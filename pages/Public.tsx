@@ -1,14 +1,15 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { Button, Input, Card, Badge, Label, Switch } from '../components/ui';
-import { 
-  Check, ChevronLeft, ChevronRight, AlertTriangle, Globe, Building2, User, MapPin, 
-  FileBadge, Lock, ArrowRight, Star, Calendar, Smartphone, Zap, TrendingUp, 
-  Sparkles, Image as ImageIcon, Palette, Heart, Shield, FileText, Clock, 
+import {
+  Check, ChevronLeft, ChevronRight, AlertTriangle, Globe, Building2, User, MapPin,
+  FileBadge, Lock, ArrowRight, Star, Calendar, Smartphone, Zap, TrendingUp,
+  Sparkles, Image as ImageIcon, Palette, Heart, Shield, FileText, Clock,
   CheckCircle2, AlertCircle, Loader2, UserCheck, PenTool, Eraser
 } from 'lucide-react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { MOCK_PATIENTS } from '../data';
+import { useAuth } from '../contexts/AuthContext';
 
 // -- LANDING PAGE --
 export const LandingPage = () => {
@@ -147,15 +148,31 @@ export const LockScreen = () => {
 
 export const LoginPage = () => {
   const navigate = useNavigate();
-  const [email, setEmail] = useState('admin@clinicall.com');
-  const [password, setPassword] = useState('password');
+  const { signIn, user } = useAuth();
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  const handleLogin = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (email.toLowerCase().includes('admin')) {
+  // Redirect if already logged in
+  useEffect(() => {
+    if (user) {
       navigate('/admin/dashboard');
+    }
+  }, [user, navigate]);
+
+  const handleLogin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+    setError(null);
+
+    const { error } = await signIn(email, password);
+
+    if (error) {
+      setError('אימייל או סיסמה שגויים');
+      setLoading(false);
     } else {
-      navigate('/client/dashboard');
+      navigate('/admin/dashboard');
     }
   };
 
@@ -172,6 +189,12 @@ export const LoginPage = () => {
         <h1 className="text-2xl font-bold text-center mb-2 text-gray-900">ברוכים הבאים</h1>
         <p className="text-center text-muted-foreground mb-8">התחברות למערכת ClinicALL</p>
 
+        {error && (
+          <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg text-red-600 text-sm text-center">
+            {error}
+          </div>
+        )}
+
         <form onSubmit={handleLogin} className="space-y-4">
           <div>
             <label className="text-sm font-medium mb-1 block text-gray-700">אימייל</label>
@@ -184,7 +207,13 @@ export const LoginPage = () => {
             </div>
             <Input type="password" value={password} onChange={(e) => setPassword(e.target.value)} required className="text-right" dir="ltr" />
           </div>
-          <Button type="submit" className="w-full shadow-md">התחבר</Button>
+          <Button type="submit" className="w-full shadow-md" disabled={loading}>
+            {loading ? (
+              <span className="flex items-center justify-center gap-2">
+                <Loader2 className="h-4 w-4 animate-spin" /> מתחבר...
+              </span>
+            ) : 'התחבר'}
+          </Button>
         </form>
 
         <div className="mt-6 pt-6 border-t text-center text-sm">
@@ -200,7 +229,10 @@ export const LoginPage = () => {
 
 export const SignupPage = () => {
   const navigate = useNavigate();
+  const { signUp } = useAuth();
   const [step, setStep] = useState(1);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const [formData, setFormData] = useState({
     fullName: '',
     email: '',
@@ -212,6 +244,7 @@ export const SignupPage = () => {
     coverImage: 'default',
     address: '',
     niche: 'aesthetics',
+    phone: '',
   });
 
   const handleChange = (field: string, value: any) => {
@@ -221,10 +254,28 @@ export const SignupPage = () => {
   const nextStep = () => setStep(prev => prev + 1);
   const prevStep = () => setStep(prev => prev - 1);
 
-  const handleSubmit = () => {
-    setTimeout(() => {
+  const handleSubmit = async () => {
+    setLoading(true);
+    setError(null);
+
+    const { error } = await signUp({
+      email: formData.email,
+      password: formData.password,
+      fullName: formData.fullName,
+      clinicName: formData.clinicName,
+      slug: formData.slug,
+      businessId: formData.businessId,
+      address: formData.address,
+      phone: formData.phone,
+    });
+
+    if (error) {
+      setError(error.message || 'שגיאה בהרשמה');
+      setLoading(false);
+    } else {
+      // Navigate to dashboard after successful signup
       navigate('/admin/dashboard');
-    }, 1500);
+    }
   };
 
   const steps = [
@@ -447,7 +498,13 @@ export const SignupPage = () => {
                      <p className="text-gray-500 mb-8">
                         הגדרנו עבורך את הכל. כעת נעביר אותך למערכת הניהול כדי להוסיף שירותים וצוות.
                      </p>
-                     
+
+                     {error && (
+                       <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg text-red-600 text-sm text-center max-w-sm mx-auto">
+                         {error}
+                       </div>
+                     )}
+
                      <div className="bg-gray-50 p-4 rounded-xl text-right max-w-sm mx-auto mb-8 text-sm">
                         <div className="flex justify-between py-1">
                            <span className="text-gray-500">כתובת האתר:</span>
@@ -459,8 +516,14 @@ export const SignupPage = () => {
                         </div>
                      </div>
 
-                     <Button onClick={handleSubmit} className="px-12 h-12 text-lg shadow-xl shadow-primary/20 w-full md:w-auto">
-                        כניסה למערכת הניהול <ArrowRight size={20} className="mr-2" />
+                     <Button onClick={handleSubmit} disabled={loading} className="px-12 h-12 text-lg shadow-xl shadow-primary/20 w-full md:w-auto">
+                        {loading ? (
+                          <span className="flex items-center justify-center gap-2">
+                            <Loader2 className="h-5 w-5 animate-spin" /> יוצר חשבון...
+                          </span>
+                        ) : (
+                          <>כניסה למערכת הניהול <ArrowRight size={20} className="mr-2" /></>
+                        )}
                      </Button>
                    </div>
                 )}

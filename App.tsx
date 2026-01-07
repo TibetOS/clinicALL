@@ -1,8 +1,8 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { BrowserRouter, Routes, Route, Navigate, useLocation, Link } from 'react-router-dom';
-import { 
-  LayoutDashboard, Users, Calendar as CalendarIcon, Settings, 
+import {
+  LayoutDashboard, Users, Calendar as CalendarIcon, Settings,
   Menu, Bell, LogOut, ChevronLeft, Package,
   Crown, Sparkles, X
 } from 'lucide-react';
@@ -17,12 +17,14 @@ import { Button, Badge } from './components/ui';
 import { ClinicAI } from './components/ClinicAI';
 import { MOCK_NOTIFICATIONS } from './data';
 import { Notification } from './types';
+import { AuthProvider, useAuth } from './contexts/AuthContext';
+import { ProtectedRoute } from './components/ProtectedRoute';
 
 // Layout Component
 const AdminLayout = ({ children }: { children?: React.ReactNode }) => {
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const location = useLocation();
-  const isMobile = window.innerWidth < 1024; // LG breakpoint
+  const { profile, signOut } = useAuth();
 
   // Notifications State
   const [notifications, setNotifications] = useState<Notification[]>(MOCK_NOTIFICATIONS);
@@ -132,11 +134,13 @@ const AdminLayout = ({ children }: { children?: React.ReactNode }) => {
              </div>
            </Link>
 
-           <Link to="/login">
-             <Button variant="ghost" className="w-full justify-start text-red-500 hover:text-red-600 hover:bg-red-50 rounded-xl">
-               <LogOut size={20} className="ml-3" /> התנתק
-             </Button>
-           </Link>
+           <Button
+             variant="ghost"
+             className="w-full justify-start text-red-500 hover:text-red-600 hover:bg-red-50 rounded-xl"
+             onClick={() => signOut()}
+           >
+             <LogOut size={20} className="ml-3" /> התנתק
+           </Button>
         </div>
       </aside>
 
@@ -208,11 +212,15 @@ const AdminLayout = ({ children }: { children?: React.ReactNode }) => {
 
             <div className="flex items-center gap-3 pl-2 border-r border-gray-100 pr-4">
                <div className="text-left hidden md:block">
-                  <div className="text-sm font-bold text-gray-900">ד״ר שרה כהן</div>
-                  <div className="text-xs text-muted-foreground">מנהלת רפואית</div>
+                  <div className="text-sm font-bold text-gray-900">{profile?.full_name || 'ד״ר שרה כהן'}</div>
+                  <div className="text-xs text-muted-foreground">
+                    {profile?.role === 'owner' ? 'בעלים' :
+                     profile?.role === 'admin' ? 'מנהל/ת' :
+                     profile?.role === 'staff' ? 'צוות' : 'מנהלת רפואית'}
+                  </div>
                </div>
                <div className="h-9 w-9 rounded-full bg-primary/10 text-primary flex items-center justify-center font-bold text-sm ring-2 ring-white shadow-sm">
-                 ש
+                 {profile?.full_name?.charAt(0) || 'ש'}
                </div>
             </div>
           </div>
@@ -241,38 +249,42 @@ const AdminLayout = ({ children }: { children?: React.ReactNode }) => {
 function App() {
   return (
     <BrowserRouter>
-      <Routes>
-        <Route path="/" element={<LandingPage />} />
-        <Route path="/pricing" element={<PricingPage />} />
-        <Route path="/login" element={<LoginPage />} />
-        <Route path="/signup" element={<SignupPage />} />
-        <Route path="/health" element={<HealthDeclaration />} />
-        <Route path="/locked" element={<LockScreen />} />
-        
-        {/* PUBLIC CLINIC LANDING PAGE */}
-        <Route path="/c/:slug" element={<ClinicLanding />} />
+      <AuthProvider>
+        <Routes>
+          <Route path="/" element={<LandingPage />} />
+          <Route path="/pricing" element={<PricingPage />} />
+          <Route path="/login" element={<LoginPage />} />
+          <Route path="/signup" element={<SignupPage />} />
+          <Route path="/health" element={<HealthDeclaration />} />
+          <Route path="/locked" element={<LockScreen />} />
 
-        {/* Legacy/Direct Booking Link */}
-        <Route path="/book/:clinicId" element={<BookingApp />} />
-        
-        <Route path="/admin" element={<Navigate to="/admin/dashboard" replace />} />
-        
-        <Route path="/admin/*" element={
-          <AdminLayout>
-            <Routes>
-              <Route path="dashboard" element={<Dashboard />} />
-              <Route path="patients" element={<PatientList />} />
-              <Route path="patients/:id" element={<PatientDetails />} />
-              <Route path="calendar" element={<Calendar />} />
-              <Route path="inventory" element={<InventoryPage />} />
-              <Route path="settings" element={<SettingsPage />} />
-              <Route path="*" element={<Navigate to="dashboard" replace />} />
-            </Routes>
-          </AdminLayout>
-        } />
+          {/* PUBLIC CLINIC LANDING PAGE */}
+          <Route path="/c/:slug" element={<ClinicLanding />} />
 
-        <Route path="*" element={<Navigate to="/" replace />} />
-      </Routes>
+          {/* Legacy/Direct Booking Link */}
+          <Route path="/book/:clinicId" element={<BookingApp />} />
+
+          <Route path="/admin" element={<Navigate to="/admin/dashboard" replace />} />
+
+          <Route path="/admin/*" element={
+            <ProtectedRoute>
+              <AdminLayout>
+                <Routes>
+                  <Route path="dashboard" element={<Dashboard />} />
+                  <Route path="patients" element={<PatientList />} />
+                  <Route path="patients/:id" element={<PatientDetails />} />
+                  <Route path="calendar" element={<Calendar />} />
+                  <Route path="inventory" element={<InventoryPage />} />
+                  <Route path="settings" element={<SettingsPage />} />
+                  <Route path="*" element={<Navigate to="dashboard" replace />} />
+                </Routes>
+              </AdminLayout>
+            </ProtectedRoute>
+          } />
+
+          <Route path="*" element={<Navigate to="/" replace />} />
+        </Routes>
+      </AuthProvider>
     </BrowserRouter>
   );
 }
