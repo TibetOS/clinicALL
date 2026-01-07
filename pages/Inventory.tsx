@@ -1,17 +1,19 @@
 
 import React, { useState } from 'react';
-import { 
-  Search, Filter, Plus, Package, AlertTriangle, 
-  ArrowDown, ArrowUp, History, Download 
+import {
+  Search, Filter, Plus, Package, AlertTriangle,
+  ArrowDown, ArrowUp, History, Download
 } from 'lucide-react';
 import { Card, Button, Input, Badge, Dialog, Label } from '../components/ui';
-import { MOCK_INVENTORY } from '../data';
+import { useInventory } from '../hooks';
 import { InventoryItem } from '../types';
 
 export const InventoryPage = () => {
   const [searchTerm, setSearchTerm] = useState('');
-  const [inventory, setInventory] = useState<InventoryItem[]>(MOCK_INVENTORY);
   const [isAddOpen, setIsAddOpen] = useState(false);
+
+  // Use hook for data
+  const { inventory, updateQuantity } = useInventory();
 
   const filteredItems = inventory.filter(item => 
     item.name.toLowerCase().includes(searchTerm.toLowerCase()) ||

@@ -1,11 +1,11 @@
 
 import React, { useState } from 'react';
-import { 
-  Plus, Search, MoreHorizontal, Phone, MessageCircle, 
-  Calendar, CheckCircle2, DollarSign, GripVertical 
+import {
+  Plus, Search, MoreHorizontal, Phone, MessageCircle,
+  Calendar, CheckCircle2, DollarSign, GripVertical
 } from 'lucide-react';
 import { Card, Button, Input, Badge, Dialog, Label } from '../components/ui';
-import { MOCK_LEADS } from '../data';
+import { useLeads } from '../hooks';
 import { Lead, LeadStage } from '../types';
 
 const STAGES: { id: LeadStage; label: string; color: string }[] = [
@@ -16,13 +16,15 @@ const STAGES: { id: LeadStage; label: string; color: string }[] = [
 ];
 
 export const LeadsPage = () => {
-  const [leads, setLeads] = useState<Lead[]>(MOCK_LEADS);
   const [searchTerm, setSearchTerm] = useState('');
   const [isAddOpen, setIsAddOpen] = useState(false);
 
+  // Use hook for data
+  const { leads, updateLead } = useLeads();
+
   // Helper to move leads
-  const moveLead = (id: string, newStage: LeadStage) => {
-    setLeads(leads.map(l => l.id === id ? { ...l, stage: newStage } : l));
+  const moveLead = async (id: string, newStage: LeadStage) => {
+    await updateLead(id, { stage: newStage });
   };
 
   const calculateTotalValue = (stage: LeadStage) => {

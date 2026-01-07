@@ -12,7 +12,7 @@ import {
 } from 'lucide-react';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar, Cell } from 'recharts';
 import { Card, Button, Input, Badge, Dialog, Tabs, TabsList, TabsTrigger, Switch, Label } from '../components/ui';
-import { MOCK_PATIENTS, MOCK_APPOINTMENTS, MOCK_SERVICES } from '../data';
+import { usePatients, useAppointments, useServices } from '../hooks';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Patient, Service, Appointment } from '../types';
 
@@ -240,7 +240,7 @@ export const Dashboard = () => {
 export const PatientList = () => {
   const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState('');
-  const [patients, setPatients] = useState<Patient[]>(MOCK_PATIENTS);
+  const { patients, loading: patientsLoading } = usePatients();
   const [isAddPatientOpen, setIsAddPatientOpen] = useState(false);
 
   const filteredPatients = patients.filter(p => 
@@ -420,7 +420,8 @@ export const PatientList = () => {
 export const Calendar = () => {
   const [currentDate, setCurrentDate] = useState(new Date());
   const [view, setView] = useState<'week' | 'day'>('week');
-  const [appointments, setAppointments] = useState<Appointment[]>(MOCK_APPOINTMENTS);
+  const { appointments, loading: appointmentsLoading } = useAppointments();
+  const { services } = useServices();
   const [isNewApptOpen, setIsNewApptOpen] = useState(false);
 
   // Helper to format hours
@@ -574,7 +575,7 @@ export const Calendar = () => {
             <div>
                <Label>טיפול</Label>
                <select className="flex h-10 w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm">
-                  {MOCK_SERVICES.map(s => <option key={s.id}>{s.name} ({s.duration} דק׳)</option>)}
+                  {services.map(s => <option key={s.id}>{s.name} ({s.duration} דק׳)</option>)}
                </select>
             </div>
             <div className="grid grid-cols-2 gap-4">
@@ -613,21 +614,19 @@ export const SettingsPage = () => {
   }, [searchParams]);
 
   // -- Services State --
-  const [services, setServices] = useState<Service[]>(MOCK_SERVICES);
+  const { services, addService } = useServices();
   const [isAddServiceOpen, setIsAddServiceOpen] = useState(false);
   const [newService, setNewService] = useState({ name: '', price: '', duration: '', category: 'הזרקות' });
 
-  const handleAddService = () => {
+  const handleAddService = async () => {
     if(!newService.name) return;
-    const s: Service = {
-      id: Math.random().toString(),
+    await addService({
       name: newService.name,
       description: 'שירות חדש',
       price: Number(newService.price) || 0,
       duration: Number(newService.duration) || 30,
       category: newService.category
-    };
-    setServices([...services, s]);
+    });
     setIsAddServiceOpen(false);
     setNewService({ name: '', price: '', duration: '', category: 'הזרקות' });
   };

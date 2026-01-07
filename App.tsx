@@ -15,8 +15,7 @@ import { PatientDetails } from './pages/PatientDetails';
 import { BookingApp } from './pages/Booking';
 import { Button, Badge } from './components/ui';
 import { ClinicAI } from './components/ClinicAI';
-import { MOCK_NOTIFICATIONS } from './data';
-import { Notification } from './types';
+import { useNotifications } from './hooks';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { ProtectedRoute } from './components/ProtectedRoute';
 
@@ -27,11 +26,9 @@ const AdminLayout = ({ children }: { children?: React.ReactNode }) => {
   const { profile, signOut } = useAuth();
 
   // Notifications State
-  const [notifications, setNotifications] = useState<Notification[]>(MOCK_NOTIFICATIONS);
+  const { notifications, unreadCount, markAsRead, markAllAsRead } = useNotifications();
   const [isNotifOpen, setIsNotifOpen] = useState(false);
   const notifRef = useRef<HTMLDivElement>(null);
-
-  const unreadCount = notifications.filter(n => !n.read).length;
 
   useEffect(() => {
     if (window.innerWidth < 1024) setSidebarOpen(false);
@@ -47,10 +44,6 @@ const AdminLayout = ({ children }: { children?: React.ReactNode }) => {
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
-
-  const markAsRead = (id: string) => {
-    setNotifications(notifications.map(n => n.id === id ? { ...n, read: true } : n));
-  };
 
   const navItems = [
     { icon: LayoutDashboard, label: 'לוח בקרה', path: '/admin/dashboard' },
@@ -178,7 +171,7 @@ const AdminLayout = ({ children }: { children?: React.ReactNode }) => {
                 <div className="absolute top-12 left-0 w-80 bg-white rounded-xl shadow-xl border border-stone-200 overflow-hidden animate-in fade-in zoom-in-95 origin-top-left z-50">
                   <div className="p-3 border-b flex justify-between items-center bg-gray-50">
                     <span className="font-bold text-sm text-gray-900">התראות ({unreadCount})</span>
-                    <button className="text-xs text-primary hover:underline" onClick={() => setNotifications(notifications.map(n => ({...n, read: true})))}>סמן הכל כנקרא</button>
+                    <button className="text-xs text-primary hover:underline" onClick={() => markAllAsRead()}>סמן הכל כנקרא</button>
                   </div>
                   <div className="max-h-[300px] overflow-y-auto custom-scrollbar">
                     {notifications.length > 0 ? (

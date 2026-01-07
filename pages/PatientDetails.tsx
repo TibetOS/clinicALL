@@ -11,22 +11,32 @@ import {
 import { Button, Card, Badge, Input, Dialog, Tabs, TabsList, TabsTrigger } from '../components/ui';
 import { FaceMap } from '../components/FaceMap';
 import { ImageSlider } from '../components/ImageSlider';
-import { MOCK_PATIENTS, MOCK_CLINICAL_NOTES, MOCK_APPOINTMENTS, MOCK_DECLARATIONS } from '../data';
+import { usePatients, useAppointments, useClinicalNotes, useDeclarations } from '../hooks';
 import { ClinicalNote, InjectionPoint, Declaration } from '../types';
 
 export const PatientDetails = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('clinical');
-  
-  const patient = MOCK_PATIENTS.find(p => p.id === id);
-  const appointments = MOCK_APPOINTMENTS.filter(a => a.patientId === id);
-  const declarations = MOCK_DECLARATIONS.filter(d => d.patientId === id);
 
-  // Local state for clinical notes to simulate adding new ones
-  const [clinicalNotes, setClinicalNotes] = useState<ClinicalNote[]>(
-     MOCK_CLINICAL_NOTES.filter(n => n.patientId === id)
-  );
+  // Use hooks for data fetching
+  const { getPatient } = usePatients();
+  const { appointments } = useAppointments({ patientId: id });
+  const { declarations } = useDeclarations({ patientId: id });
+  const { clinicalNotes, addClinicalNote } = useClinicalNotes({ patientId: id });
+
+  const [patient, setPatient] = useState<any>(null);
+  const [patientLoading, setPatientLoading] = useState(true);
+
+  // Fetch patient on mount
+  useEffect(() => {
+    if (id) {
+      getPatient(id).then((p) => {
+        setPatient(p);
+        setPatientLoading(false);
+      });
+    }
+  }, [id, getPatient]);
 
   // New Clinical Note State
   const [isEditing, setIsEditing] = useState(false);
@@ -58,6 +68,7 @@ export const PatientDetails = () => {
     }
   }, [activeTab, id]);
 
+  if (patientLoading) return <div className="p-8">טוען...</div>;
   if (!patient) return <div className="p-8">מטופל לא נמצא</div>;
 
   const handleAddPoint = (point: { x: number; y: number }) => {
@@ -69,21 +80,19 @@ export const PatientDetails = () => {
     setNewPoints([...newPoints, newPoint]);
   };
 
-  const handleSaveNote = () => {
+  const handleSaveNote = async () => {
     if (!noteText && newPoints.length === 0) return;
 
-    const newNote: ClinicalNote = {
-      id: Math.random().toString(36),
+    await addClinicalNote({
       patientId: patient.id,
       date: new Date().toISOString().split('T')[0],
-      providerName: 'ד״ר שרה', // Hardcoded active user
+      providerName: 'ד״ר שרה', // TODO: Use current user from auth
       treatmentType: 'טיפול אסתטי',
       notes: noteText,
       injectionPoints: newPoints,
       images: []
-    };
+    });
 
-    setClinicalNotes([newNote, ...clinicalNotes]);
     setIsEditing(false);
     setNoteText('');
     setNewPoints([]);

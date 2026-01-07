@@ -5,18 +5,23 @@ import {
   FileText, TrendingUp, AlertCircle, CheckCircle2 
 } from 'lucide-react';
 import { Card, Button, Input, Badge, Dialog, Label } from '../components/ui';
-import { MOCK_INVOICES, MOCK_PATIENTS, MOCK_SERVICES } from '../data';
+import { useInvoices, usePatients, useServices } from '../hooks';
 import { Invoice, InvoiceItem } from '../types';
 
 export const FinancePage = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [isNewInvoiceOpen, setIsNewInvoiceOpen] = useState(false);
-  
+
+  // Use hooks for data
+  const { invoices } = useInvoices();
+  const { patients } = usePatients();
+  const { services } = useServices();
+
   // New Invoice State
   const [selectedPatient, setSelectedPatient] = useState('');
   const [invoiceItems, setInvoiceItems] = useState<InvoiceItem[]>([{ description: '', quantity: 1, price: 0 }]);
 
-  const filteredInvoices = MOCK_INVOICES.filter(inv => 
+  const filteredInvoices = invoices.filter(inv => 
     inv.patientName.toLowerCase().includes(searchTerm.toLowerCase()) ||
     inv.invoiceNumber.includes(searchTerm)
   );
@@ -171,7 +176,7 @@ export const FinancePage = () => {
                      onChange={(e) => setSelectedPatient(e.target.value)}
                   >
                      <option value="">בחר מטופל...</option>
-                     {MOCK_PATIENTS.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
+                     {patients.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
                   </select>
                </div>
                <div>
@@ -192,7 +197,7 @@ export const FinancePage = () => {
                            list="services"
                         />
                         <datalist id="services">
-                           {MOCK_SERVICES.map(s => <option key={s.id} value={s.name} />)}
+                           {services.map(s => <option key={s.id} value={s.name} />)}
                         </datalist>
                      </div>
                      <div className="w-20">

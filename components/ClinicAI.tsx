@@ -3,7 +3,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { GoogleGenAI } from "@google/genai";
 import { Sparkles, Send, X, Bot, User, Loader2, ChevronDown, ChevronUp } from 'lucide-react';
 import { Button, Input, Card } from './ui';
-import { MOCK_PATIENTS, MOCK_APPOINTMENTS, MOCK_SERVICES } from '../data';
+import { usePatients, useAppointments, useServices } from '../hooks';
 
 interface Message {
   id: string;
@@ -19,6 +19,11 @@ export const ClinicAI = () => {
   const [inputValue, setInputValue] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  // Use hooks for data
+  const { patients } = usePatients();
+  const { appointments } = useAppointments();
+  const { services } = useServices();
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -44,9 +49,9 @@ export const ClinicAI = () => {
       // Prepare Context
       const context = `
         Current Date: ${new Date().toLocaleDateString('he-IL')}
-        Patients: ${JSON.stringify(MOCK_PATIENTS.map(p => ({ name: p.name, phone: p.phone, nextAppt: p.upcomingAppointment })))}
-        Appointments Today: ${JSON.stringify(MOCK_APPOINTMENTS.map(a => ({ patient: a.patientName, service: a.serviceName, time: a.time, status: a.status })))}
-        Services: ${JSON.stringify(MOCK_SERVICES.map(s => s.name))}
+        Patients: ${JSON.stringify(patients.map(p => ({ name: p.name, phone: p.phone, nextAppt: p.upcomingAppointment })))}
+        Appointments Today: ${JSON.stringify(appointments.map(a => ({ patient: a.patientName, service: a.serviceName, time: a.time, status: a.status })))}
+        Services: ${JSON.stringify(services.map(s => s.name))}
       `;
 
       const response = await ai.models.generateContent({

@@ -1,15 +1,18 @@
 
 import React, { useState } from 'react';
-import { 
-  Megaphone, MessageCircle, Mail, Users, Send, 
-  BarChart, Calendar, Smartphone, Plus, RefreshCw 
+import {
+  Megaphone, MessageCircle, Mail, Users, Send,
+  BarChart, Calendar, Smartphone, Plus, RefreshCw
 } from 'lucide-react';
 import { Card, Button, Input, Badge, Dialog, Label, Tabs, TabsList, TabsTrigger } from '../components/ui';
-import { MOCK_CAMPAIGNS } from '../data';
+import { useCampaigns } from '../hooks';
 
 export const MarketingPage = () => {
   const [activeTab, setActiveTab] = useState('campaigns');
   const [isNewCampaignOpen, setIsNewCampaignOpen] = useState(false);
+
+  // Use hook for data
+  const { campaigns } = useCampaigns();
 
   return (
     <div className="space-y-6 animate-in fade-in duration-500 pb-10">
@@ -71,7 +74,7 @@ export const MarketingPage = () => {
 
          {activeTab === 'campaigns' && (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 animate-in fade-in slide-in-from-bottom-2">
-               {MOCK_CAMPAIGNS.map(camp => (
+               {campaigns.map(camp => (
                   <Card key={camp.id} className="p-5 hover:shadow-md transition-shadow flex flex-col justify-between h-full border-t-4 border-t-transparent hover:border-t-primary">
                      <div>
                         <div className="flex justify-between items-start mb-3">
