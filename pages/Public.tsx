@@ -1,0 +1,1007 @@
+
+import React, { useState, useEffect, useRef } from 'react';
+import { Button, Input, Card, Badge, Label, Switch } from '../components/ui';
+import { 
+  Check, ChevronLeft, ChevronRight, AlertTriangle, Globe, Building2, User, MapPin, 
+  FileBadge, Lock, ArrowRight, Star, Calendar, Smartphone, Zap, TrendingUp, 
+  Sparkles, Image as ImageIcon, Palette, Heart, Shield, FileText, Clock, 
+  CheckCircle2, AlertCircle, Loader2, UserCheck, PenTool, Eraser
+} from 'lucide-react';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
+import { MOCK_PATIENTS } from '../data';
+
+// -- LANDING PAGE --
+export const LandingPage = () => {
+  return (
+    <div className="min-h-screen bg-white">
+      {/* Navbar */}
+      <nav className="border-b bg-white/80 backdrop-blur-md sticky top-0 z-50">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
+           <div className="flex items-center gap-2">
+              <div className="h-8 w-8 bg-primary rounded-lg flex items-center justify-center text-white font-bold shadow-sm">C</div>
+              <span className="font-bold text-xl text-gray-900 tracking-tight">ClinicALL</span>
+           </div>
+           <div className="hidden md:flex items-center gap-8 text-sm font-medium text-gray-600">
+              <a href="#features" className="hover:text-primary">פיצ׳רים</a>
+              <Link to="/pricing" className="hover:text-primary">מחירים</Link>
+              <a href="#" className="hover:text-primary">אודות</a>
+           </div>
+           <div className="flex items-center gap-3">
+              <Link to="/login">
+                <Button variant="ghost">התחבר</Button>
+              </Link>
+              <Link to="/signup">
+                <Button className="shadow-md">נסה חינם</Button>
+              </Link>
+           </div>
+        </div>
+      </nav>
+
+      {/* Hero Section */}
+      <section className="pt-20 pb-32 overflow-hidden relative">
+         <div className="max-w-7xl mx-auto px-4 sm:px-6 relative z-10">
+            <div className="text-center max-w-3xl mx-auto mb-12">
+               <Badge className="mb-4 bg-primary/10 text-primary hover:bg-primary/20 border-primary/20 py-1.5 px-4 text-sm">
+                  חדש! בונה אתרים לקליניקות ב-5 דקות ✨
+               </Badge>
+               <h1 className="text-5xl md:text-6xl font-bold text-gray-900 mb-6 leading-tight">
+                  יותר ממערכת ניהול.<br/>
+                  <span className="text-primary">הנוכחות הדיגיטלית</span> המלאה שלך.
+               </h1>
+               <p className="text-xl text-gray-600 mb-8 leading-relaxed">
+                  בנה אתר תדמית מהמם, נהל יומן תורים חכם, ושמור על קשר עם המטופלים - הכל בפלטפורמה אחת שמותאמת לאסתטיקה.
+               </p>
+               <div className="flex flex-col sm:flex-row gap-4 justify-center">
+                  <Link to="/signup">
+                    <Button size="lg" className="h-14 px-8 text-lg shadow-xl shadow-primary/20">
+                       בנה את הקליניקה שלך בחינם <ArrowRight className="mr-2" />
+                    </Button>
+                  </Link>
+                  <Button variant="outline" size="lg" className="h-14 px-8 text-lg bg-white">
+                     ראה דוגמה חיה
+                  </Button>
+               </div>
+               <p className="mt-4 text-sm text-gray-500">ללא צורך בכרטיס אשראי • התקנה מיידית</p>
+            </div>
+         </div>
+         
+         {/* Background Decor */}
+         <div className="absolute top-0 left-0 right-0 h-full -z-10 overflow-hidden">
+            <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[1000px] h-[600px] bg-primary/5 rounded-[100%] blur-3xl"></div>
+            <div className="absolute bottom-0 right-0 w-[800px] h-[800px] bg-blue-100/30 rounded-full blur-3xl translate-y-1/2"></div>
+         </div>
+      </section>
+
+      {/* Features Grid */}
+      <section id="features" className="py-24 bg-gray-50">
+         <div className="max-w-7xl mx-auto px-4 sm:px-6">
+            <div className="text-center max-w-2xl mx-auto mb-16">
+               <h2 className="text-3xl font-bold text-gray-900 mb-4">כל מה שצריך כדי לנהל ולהצמיח</h2>
+               <p className="text-gray-600 text-lg">בחרנו בקפידה את הכלים החשובים ביותר למרפאות אסתטיקה ואיגדנו אותם במקום אחד.</p>
+            </div>
+            
+            <div className="grid md:grid-cols-3 gap-8">
+               {[
+                  { icon: Globe, title: 'אתר תדמית מעוצב', desc: 'עמוד נחיתה יוקרתי לקליניקה שלך, כולל גלריית עבודות, מחירון ומידע על הצוות.' },
+                  { icon: Calendar, title: 'יומן תורים חכם', desc: 'מניעת כפילויות, תזכורות אוטומטיות ב-SMS ושיבוץ חכם של חדרי טיפול.' },
+                  { icon: FileBadge, title: 'תיק רפואי דיגיטלי', desc: 'טפסים דיגיטליים, היסטוריית טיפולים, צילומי לפני/אחרי ומעקב מדויק.' },
+                  { icon: Zap, title: 'שיווק ואוטומציה', desc: 'שליחת קמפיינים, מועדון לקוחות, ושימור לקוחות אוטומטי להגדלת המכירות.' },
+                  { icon: Smartphone, title: 'אפליקציה למטופלים', desc: 'אזור אישי למטופלים לזימון תורים, צפייה בהיסטוריה ומילוי הצהרות בריאות.' },
+                  { icon: TrendingUp, title: 'דוחות וניהול פיננסי', desc: 'מעקב אחר הכנסות, מלאי, הפקת חשבוניות ודוחות ביצועים בזמן אמת.' }
+               ].map((f, i) => (
+                  <Card key={i} className="p-6 hover:shadow-lg transition-shadow border-none shadow-sm">
+                     <div className="h-12 w-12 bg-primary/10 rounded-xl flex items-center justify-center text-primary mb-4">
+                        <f.icon size={24} />
+                     </div>
+                     <h3 className="text-xl font-bold text-gray-900 mb-2">{f.title}</h3>
+                     <p className="text-gray-500 leading-relaxed">{f.desc}</p>
+                  </Card>
+               ))}
+            </div>
+         </div>
+      </section>
+
+      <footer className="bg-gray-900 text-gray-400 py-12">
+         <div className="max-w-7xl mx-auto px-4 sm:px-6 text-center">
+             <div className="flex justify-center items-center gap-2 mb-4 text-white">
+               <div className="h-8 w-8 bg-primary rounded-lg flex items-center justify-center font-bold">C</div>
+               <span className="font-bold text-xl">ClinicALL</span>
+            </div>
+            <p className="max-w-sm mx-auto mb-6">מערכת הניהול המתקדמת ביותר לקליניקות אסתטיות. חכמה, פשוטה ומעוצבת.</p>
+            <div className="text-sm">© 2023 ClinicALL. כל הזכויות שמורות.</div>
+         </div>
+      </footer>
+    </div>
+  );
+};
+
+// -- LOCK SCREEN --
+export const LockScreen = () => {
+  const navigate = useNavigate();
+  return (
+    <div className="min-h-screen bg-gray-900 flex items-center justify-center p-4">
+      <div className="max-w-md w-full bg-white rounded-2xl shadow-2xl p-8 text-center relative overflow-hidden">
+        <div className="absolute top-0 left-0 w-full h-2 bg-red-500"></div>
+        <div className="w-20 h-20 bg-red-100 text-red-600 rounded-full flex items-center justify-center mx-auto mb-6">
+          <Lock size={40} />
+        </div>
+        <h1 className="text-2xl font-bold text-gray-900 mb-2">המנוי שלך הסתיים</h1>
+        <p className="text-gray-500 mb-8 leading-relaxed">
+          תקופת הניסיון או המנוי שלך הסתיימו. הנתונים שלך שמורים ומאובטחים, אך הגישה למערכת נחסמה.
+          <br/>
+          אנא עדכן אמצעי תשלום כדי להמשיך.
+        </p>
+
+        <div className="space-y-4">
+          <Button className="w-full h-12 text-lg shadow-lg" onClick={() => navigate('/admin/settings?tab=billing')}>
+             עדכן אמצעי תשלום
+          </Button>
+          <Button variant="ghost" className="w-full" onClick={() => navigate('/login')}>
+             יציאה מהמערכת
+          </Button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export const LoginPage = () => {
+  const navigate = useNavigate();
+  const [email, setEmail] = useState('admin@clinicall.com');
+  const [password, setPassword] = useState('password');
+
+  const handleLogin = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (email.toLowerCase().includes('admin')) {
+      navigate('/admin/dashboard');
+    } else {
+      navigate('/client/dashboard');
+    }
+  };
+
+  return (
+    <div className="min-h-screen flex items-center justify-center bg-gray-50 p-4">
+      <Card className="w-full max-w-md p-8 shadow-lg border-0">
+        <div className="flex justify-center mb-6">
+          <Link to="/">
+             <div className="h-12 w-12 bg-primary rounded-xl flex items-center justify-center shadow-md">
+                <span className="text-white font-bold text-2xl">C</span>
+             </div>
+          </Link>
+        </div>
+        <h1 className="text-2xl font-bold text-center mb-2 text-gray-900">ברוכים הבאים</h1>
+        <p className="text-center text-muted-foreground mb-8">התחברות למערכת ClinicALL</p>
+
+        <form onSubmit={handleLogin} className="space-y-4">
+          <div>
+            <label className="text-sm font-medium mb-1 block text-gray-700">אימייל</label>
+            <Input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="name@example.com" required className="text-right direction-ltr" dir="ltr" />
+          </div>
+          <div>
+            <div className="flex justify-between items-center mb-1">
+              <label className="text-sm font-medium text-gray-700">סיסמה</label>
+              <a href="#" className="text-xs text-primary hover:underline">שכחת סיסמה?</a>
+            </div>
+            <Input type="password" value={password} onChange={(e) => setPassword(e.target.value)} required className="text-right" dir="ltr" />
+          </div>
+          <Button type="submit" className="w-full shadow-md">התחבר</Button>
+        </form>
+
+        <div className="mt-6 pt-6 border-t text-center text-sm">
+          <span className="text-gray-500">אין לך עדיין חשבון? </span>
+          <Link to="/signup" className="font-medium text-primary hover:underline">
+            פתח קליניקה חדשה
+          </Link>
+        </div>
+      </Card>
+    </div>
+  );
+};
+
+export const SignupPage = () => {
+  const navigate = useNavigate();
+  const [step, setStep] = useState(1);
+  const [formData, setFormData] = useState({
+    fullName: '',
+    email: '',
+    password: '',
+    clinicName: '',
+    businessId: '',
+    slug: '',
+    brandColor: '#0D9488',
+    coverImage: 'default',
+    address: '',
+    niche: 'aesthetics',
+  });
+
+  const handleChange = (field: string, value: any) => {
+    setFormData(prev => ({ ...prev, [field]: value }));
+  };
+
+  const nextStep = () => setStep(prev => prev + 1);
+  const prevStep = () => setStep(prev => prev - 1);
+
+  const handleSubmit = () => {
+    setTimeout(() => {
+      navigate('/admin/dashboard');
+    }, 1500);
+  };
+
+  const steps = [
+    { title: 'פרטי חשבון', icon: User },
+    { title: 'פרטי הקליניקה', icon: Building2 },
+    { title: 'מיתוג ועיצוב', icon: Palette },
+    { title: 'סיום', icon: Check }
+  ];
+
+  return (
+    <div className="min-h-screen bg-gray-50 flex flex-col">
+       {/* Simplified Nav */}
+       <div className="p-4 flex justify-between items-center max-w-6xl mx-auto w-full">
+          <Link to="/" className="flex items-center gap-2">
+             <div className="h-8 w-8 bg-primary rounded-lg flex items-center justify-center text-white font-bold">C</div>
+             <span className="font-bold text-gray-900">ClinicALL</span>
+          </Link>
+          <div className="text-sm text-gray-500">
+             כבר יש לך חשבון? <Link to="/login" className="text-primary hover:underline">התחבר</Link>
+          </div>
+       </div>
+
+      <div className="flex-1 flex items-center justify-center p-4">
+        <div className="w-full max-w-5xl grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
+           
+           {/* Left Column: Form */}
+           <Card className="w-full p-0 shadow-xl border-0 overflow-hidden order-2 lg:order-1">
+             {/* Progress Bar */}
+             <div className="bg-gray-50 p-6 border-b">
+                <div className="flex justify-between max-w-md mx-auto relative mb-2">
+                   {/* Line */}
+                   <div className="absolute top-1/2 left-0 w-full h-0.5 bg-gray-200 -translate-y-1/2 -z-0"></div>
+                   <div 
+                     className="absolute top-1/2 right-0 h-0.5 bg-primary -translate-y-1/2 -z-0 transition-all duration-500"
+                     style={{ width: `${((step - 1) / (steps.length - 1)) * 100}%` }}
+                   ></div>
+
+                   {steps.map((s, idx) => {
+                     const Icon = s.icon;
+                     const isActive = step >= idx + 1;
+                     return (
+                        <div key={idx} className="relative z-10 bg-gray-50 px-2">
+                           <div className={`
+                              w-8 h-8 rounded-full flex items-center justify-center transition-all duration-300 border-2
+                              ${isActive ? 'bg-primary border-primary text-white shadow-md' : 'bg-white border-gray-300 text-gray-400'}
+                           `}>
+                              <Icon size={14} />
+                           </div>
+                        </div>
+                     );
+                   })}
+                </div>
+                <div className="text-center">
+                   <h2 className="text-lg font-bold text-gray-900">{steps[step-1].title}</h2>
+                </div>
+             </div>
+
+             <div className="p-8 min-h-[400px]">
+                {/* STEP 1: ACCOUNT */}
+                {step === 1 && (
+                   <div className="space-y-6 animate-in fade-in slide-in-from-right-8 duration-300">
+                      <div>
+                         <label className="text-sm font-medium text-gray-700">שם מלא</label>
+                         <Input 
+                            value={formData.fullName} 
+                            onChange={e => handleChange('fullName', e.target.value)}
+                            placeholder="ישראל ישראלי" 
+                            autoFocus
+                         />
+                      </div>
+                      <div>
+                         <label className="text-sm font-medium text-gray-700">אימייל</label>
+                         <Input 
+                            type="email"
+                            value={formData.email} 
+                            onChange={e => handleChange('email', e.target.value)}
+                            placeholder="name@example.com" 
+                            className="direction-ltr text-right"
+                         />
+                      </div>
+                      <div>
+                         <label className="text-sm font-medium text-gray-700">סיסמה</label>
+                         <Input 
+                            type="password"
+                            value={formData.password} 
+                            onChange={e => handleChange('password', e.target.value)}
+                            className="direction-ltr text-right"
+                         />
+                      </div>
+                      <div className="pt-4">
+                         <Button onClick={nextStep} className="w-full h-12 text-lg">
+                            התחל לבנות <ChevronLeft size={20} className="mr-2" />
+                         </Button>
+                      </div>
+                   </div>
+                )}
+
+                {/* STEP 2: CLINIC DETAILS */}
+                {step === 2 && (
+                   <div className="space-y-6 animate-in fade-in slide-in-from-right-8 duration-300">
+                      <div>
+                         <label className="text-sm font-medium text-gray-700">שם הקליניקה</label>
+                         <Input 
+                            value={formData.clinicName} 
+                            onChange={e => {
+                               handleChange('clinicName', e.target.value);
+                               // Auto-generate slug
+                               if (!formData.slug) {
+                                  handleChange('slug', e.target.value.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, ''));
+                               }
+                            }}
+                            placeholder="לדוג׳: אסתטיקה ויופי - ד״ר כהן" 
+                            autoFocus
+                         />
+                      </div>
+                      <div>
+                         <label className="text-sm font-medium text-gray-700">ת.ז. / ח.פ. (לצורכי חשבונית)</label>
+                         <Input 
+                            value={formData.businessId}
+                            onChange={e => handleChange('businessId', e.target.value)}
+                            placeholder="000000000"
+                            className="direction-ltr text-right"
+                         />
+                      </div>
+                      <div>
+                         <label className="text-sm font-medium text-gray-700">כתובת ה-URL שלך (Slug)</label>
+                         <div className="flex direction-ltr">
+                            <span className="inline-flex items-center px-3 rounded-l-lg border border-r-0 border-gray-200 bg-gray-50 text-gray-500 text-sm">
+                               clinicall.com/c/
+                            </span>
+                            <Input 
+                               value={formData.slug} 
+                               onChange={e => handleChange('slug', e.target.value)}
+                               className="rounded-l-none"
+                            />
+                         </div>
+                         <p className="text-xs text-gray-500 mt-1">זו הכתובת שבה המטופלים ימצאו אותך.</p>
+                      </div>
+                      <div>
+                         <label className="text-sm font-medium text-gray-700">כתובת פיזית</label>
+                         <div className="relative">
+                            <MapPin className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                            <Input 
+                               value={formData.address}
+                               onChange={e => handleChange('address', e.target.value)}
+                               className="pr-9"
+                               placeholder="רוטשילד 45, תל אביב"
+                            />
+                         </div>
+                      </div>
+                      <div className="flex justify-between pt-4">
+                         <Button variant="ghost" onClick={prevStep}>חזור</Button>
+                         <Button onClick={nextStep} disabled={!formData.businessId}>המשך <ChevronLeft size={16} className="mr-2" /></Button>
+                      </div>
+                   </div>
+                )}
+
+                {/* STEP 3: BRANDING */}
+                {step === 3 && (
+                   <div className="space-y-6 animate-in fade-in slide-in-from-right-8 duration-300">
+                      <div>
+                         <label className="text-sm font-medium text-gray-700 mb-2 block">צבע מותג ראשי</label>
+                         <div className="flex gap-3 flex-wrap">
+                            {['#0D9488', '#BCA48D', '#EC4899', '#6366F1', '#1F2937'].map(color => (
+                               <button 
+                                 key={color}
+                                 onClick={() => handleChange('brandColor', color)}
+                                 className={`w-10 h-10 rounded-full border-2 transition-all ${formData.brandColor === color ? 'border-gray-900 scale-110 shadow-md' : 'border-transparent'}`}
+                                 style={{ backgroundColor: color }}
+                               />
+                            ))}
+                            <div className="w-10 h-10 rounded-full border border-gray-200 flex items-center justify-center overflow-hidden relative">
+                               <input 
+                                 type="color" 
+                                 className="absolute inset-0 w-[150%] h-[150%] -translate-x-1/4 -translate-y-1/4 cursor-pointer p-0 border-0"
+                                 value={formData.brandColor}
+                                 onChange={e => handleChange('brandColor', e.target.value)}
+                               />
+                            </div>
+                         </div>
+                      </div>
+
+                      <div>
+                         <label className="text-sm font-medium text-gray-700 mb-2 block">תמונת נושא (Hero)</label>
+                         <div className="grid grid-cols-2 gap-3">
+                            <div 
+                              onClick={() => handleChange('coverImage', 'default')}
+                              className={`border-2 rounded-xl overflow-hidden cursor-pointer h-24 relative ${formData.coverImage === 'default' ? 'border-primary' : 'border-gray-200'}`}
+                            >
+                               <img src="https://images.unsplash.com/photo-1629909613654-28e377c37b09?auto=format&fit=crop&q=80&w=600" className="w-full h-full object-cover" />
+                               {formData.coverImage === 'default' && <div className="absolute inset-0 bg-primary/20 flex items-center justify-center"><Check className="text-white drop-shadow-md"/></div>}
+                            </div>
+                            <div 
+                              onClick={() => handleChange('coverImage', 'spa')}
+                              className={`border-2 rounded-xl overflow-hidden cursor-pointer h-24 relative ${formData.coverImage === 'spa' ? 'border-primary' : 'border-gray-200'}`}
+                            >
+                               <img src="https://images.unsplash.com/photo-1540555700478-4be289fbecef?auto=format&fit=crop&q=80&w=600" className="w-full h-full object-cover" />
+                               {formData.coverImage === 'spa' && <div className="absolute inset-0 bg-primary/20 flex items-center justify-center"><Check className="text-white drop-shadow-md"/></div>}
+                            </div>
+                         </div>
+                         <Button variant="outline" size="sm" className="mt-2 w-full border-dashed">
+                            <ImageIcon size={14} className="ml-2"/> העלה תמונה משלך
+                         </Button>
+                      </div>
+
+                      <div className="flex justify-between pt-4">
+                         <Button variant="ghost" onClick={prevStep}>חזור</Button>
+                         <Button onClick={nextStep}>ראה תוצאה סופית <ChevronLeft size={16} className="mr-2" /></Button>
+                      </div>
+                   </div>
+                )}
+
+                {/* STEP 4: SUCCESS */}
+                {step === 4 && (
+                   <div className="text-center py-8 animate-in fade-in zoom-in-95">
+                      <div className="w-20 h-20 bg-green-100 text-green-600 rounded-full flex items-center justify-center mx-auto mb-6 animate-bounce">
+                        <Check size={40} />
+                     </div>
+                     <h2 className="text-2xl font-bold text-gray-900 mb-2">האתר שלך מוכן!</h2>
+                     <p className="text-gray-500 mb-8">
+                        הגדרנו עבורך את הכל. כעת נעביר אותך למערכת הניהול כדי להוסיף שירותים וצוות.
+                     </p>
+                     
+                     <div className="bg-gray-50 p-4 rounded-xl text-right max-w-sm mx-auto mb-8 text-sm">
+                        <div className="flex justify-between py-1">
+                           <span className="text-gray-500">כתובת האתר:</span>
+                           <span className="font-mono font-bold text-primary">clinicall.com/c/{formData.slug || 'my-clinic'}</span>
+                        </div>
+                        <div className="flex justify-between py-1">
+                           <span className="text-gray-500">חבילה:</span>
+                           <span className="font-bold">ניסיון חינם (Pro)</span>
+                        </div>
+                     </div>
+
+                     <Button onClick={handleSubmit} className="px-12 h-12 text-lg shadow-xl shadow-primary/20 w-full md:w-auto">
+                        כניסה למערכת הניהול <ArrowRight size={20} className="mr-2" />
+                     </Button>
+                   </div>
+                )}
+             </div>
+           </Card>
+
+           {/* Right Column: Live Preview */}
+           <div className="hidden lg:block sticky top-8 order-1 lg:order-2">
+              <div className="text-center mb-4">
+                 <Badge variant="outline" className="bg-white">תצוגה מקדימה חיה</Badge>
+              </div>
+              
+              {/* Phone Frame */}
+              <div className="mx-auto w-[320px] h-[640px] bg-gray-900 rounded-[3rem] border-8 border-gray-900 shadow-2xl overflow-hidden relative">
+                 <div className="absolute top-0 w-full h-full bg-white flex flex-col overflow-y-auto no-scrollbar">
+                    
+                    {/* Preview Content */}
+                    <div className="relative h-48 bg-gray-200 shrink-0">
+                       <img 
+                          src={formData.coverImage === 'spa' 
+                             ? "https://images.unsplash.com/photo-1540555700478-4be289fbecef?auto=format&fit=crop&q=80&w=600"
+                             : "https://images.unsplash.com/photo-1629909613654-28e377c37b09?auto=format&fit=crop&q=80&w=600"
+                          } 
+                          className="w-full h-full object-cover" 
+                       />
+                       <div className="absolute inset-0 bg-black/20"></div>
+                       <div className="absolute bottom-4 right-4 text-white">
+                          <h2 className="font-bold text-xl drop-shadow-md">{formData.clinicName || 'שם הקליניקה'}</h2>
+                          <p className="text-xs opacity-90">{formData.address || 'תל אביב'}</p>
+                       </div>
+                    </div>
+
+                    <div className="p-4 space-y-4">
+                       <div className="flex gap-2">
+                          <Button 
+                             className="flex-1 rounded-full text-xs h-8" 
+                             style={{ backgroundColor: formData.brandColor }}
+                          >
+                             קבע תור
+                          </Button>
+                          <Button variant="outline" className="flex-1 rounded-full text-xs h-8">
+                             WhatsApp
+                          </Button>
+                       </div>
+
+                       <div>
+                          <h3 className="font-bold text-sm mb-2">טיפולים פופולריים</h3>
+                          {[1,2].map(i => (
+                             <div key={i} className="flex justify-between items-center border p-2 rounded-lg mb-2 shadow-sm">
+                                <div className="flex gap-2 items-center">
+                                   <div className="w-8 h-8 bg-gray-100 rounded-md"></div>
+                                   <div>
+                                      <div className="text-xs font-bold">טיפול {i}</div>
+                                      <div className="text-[10px] text-gray-500">30 דק׳</div>
+                                   </div>
+                                </div>
+                                <span className="text-xs font-bold">₪450</span>
+                             </div>
+                          ))}
+                       </div>
+
+                       <div className="p-3 bg-gray-50 rounded-xl text-center">
+                          <p className="text-xs text-gray-500 italic">"השירות היה מדהים, ממליצה בחום!"</p>
+                          <div className="flex justify-center gap-1 mt-1 text-amber-400">
+                             <Star size={10} fill="currentColor"/>
+                             <Star size={10} fill="currentColor"/>
+                             <Star size={10} fill="currentColor"/>
+                             <Star size={10} fill="currentColor"/>
+                             <Star size={10} fill="currentColor"/>
+                          </div>
+                       </div>
+                    </div>
+
+                 </div>
+
+                 {/* Phone Notch */}
+                 <div className="absolute top-0 left-1/2 -translate-x-1/2 w-32 h-6 bg-gray-900 rounded-b-xl z-20"></div>
+              </div>
+           </div>
+
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// -- HEALTH DECLARATION --
+
+const HEALTH_QUESTIONS = [
+  { id: 'q1', text: { en: 'Are you pregnant or breastfeeding?', he: 'האם את בהריון או מניקה?' }, details: false },
+  { id: 'q2', text: { en: 'Do you suffer from any allergies (medications, food, latex)?', he: 'האם ידועה רגישות לתרופות, מזון או לטקס?' }, details: true },
+  { id: 'q3', text: { en: 'Have you taken Roaccutane in the past 6 months?', he: 'האם נטלת רואקוטן ב-6 החודשים האחרונים?' }, details: false },
+  { id: 'q4', text: { en: 'Do you have any autoimmune diseases?', he: 'האם את/ה סובל/ת ממחלות אוטואימוניות?' }, details: true },
+  { id: 'q5', text: { en: 'Do you take blood thinners or have coagulation problems?', he: 'האם את/ה נוטל/ת מדללי דם או סובל/ת מבעיות קרישה?' }, details: false },
+  { id: 'q6', text: { en: 'Do you have diabetes?', he: 'האם את/ה סובל/ת מסוכרת?' }, details: false },
+  { id: 'q7', text: { en: 'Do you suffer from Herpes Simplex (cold sores)?', he: 'האם את/ה סובל/ת מהרפס?' }, details: false },
+  { id: 'q8', text: { en: 'Do you have permanent fillers or implants in the treated area?', he: 'האם ישנם חומרי מילוי קבועים או שתלים באזור הטיפול?' }, details: true },
+  { id: 'q9', text: { en: 'Do you have any active skin infection or open wounds?', he: 'האם יש דלקת עור פעילה או פצעים פתוחים?' }, details: false },
+];
+
+const SignaturePad = ({ onEnd, onClear }: { onEnd: (data: string | null) => void, onClear?: () => void }) => {
+   const canvasRef = useRef<HTMLCanvasElement>(null);
+   const [isDrawing, setIsDrawing] = useState(false);
+   const [hasSignature, setHasSignature] = useState(false);
+
+   const startDrawing = (e: React.MouseEvent | React.TouchEvent) => {
+      const canvas = canvasRef.current;
+      if (!canvas) return;
+      const ctx = canvas.getContext('2d');
+      if (!ctx) return;
+      
+      const rect = canvas.getBoundingClientRect();
+      const clientX = 'touches' in e ? e.touches[0].clientX : e.clientX;
+      const clientY = 'touches' in e ? e.touches[0].clientY : e.clientY;
+      
+      ctx.beginPath();
+      ctx.moveTo(clientX - rect.left, clientY - rect.top);
+      setIsDrawing(true);
+      
+      // Prevent scrolling on touch
+      if ('touches' in e) e.preventDefault();
+   };
+
+   const draw = (e: React.MouseEvent | React.TouchEvent) => {
+      if (!isDrawing) return;
+      const canvas = canvasRef.current;
+      if (!canvas) return;
+      const ctx = canvas.getContext('2d');
+      if (!ctx) return;
+
+      const rect = canvas.getBoundingClientRect();
+      const clientX = 'touches' in e ? e.touches[0].clientX : e.clientX;
+      const clientY = 'touches' in e ? e.touches[0].clientY : e.clientY;
+
+      ctx.lineTo(clientX - rect.left, clientY - rect.top);
+      ctx.stroke();
+      if ('touches' in e) e.preventDefault();
+   };
+
+   const endDrawing = () => {
+      if (isDrawing) {
+         setIsDrawing(false);
+         setHasSignature(true);
+         onEnd(canvasRef.current?.toDataURL() || null);
+      }
+   };
+   
+   const clearCanvas = () => {
+      const canvas = canvasRef.current;
+      if (!canvas) return;
+      const ctx = canvas.getContext('2d');
+      if (!ctx) return;
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      setHasSignature(false);
+      onEnd(null);
+      if (onClear) onClear();
+   };
+
+   // Initial setup
+   useEffect(() => {
+     const canvas = canvasRef.current;
+     if (canvas) {
+       canvas.width = canvas.parentElement?.offsetWidth || 500;
+       canvas.height = 200;
+       const ctx = canvas.getContext('2d');
+       if (ctx) {
+         ctx.strokeStyle = "#000";
+         ctx.lineWidth = 2;
+         ctx.lineCap = "round";
+       }
+     }
+   }, []);
+
+   return (
+      <div className="relative border-2 border-dashed border-gray-300 rounded-xl bg-gray-50 touch-none">
+         <canvas 
+            ref={canvasRef}
+            onMouseDown={startDrawing}
+            onMouseMove={draw}
+            onMouseUp={endDrawing}
+            onMouseLeave={endDrawing}
+            onTouchStart={startDrawing}
+            onTouchMove={draw}
+            onTouchEnd={endDrawing}
+            className="w-full h-[200px] cursor-crosshair rounded-xl"
+         />
+         <div className="absolute top-2 right-2 flex gap-2">
+            <Button size="sm" variant="ghost" className="h-8 bg-white/80 backdrop-blur-sm shadow-sm" onClick={clearCanvas}>
+               <Eraser size={14} className="mr-1"/> Clear
+            </Button>
+         </div>
+         {!hasSignature && (
+            <div className="absolute inset-0 flex items-center justify-center pointer-events-none opacity-40">
+               <div className="text-center">
+                  <PenTool className="mx-auto mb-2" />
+                  <span className="text-sm">Sign Here</span>
+               </div>
+            </div>
+         )}
+      </div>
+   );
+};
+
+export const HealthDeclaration = () => {
+  const [step, setStep] = useState(1);
+  const [lang, setLang] = useState<'he' | 'en'>('he');
+  const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const patientId = searchParams.get('patientId');
+  const patient = MOCK_PATIENTS.find(p => p.id === patientId);
+
+  // Form State
+  const [formData, setFormData] = useState({
+     fullName: patient?.name || '',
+     dob: '',
+     phone: patient?.phone || '',
+     email: patient?.email || '',
+     healthQuestions: {} as Record<string, boolean>,
+     healthDetails: {} as Record<string, string>,
+     lifestyle: { smoke: false, alcohol: false, sun: false, sunReaction: 'burns' },
+     treatments: { activeIngredients: false, retinA: false, pastTreatments: false, abnormalReaction: false },
+     consent: false,
+     signature: null as string | null
+  });
+
+  const updateForm = (key: string, value: any) => {
+     setFormData(prev => ({ ...prev, [key]: value }));
+  };
+  
+  const updateNested = (category: string, key: string, value: any) => {
+     setFormData(prev => ({ 
+        ...prev, 
+        [category]: { ...(prev as any)[category], [key]: value } 
+     }));
+  };
+
+  const toggleLang = () => {
+    const newLang = lang === 'en' ? 'he' : 'en';
+    setLang(newLang);
+    document.documentElement.dir = newLang === 'he' ? 'rtl' : 'ltr';
+    document.documentElement.lang = newLang;
+  };
+
+  const nextStep = () => {
+     if (step === 1 && (!formData.fullName || !formData.phone)) {
+        alert(lang === 'he' ? 'אנא מלאי שדות חובה' : 'Please fill mandatory fields');
+        return;
+     }
+     if (step === 3 && (!formData.consent || !formData.signature)) {
+        alert(lang === 'he' ? 'יש לאשר את התנאים ולחתום' : 'Please sign and agree to terms');
+        return;
+     }
+     setStep(prev => prev + 1);
+     window.scrollTo(0, 0);
+  };
+
+  const prevStep = () => setStep(prev => prev - 1);
+
+  // Translations helper
+  const t = (he: string, en: string) => lang === 'he' ? he : en;
+
+  if (step === 4) {
+     return (
+        <div className="min-h-screen bg-stone-50 flex items-center justify-center p-4">
+           <Card className="max-w-md w-full p-8 text-center animate-in zoom-in-95 duration-500">
+              <div className="w-20 h-20 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-6 text-primary">
+                 <CheckCircle2 size={48} strokeWidth={2.5} />
+              </div>
+              <h2 className="text-2xl font-bold text-gray-900 mb-2">{t('תודה רבה!', 'Thank You!')}</h2>
+              <p className="text-gray-500 mb-8 leading-relaxed">
+                 {t('הצהרת הבריאות שלך נקלטה בהצלחה במערכת.', 'Your health declaration has been submitted successfully.')}
+              </p>
+              <Button onClick={() => navigate('/')} className="w-full h-12 text-lg">
+                 {t('סיום', 'Done')}
+              </Button>
+           </Card>
+        </div>
+     );
+  }
+
+  return (
+    <div className="min-h-screen bg-stone-50 py-8 px-4 sm:px-6 font-sans text-stone-800">
+      <div className="max-w-2xl mx-auto">
+        {/* Header */}
+        <div className="flex justify-between items-center mb-8">
+          <div className="flex items-center gap-3">
+            <div className="h-10 w-10 bg-primary rounded-xl flex items-center justify-center text-white font-bold text-xl shadow-md">C</div>
+            <span className="font-bold text-xl text-gray-800">ClinicALL</span>
+          </div>
+          <Button variant="ghost" size="sm" onClick={toggleLang} className="gap-2 text-gray-600 hover:bg-white">
+            <Globe size={16} /> {lang === 'en' ? 'עברית' : 'English'}
+          </Button>
+        </div>
+
+        {/* Progress Bar */}
+        <div className="mb-8">
+           <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
+              <div 
+                 className="h-full bg-primary transition-all duration-700 ease-out" 
+                 style={{ width: `${(step / 3) * 100}%` }}
+              ></div>
+           </div>
+           <div className="flex justify-between mt-2 text-xs font-medium text-gray-400">
+              <span className={step >= 1 ? 'text-primary' : ''}>{t('פרטים אישיים', 'Personal Info')}</span>
+              <span className={step >= 2 ? 'text-primary' : ''}>{t('אורח חיים', 'Lifestyle')}</span>
+              <span className={step >= 3 ? 'text-primary' : ''}>{t('חתימה', 'Signature')}</span>
+           </div>
+        </div>
+
+        <Card className="overflow-hidden border-0 shadow-lg">
+           
+           {/* Step 1: Personal & Medical */}
+           {step === 1 && (
+              <div className="animate-in slide-in-from-right-8 fade-in duration-300">
+                 <div className="bg-primary/5 p-6 border-b border-primary/10">
+                    <div className="flex items-center gap-3 mb-2">
+                       <div className="p-2 bg-white rounded-lg text-primary shadow-sm"><User size={20}/></div>
+                       <h2 className="text-xl font-bold text-gray-900">{t('פרטים אישיים', 'Personal Information')}</h2>
+                    </div>
+                    {patient && (
+                       <div className="bg-white/60 backdrop-blur-sm p-3 rounded-lg border border-primary/10 flex items-center gap-3 text-sm text-primary mt-2">
+                          <UserCheck size={16} />
+                          <span className="font-medium">{t(`שמחים לראות אותך שוב, ${patient.name}`, `Welcome back, ${patient.name}`)}</span>
+                       </div>
+                    )}
+                 </div>
+
+                 <div className="p-6 space-y-6">
+                    <div>
+                       <Label>{t('שם מלא *', 'FULL NAME *')}</Label>
+                       <Input value={formData.fullName} onChange={e => updateForm('fullName', e.target.value)} className="h-12 bg-gray-50 border-gray-200 focus:bg-white" />
+                    </div>
+                    <div className="grid grid-cols-2 gap-4">
+                       <div>
+                          <Label>{t('תאריך לידה *', 'DATE OF BIRTH *')}</Label>
+                          <Input type="date" value={formData.dob} onChange={e => updateForm('dob', e.target.value)} className="h-12 bg-gray-50 border-gray-200 focus:bg-white" />
+                       </div>
+                       <div>
+                          <Label>{t('טלפון *', 'PHONE *')}</Label>
+                          <Input type="tel" value={formData.phone} onChange={e => updateForm('phone', e.target.value)} className="h-12 bg-gray-50 border-gray-200 focus:bg-white text-left direction-ltr" />
+                       </div>
+                    </div>
+                    <div>
+                       <Label>{t('אימייל', 'EMAIL')}</Label>
+                       <Input type="email" value={formData.email} onChange={e => updateForm('email', e.target.value)} className="h-12 bg-gray-50 border-gray-200 focus:bg-white text-left direction-ltr" />
+                    </div>
+                 </div>
+
+                 <div className="bg-red-50/50 p-6 border-t border-red-100">
+                    <div className="flex items-center gap-3 mb-6">
+                       <div className="p-2 bg-white rounded-lg text-red-500 shadow-sm"><Heart size={20}/></div>
+                       <div>
+                          <h2 className="text-lg font-bold text-gray-900">{t('שאלון רפואי', 'Health Questions')}</h2>
+                          <p className="text-xs text-gray-500">{t('אנא עני בכנות למען בטיחותך', 'Answer honestly for safety')}</p>
+                       </div>
+                    </div>
+
+                    <div className="space-y-4">
+                       {HEALTH_QUESTIONS.map((q) => (
+                          <div key={q.id} className="bg-white p-4 rounded-xl border border-gray-200 shadow-sm hover:border-red-200 transition-colors">
+                             <div className="flex justify-between items-start gap-4">
+                                <span className="text-sm font-medium text-gray-800 pt-1">{lang === 'he' ? q.text.he : q.text.en}</span>
+                                <div className="flex gap-1 bg-gray-100 p-1 rounded-lg shrink-0">
+                                   <button 
+                                      onClick={() => updateNested('healthQuestions', q.id, false)}
+                                      className={`px-3 py-1 text-xs font-bold rounded-md transition-all ${formData.healthQuestions[q.id] === false ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}
+                                   >
+                                      {t('לא', 'No')}
+                                   </button>
+                                   <button 
+                                      onClick={() => updateNested('healthQuestions', q.id, true)}
+                                      className={`px-3 py-1 text-xs font-bold rounded-md transition-all ${formData.healthQuestions[q.id] === true ? 'bg-red-50 text-red-600 shadow-sm ring-1 ring-red-100' : 'text-gray-500 hover:text-gray-700'}`}
+                                   >
+                                      {t('כן', 'Yes')}
+                                   </button>
+                                </div>
+                             </div>
+                             {q.details && formData.healthQuestions[q.id] && (
+                                <div className="mt-3 animate-in fade-in slide-in-from-top-2">
+                                   <Input 
+                                      placeholder={t('אנא פרטי...', 'Please specify...')} 
+                                      value={formData.healthDetails[q.id] || ''}
+                                      onChange={(e) => updateNested('healthDetails', q.id, e.target.value)}
+                                      className="text-sm border-red-100 focus:border-red-300 focus:ring-red-200"
+                                   />
+                                </div>
+                             )}
+                          </div>
+                       ))}
+                    </div>
+                 </div>
+              </div>
+           )}
+
+           {/* Step 2: Lifestyle & Treatments */}
+           {step === 2 && (
+              <div className="animate-in slide-in-from-right-8 fade-in duration-300">
+                 <div className="bg-purple-50/50 p-6 border-b border-purple-100">
+                    <div className="flex items-center gap-3 mb-2">
+                       <div className="p-2 bg-white rounded-lg text-purple-600 shadow-sm"><Heart size={20}/></div>
+                       <h2 className="text-xl font-bold text-gray-900">{t('אורח חיים', 'Lifestyle')}</h2>
+                    </div>
+                 </div>
+
+                 <div className="p-6 space-y-6">
+                     {[
+                        { id: 'smoke', label: t('האם את מעשנת?', 'Do you smoke?') },
+                        { id: 'alcohol', label: t('האם את שותה אלכוהול בקביעות?', 'Drink alcohol regularly?') },
+                        { id: 'sun', label: t('חשיפה קבועה לשמש / מיטת שיזוף?', 'Regular sun exposure?') },
+                     ].map(item => (
+                        <div key={item.id} className="flex justify-between items-center py-2 border-b border-dashed border-gray-100 last:border-0">
+                           <span className="text-sm font-medium">{item.label}</span>
+                           <Switch 
+                              checked={(formData.lifestyle as any)[item.id]} 
+                              onCheckedChange={(val) => updateNested('lifestyle', item.id, val)} 
+                           />
+                        </div>
+                     ))}
+                     
+                     <div className="bg-orange-50 p-4 rounded-xl border border-orange-100">
+                        <Label className="text-orange-800 mb-3 block">{t('כיצד עורך מגיב לשמש?', 'How does your skin react to sun?')}</Label>
+                        <div className="grid grid-cols-3 gap-2">
+                           {['burns', 'tans', 'rarely'].map(opt => (
+                              <button
+                                 key={opt}
+                                 onClick={() => updateNested('lifestyle', 'sunReaction', opt)}
+                                 className={`py-2 px-1 text-xs font-medium rounded-lg border transition-all ${
+                                    formData.lifestyle.sunReaction === opt 
+                                    ? 'bg-white border-orange-300 text-orange-700 shadow-sm' 
+                                    : 'bg-white/50 border-transparent text-gray-500 hover:bg-white'
+                                 }`}
+                              >
+                                 {opt === 'burns' ? t('נשרף בקלות', 'Burns') : opt === 'tans' ? t('משתזף', 'Tans') : t('כמעט ולא', 'Rarely')}
+                              </button>
+                           ))}
+                        </div>
+                     </div>
+                 </div>
+
+                 <div className="bg-teal-50/50 p-6 border-t border-teal-100">
+                     <div className="flex items-center gap-3 mb-6">
+                       <div className="p-2 bg-white rounded-lg text-teal-600 shadow-sm"><Sparkles size={20}/></div>
+                       <h2 className="text-lg font-bold text-gray-900">{t('טיפולים ותכשירים', 'Treatments & Products')}</h2>
+                    </div>
+
+                    <div className="space-y-4">
+                        {[
+                           { id: 'activeIngredients', label: t('שימוש בחומרים פעילים (חומצות/רטינול)?', 'Use active ingredients?') },
+                           { id: 'retinA', label: t('שימוש ברטין-A / רואקוטן לאחרונה?', 'Used prescription Retin-A?') },
+                           { id: 'pastTreatments', label: t('האם עברת טיפולים אסתטיים בעבר?', 'Past aesthetic treatments?') },
+                           { id: 'abnormalReaction', label: t('האם הייתה תגובה חריגה לטיפול?', 'Had abnormal reaction?') },
+                        ].map(item => (
+                           <div key={item.id} className="flex justify-between items-center bg-white p-3 rounded-lg border border-gray-100 shadow-sm">
+                              <span className="text-sm font-medium text-gray-700">{item.label}</span>
+                              <Switch 
+                                 checked={(formData.treatments as any)[item.id]} 
+                                 onCheckedChange={(val) => updateNested('treatments', item.id, val)} 
+                              />
+                           </div>
+                        ))}
+                    </div>
+                 </div>
+              </div>
+           )}
+
+           {/* Step 3: Consent & Signature */}
+           {step === 3 && (
+              <div className="animate-in slide-in-from-right-8 fade-in duration-300">
+                 <div className="bg-primary/5 p-6 border-b border-primary/10">
+                    <div className="flex items-center gap-3 mb-2">
+                       <div className="p-2 bg-white rounded-lg text-primary shadow-sm"><Shield size={20}/></div>
+                       <h2 className="text-xl font-bold text-gray-900">{t('הסכמה וחתימה', 'Consent & Signature')}</h2>
+                    </div>
+                 </div>
+
+                 <div className="p-6 space-y-6">
+                    {/* Instructions */}
+                    <div className="bg-blue-50 p-4 rounded-xl border border-blue-100 text-sm text-blue-800">
+                       <h4 className="font-bold flex items-center gap-2 mb-2"><Sparkles size={14}/> {t('הנחיות חשובות', 'Instructions')}</h4>
+                       <ul className="list-disc list-inside space-y-1 opacity-80">
+                          <li>{t('אין לשטוף פנים במים חמים ב-24 שעות הקרובות', 'Avoid hot water on face for 24h')}</li>
+                          <li>{t('יש להימנע מחשיפה לשמש', 'Avoid sun exposure')}</li>
+                          <li>{t('במקרה של אדמומיות חריגה יש לפנות למרפאה', 'Contact clinic if unusual redness occurs')}</li>
+                       </ul>
+                    </div>
+
+                    {/* Policy */}
+                    <div className="border rounded-xl p-4 bg-gray-50/50">
+                        <div className="flex items-start gap-3 mb-4">
+                           <AlertCircle className="text-orange-500 shrink-0 mt-0.5" size={18} />
+                           <div>
+                              <h4 className="font-bold text-gray-900 text-sm mb-1">{t('מדיניות ביטולים', 'Cancellation Policy')}</h4>
+                              <p className="text-xs text-gray-500 leading-relaxed">
+                                 {t(
+                                    'ביטול תור עד 48 שעות מראש - ללא עלות. ביטול בטווח של פחות מ-48 שעות יחויב במלוא עלות הטיפול. איחור של מעל 15 דקות עלול לגרור ביטול התור.',
+                                    'Cancellation up to 48 hours in advance - no charge. Less than 48 hours - full charge. Being late over 15 mins may result in cancellation.'
+                                 )}
+                              </p>
+                           </div>
+                        </div>
+                        <div className="h-px bg-gray-200 my-4"></div>
+                        <label className="flex items-start gap-3 cursor-pointer group">
+                           <div className={`mt-0.5 w-5 h-5 border-2 rounded flex items-center justify-center transition-colors ${formData.consent ? 'bg-primary border-primary text-white' : 'border-gray-300 bg-white'}`}>
+                              {formData.consent && <Check size={14} />}
+                           </div>
+                           <input type="checkbox" className="hidden" checked={formData.consent} onChange={e => updateForm('consent', e.target.checked)} />
+                           <span className="text-sm text-gray-700 select-none group-hover:text-gray-900">{t('קראתי והבנתי את כל האמור לעיל ואני מאשר/ת את התנאים', 'I have read and agree to all terms above')}</span>
+                        </label>
+                    </div>
+
+                    {/* Signature */}
+                    <div>
+                       <div className="flex justify-between items-end mb-2">
+                          <Label className="mb-0 flex items-center gap-2"><FileText size={14}/> {t('חתימה דיגיטלית', 'Digital Signature')}</Label>
+                          <span className="text-xs text-gray-400 font-mono">{new Date().toLocaleDateString('he-IL')}</span>
+                       </div>
+                       <Input value={formData.fullName} readOnly className="mb-3 bg-gray-50 border-none text-gray-500" />
+                       <SignaturePad 
+                          onEnd={(data) => updateForm('signature', data)}
+                          onClear={() => updateForm('signature', null)}
+                       />
+                    </div>
+                 </div>
+              </div>
+           )}
+
+           {/* Footer Navigation */}
+           <div className="p-6 border-t bg-gray-50 flex justify-between items-center">
+              {step > 1 ? (
+                 <Button variant="ghost" onClick={prevStep} className="text-gray-500">
+                    <ChevronRight size={16} className="ml-1"/> {t('חזור', 'Back')}
+                 </Button>
+              ) : <div></div>}
+              
+              <Button onClick={nextStep} className="px-8 shadow-lg shadow-primary/20" disabled={step === 3 && (!formData.consent || !formData.signature)}>
+                 {step === 3 ? t('שלח הצהרה', 'Submit') : t('המשך', 'Next')} 
+                 {step !== 3 && <ChevronLeft size={16} className="mr-1" />}
+              </Button>
+           </div>
+        </Card>
+      </div>
+    </div>
+  );
+};

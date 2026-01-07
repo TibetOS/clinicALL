@@ -1,0 +1,5 @@
+{
+  "name": "ClinicALL",
+  "description": "A comprehensive SaaS clinic management platform featuring multi-tenant architecture, patient portals, and admin dashboards tailored for aesthetic clinics.",
+  "requestFramePermissions": []
+}
