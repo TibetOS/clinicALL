@@ -1,6 +1,7 @@
 export { usePatients } from './usePatients';
 export { useAppointments } from './useAppointments';
 export { useServices } from './useServices';
+export { useClinic } from './useClinic';
 export { useInventory } from './useInventory';
 export { useLeads } from './useLeads';
 export { useInvoices } from './useInvoices';

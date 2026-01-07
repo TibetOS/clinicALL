@@ -1,39 +1,15 @@
 
 import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
-import { 
-  MapPin, Phone, Instagram, Facebook, Clock, Star, 
-  ChevronDown, Calendar, ArrowRight, X, Menu, Share2
+import {
+  MapPin, Phone, Instagram, Facebook, Clock, Star,
+  ChevronDown, Calendar, ArrowRight, X, Menu, Share2, Loader2
 } from 'lucide-react';
 import { Button, Card, Badge, Dialog } from '../components/ui';
 import { BookingApp } from './Booking';
-import { MOCK_SERVICES } from '../data';
+import { useClinic, useServices } from '../hooks';
 import { ClinicProfile, Service } from '../types';
 import { ImageSlider } from '../components/ImageSlider';
-
-// Mock Data specific to this clinic
-const MOCK_PROFILE: ClinicProfile = {
-  id: 'clinic-1',
-  name: 'ד״ר שרה כהן - אסתטיקה רפואית',
-  slug: 'dr-sarah',
-  businessId: '512345678',
-  tagline: 'אומנות היופי הטבעי',
-  description: `ברוכים הבאים לקליניקה שלנו בלב תל אביב. אנו מתמחים בטיפולי אסתטיקה מתקדמים המדגישים את היופי הטבעי שלך.
-  
-  הקליניקה מצוידת בטכנולוגיות המתקדמות ביותר ומציעה מגוון רחב של טיפולים: הזרקות, בוטוקס, חומצה היאלורונית, ושיפור מרקם העור.`,
-  brandColor: '#BCA48D', // Soft Beige/Gold
-  address: 'שדרות רוטשילד 45, תל אביב',
-  phone: '03-555-1234',
-  whatsapp: '050-1234567',
-  instagram: '@drsarah_clinic',
-  openingHours: {
-    'א׳-ה׳': '09:00 - 19:00',
-    'ו׳': '09:00 - 13:00',
-  },
-  services: ['1', '2', '3'],
-  coverUrl: 'https://images.unsplash.com/photo-1629909613654-28e377c37b09?auto=format&fit=crop&q=80&w=2068',
-  logoUrl: 'https://ui-avatars.com/api/?name=Sarah+Cohen&background=BCA48D&color=fff&size=128'
-};
 
 export const ClinicLanding = () => {
   const { slug } = useParams();
@@ -42,10 +18,12 @@ export const ClinicLanding = () => {
   const [selectedService, setSelectedService] = useState<Service | null>(null);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
-  // In a real app, fetch data by slug
-  const profile = MOCK_PROFILE;
-  const featuredServices = MOCK_SERVICES.filter(s => profile.services.includes(s.id));
-  const otherServices = MOCK_SERVICES.filter(s => !profile.services.includes(s.id));
+  // Fetch clinic and services from Supabase
+  const { clinic: profile, loading: clinicLoading, error: clinicError } = useClinic(slug);
+  const { services, loading: servicesLoading } = useServices();
+
+  // All services are displayed (no featured/other split needed with real data)
+  const allServices = services;
 
   useEffect(() => {
     const handleScroll = () => {
@@ -54,6 +32,31 @@ export const ClinicLanding = () => {
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
+
+  // Show loading state
+  if (clinicLoading || servicesLoading) {
+    return (
+      <div className="min-h-screen bg-stone-50 flex items-center justify-center">
+        <div className="text-center">
+          <Loader2 className="h-12 w-12 animate-spin text-primary mx-auto mb-4" />
+          <p className="text-stone-600">טוען...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Show error state
+  if (clinicError || !profile) {
+    return (
+      <div className="min-h-screen bg-stone-50 flex items-center justify-center">
+        <div className="text-center">
+          <h1 className="text-2xl font-bold text-stone-900 mb-2">הקליניקה לא נמצאה</h1>
+          <p className="text-stone-600 mb-4">{clinicError || 'הקליניקה שחיפשת אינה קיימת במערכת'}</p>
+          <Button onClick={() => window.location.href = '/'}>חזרה לדף הבית</Button>
+        </div>
+      </div>
+    );
+  }
 
   const openBooking = (service?: Service) => {
     if (service) setSelectedService(service);
@@ -248,7 +251,7 @@ export const ClinicLanding = () => {
 
             {/* Detailed List */}
             <div className="grid md:grid-cols-2 gap-x-12 gap-y-8">
-               {[...featuredServices, ...otherServices].slice(0, 6).map(service => (
+               {allServices.slice(0, 6).map(service => (
                   <div key={service.id} className="flex justify-between items-start border-b border-stone-100 pb-6 group">
                      <div>
                         <h4 className="font-bold text-lg text-stone-900 group-hover:text-[var(--brand-color)] transition-colors">{service.name}</h4>
