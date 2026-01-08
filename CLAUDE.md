@@ -148,3 +148,123 @@ Core types:
 - Sidebar is on the right side
 - Translation helpers like `getStatusLabel()` in `pages/admin/` components
 - Use `ml-*` instead of `mr-*` for RTL spacing (reversed)
+
+---
+
+## Best Practices for Claude Code
+
+### Before Making Changes
+
+1. **Verify mock mode works**: Always test with mock data first (`data.ts`) before testing Supabase integration
+2. **Check existing patterns**: Review similar hooks/components before creating new ones
+3. **Read the types**: Check `types.ts` for existing interfaces before defining new ones
+
+### Code Patterns to Follow
+
+#### Hooks Pattern
+When creating data hooks, follow the established pattern in `hooks/`:
+```tsx
+export function useResource(): UseResource {
+  const [data, setData] = useState<Type[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  // Always check isSupabaseConfigured() and fall back to mock data
+  if (!isSupabaseConfigured()) {
+    return MOCK_DATA;
+  }
+
+  // Transform snake_case (DB) to camelCase (app)
+  // ...
+}
+```
+
+#### Component Pattern
+- Use existing UI components from `components/ui.tsx`
+- Use `cn()` for conditional class merging
+- Keep components RTL-aware (use `ml-*` instead of `mr-*`)
+- Import icons from `lucide-react`
+
+#### State Management
+- Use React hooks (`useState`, `useEffect`, `useCallback`)
+- Use `useAuth()` for user/session data
+- No external state libraries - keep it simple
+
+### Naming Conventions
+
+| Context | Convention | Example |
+|---------|------------|---------|
+| TypeScript types | PascalCase | `Patient`, `AppointmentStatus` |
+| React components | PascalCase | `PatientList`, `AdminLayout` |
+| Hooks | camelCase with `use` prefix | `usePatients`, `useAuth` |
+| Database columns | snake_case | `clinic_id`, `created_at` |
+| App properties | camelCase | `clinicId`, `createdAt` |
+
+### Database Field Mapping
+
+Always transform between database (snake_case) and app (camelCase):
+```tsx
+// DB → App
+const patient: Patient = {
+  id: data.id,
+  clinicId: data.clinic_id,      // Transform snake_case
+  lastName: data.last_name,
+  createdAt: data.created_at,
+};
+
+// App → DB
+const dbRecord = {
+  clinic_id: patient.clinicId,   // Transform camelCase
+  last_name: patient.lastName,
+};
+```
+
+### Security Considerations
+
+This is a **healthcare application** - handle data carefully:
+
+1. **Patient data is PII**: Never log patient names, emails, phones, or health info
+2. **Health declarations are sensitive**: Treat as confidential medical records
+3. **Token security**: Health declaration tokens (`/health/:token`) provide unauthenticated access - validate expiration
+4. **Role-based access**: Check user roles (`owner`, `admin`, `staff`, `client`) for protected operations
+5. **Input validation**: Sanitize all user inputs, especially in forms
+
+### Testing Changes
+
+1. **Build check**: Run `pnpm build` to catch TypeScript errors
+2. **Dev server**: Run `pnpm dev` and manually test the affected routes
+3. **Mock mode**: Test without Supabase credentials first
+4. **RTL layout**: Verify UI looks correct in right-to-left mode
+
+### Common Pitfalls
+
+- **Forgetting mock fallback**: Always handle `!isSupabaseConfigured()` case in hooks
+- **Wrong margin direction**: Use `ml-*` (not `mr-*`) for RTL spacing
+- **Missing type exports**: Add new types to `types.ts`, not inline
+- **Hardcoded Hebrew**: Keep Hebrew strings in components, but consider extraction for future i18n
+- **Lazy loading admin pages**: New admin pages must use `lazy()` import in `App.tsx`
+
+### Adding New Features
+
+1. **New hook**: Create in `hooks/`, export from `hooks/index.ts`, follow existing pattern
+2. **New type**: Add to `types.ts` with JSDoc comments
+3. **New admin page**: Create in `pages/admin/`, lazy load in `App.tsx`, add route
+4. **New UI component**: Add to `components/ui.tsx` with variants support
+5. **Mock data**: Add corresponding mock data to `data.ts`
+
+### File Organization
+
+```
+clinicall/
+├── components/       # Reusable components
+│   └── ui.tsx       # Design system components
+├── contexts/        # React contexts (AuthContext)
+├── hooks/           # Data fetching hooks
+├── lib/             # Utilities (Supabase client)
+├── pages/           # Route components
+│   └── admin/       # Admin dashboard (lazy loaded)
+├── App.tsx          # Router + AdminLayout
+├── data.ts          # Mock data
+├── types.ts         # TypeScript interfaces
+└── index.tsx        # Entry point
+```
