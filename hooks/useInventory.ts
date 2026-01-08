@@ -16,6 +16,7 @@ interface InventoryInput {
 }
 
 interface UseInventory {
+  inventory: InventoryItem[];
   items: InventoryItem[];
   loading: boolean;
   error: string | null;
@@ -271,6 +272,7 @@ export function useInventory(): UseInventory {
   }, [fetchItems]);
 
   return {
+    inventory: items,
     items,
     loading,
     error,
