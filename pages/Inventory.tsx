@@ -8,12 +8,57 @@ import { Card, Button, Input, Badge, Dialog, Label } from '../components/ui';
 import { useInventory } from '../hooks';
 import { InventoryItem } from '../types';
 
+interface NewItemForm {
+  name: string;
+  sku: string;
+  category: string;
+  quantity: number;
+  minQuantity: number;
+  expiryDate: string;
+  supplier: string;
+}
+
+const initialFormState: NewItemForm = {
+  name: '',
+  sku: '',
+  category: 'רעלנים (Toxins)',
+  quantity: 0,
+  minQuantity: 5,
+  expiryDate: '',
+  supplier: '',
+};
+
 export const InventoryPage = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [isAddOpen, setIsAddOpen] = useState(false);
+  const [newItem, setNewItem] = useState<NewItemForm>(initialFormState);
+  const [saving, setSaving] = useState(false);
 
   // Use hook for data
-  const { inventory, updateQuantity } = useInventory();
+  const { inventory, updateQuantity, addItem } = useInventory();
+
+  const handleAddItem = async () => {
+    if (!newItem.name.trim()) return;
+
+    setSaving(true);
+    try {
+      await addItem({
+        name: newItem.name,
+        sku: newItem.sku,
+        category: newItem.category,
+        quantity: newItem.quantity,
+        minQuantity: newItem.minQuantity,
+        expiryDate: newItem.expiryDate,
+        supplier: newItem.supplier,
+      });
+      setNewItem(initialFormState);
+      setIsAddOpen(false);
+    } catch (err) {
+      console.error('Failed to add item:', err);
+    } finally {
+      setSaving(false);
+    }
+  };
 
   const filteredItems = inventory.filter(item => 
     item.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -45,24 +90,34 @@ export const InventoryPage = () => {
 
       {/* Status Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-         <Card className="p-4 flex items-center gap-4 border-l-4 border-l-red-500 bg-red-50/20">
-            <div className="p-3 bg-white rounded-full shadow-sm text-red-500"><AlertTriangle size={24}/></div>
+         <Card className={`p-4 flex items-center gap-4 border-l-4 border-l-red-500 transition-all ${
+           inventory.filter(i => i.status === 'critical').length > 0
+             ? 'bg-red-50 ring-2 ring-red-200 shadow-lg'
+             : 'bg-red-50/20'
+         }`}>
+            <div className={`p-3 bg-white rounded-full shadow-sm text-red-500 ${
+              inventory.filter(i => i.status === 'critical').length > 0 ? 'animate-pulse' : ''
+            }`}>
+              <AlertTriangle size={24} className={inventory.filter(i => i.status === 'critical').length > 0 ? 'animate-bounce' : ''}/>
+            </div>
             <div>
-               <p className="text-sm font-medium text-gray-500">פריטים במלאי קריטי</p>
-               <h3 className="text-2xl font-bold text-gray-900">{inventory.filter(i => i.status === 'critical').length}</h3>
+               <p className="text-sm font-medium text-gray-600">פריטים במלאי קריטי</p>
+               <h3 className={`text-2xl font-bold ${
+                 inventory.filter(i => i.status === 'critical').length > 0 ? 'text-red-600' : 'text-gray-900'
+               }`}>{inventory.filter(i => i.status === 'critical').length}</h3>
             </div>
          </Card>
          <Card className="p-4 flex items-center gap-4 border-l-4 border-l-yellow-500 bg-yellow-50/20">
             <div className="p-3 bg-white rounded-full shadow-sm text-yellow-600"><Package size={24}/></div>
             <div>
-               <p className="text-sm font-medium text-gray-500">שווי מלאי כולל</p>
+               <p className="text-sm font-medium text-gray-600">שווי מלאי כולל</p>
                <h3 className="text-2xl font-bold text-gray-900">₪42,500</h3>
             </div>
          </Card>
          <Card className="p-4 flex items-center gap-4 border-l-4 border-l-blue-500 bg-blue-50/20">
             <div className="p-3 bg-white rounded-full shadow-sm text-blue-600"><History size={24}/></div>
             <div>
-               <p className="text-sm font-medium text-gray-500">תנועות החודש</p>
+               <p className="text-sm font-medium text-gray-600">תנועות החודש</p>
                <h3 className="text-2xl font-bold text-gray-900">28</h3>
             </div>
          </Card>
@@ -118,12 +173,22 @@ export const InventoryPage = () => {
                         <td className="px-6 py-4 text-gray-500 direction-ltr text-right">{item.expiryDate}</td>
                         <td className="px-6 py-4">{getStatusBadge(item.status)}</td>
                         <td className="px-6 py-4">
-                           <div className="flex gap-2">
-                              <Button variant="ghost" size="icon" className="h-8 w-8 text-green-600 hover:text-green-700 hover:bg-green-50">
-                                 <ArrowUp size={16} />
+                           <div className="flex gap-1">
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-11 w-11 min-h-[44px] min-w-[44px] text-green-600 hover:text-green-700 hover:bg-green-50 touch-manipulation"
+                                aria-label="הוסף למלאי"
+                              >
+                                 <ArrowUp size={18} />
                               </Button>
-                              <Button variant="ghost" size="icon" className="h-8 w-8 text-red-600 hover:text-red-700 hover:bg-red-50">
-                                 <ArrowDown size={16} />
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-11 w-11 min-h-[44px] min-w-[44px] text-red-600 hover:text-red-700 hover:bg-red-50 touch-manipulation"
+                                aria-label="הפחת מהמלאי"
+                              >
+                                 <ArrowDown size={18} />
                               </Button>
                            </div>
                         </td>
@@ -139,15 +204,27 @@ export const InventoryPage = () => {
             <div className="grid grid-cols-2 gap-4">
                <div className="col-span-2">
                   <Label>שם הפריט</Label>
-                  <Input placeholder="לדוג׳: Botox Allergan 100u" />
+                  <Input
+                    placeholder="לדוג׳: Botox Allergan 100u"
+                    value={newItem.name}
+                    onChange={(e) => setNewItem(prev => ({ ...prev, name: e.target.value }))}
+                  />
                </div>
                <div>
                   <Label>מק״ט</Label>
-                  <Input placeholder="BTX-001" />
+                  <Input
+                    placeholder="BTX-001"
+                    value={newItem.sku}
+                    onChange={(e) => setNewItem(prev => ({ ...prev, sku: e.target.value }))}
+                  />
                </div>
                <div>
                   <Label>קטגוריה</Label>
-                  <select className="flex h-10 w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm">
+                  <select
+                    className="flex h-10 w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm"
+                    value={newItem.category}
+                    onChange={(e) => setNewItem(prev => ({ ...prev, category: e.target.value }))}
+                  >
                      <option>רעלנים (Toxins)</option>
                      <option>חומרי מילוי (Fillers)</option>
                      <option>ציוד מתכלה</option>
@@ -155,24 +232,44 @@ export const InventoryPage = () => {
                </div>
                <div>
                   <Label>כמות התחלתית</Label>
-                  <Input type="number" placeholder="0" />
+                  <Input
+                    type="number"
+                    placeholder="0"
+                    value={newItem.quantity}
+                    onChange={(e) => setNewItem(prev => ({ ...prev, quantity: parseInt(e.target.value) || 0 }))}
+                  />
                </div>
                <div>
                   <Label>סף התראה</Label>
-                  <Input type="number" placeholder="5" />
+                  <Input
+                    type="number"
+                    placeholder="5"
+                    value={newItem.minQuantity}
+                    onChange={(e) => setNewItem(prev => ({ ...prev, minQuantity: parseInt(e.target.value) || 0 }))}
+                  />
                </div>
                <div>
                   <Label>תאריך תפוגה</Label>
-                  <Input type="date" />
+                  <Input
+                    type="date"
+                    value={newItem.expiryDate}
+                    onChange={(e) => setNewItem(prev => ({ ...prev, expiryDate: e.target.value }))}
+                  />
                </div>
                <div>
                   <Label>ספק</Label>
-                  <Input placeholder="שם הספק" />
+                  <Input
+                    placeholder="שם הספק"
+                    value={newItem.supplier}
+                    onChange={(e) => setNewItem(prev => ({ ...prev, supplier: e.target.value }))}
+                  />
                </div>
             </div>
             <div className="flex justify-end gap-3 pt-4 border-t mt-4">
-               <Button variant="ghost" onClick={() => setIsAddOpen(false)}>ביטול</Button>
-               <Button onClick={() => setIsAddOpen(false)}>שמור במלאי</Button>
+               <Button variant="ghost" onClick={() => setIsAddOpen(false)} disabled={saving}>ביטול</Button>
+               <Button onClick={handleAddItem} disabled={saving || !newItem.name.trim()}>
+                 {saving ? 'שומר...' : 'שמור במלאי'}
+               </Button>
             </div>
         </div>
       </Dialog>

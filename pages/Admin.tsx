@@ -11,7 +11,7 @@ import {
   Globe, Image as ImageIcon, Link as LinkIcon, MoreHorizontal
 } from 'lucide-react';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar, Cell } from 'recharts';
-import { Card, Button, Input, Badge, Dialog, Tabs, TabsList, TabsTrigger, Switch, Label } from '../components/ui';
+import { Card, Button, Input, Badge, Dialog, Tabs, TabsList, TabsTrigger, Label, Skeleton } from '../components/ui';
 import { usePatients, useAppointments, useServices } from '../hooks';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Patient, Service, Appointment } from '../types';
@@ -158,17 +158,35 @@ export const Dashboard = () => {
               </div>
            </div>
            
-           {/* Micro Chart */}
-           <div className="h-20 -mx-6 -mb-4 z-10">
+           {/* Micro Chart with tooltip */}
+           <div className="h-24 -mx-6 -mb-4 z-10">
               <ResponsiveContainer width="100%" height="100%">
-                 <AreaChart data={revenueData}>
+                 <AreaChart data={revenueData} margin={{ top: 5, right: 10, left: 10, bottom: 0 }}>
                     <defs>
                        <linearGradient id="colorRevenueDark" x1="0" y1="0" x2="0" y2="1">
                           <stop offset="5%" stopColor="#2DD4BF" stopOpacity={0.3}/>
                           <stop offset="95%" stopColor="#2DD4BF" stopOpacity={0}/>
                        </linearGradient>
                     </defs>
-                    <Area type="monotone" dataKey="value" stroke="#2DD4BF" strokeWidth={3} fillOpacity={1} fill="url(#colorRevenueDark)" />
+                    <XAxis
+                       dataKey="name"
+                       axisLine={false}
+                       tickLine={false}
+                       tick={{ fontSize: 10, fill: '#9CA3AF' }}
+                       dy={5}
+                    />
+                    <Tooltip
+                       contentStyle={{
+                          background: '#1C1917',
+                          border: 'none',
+                          borderRadius: '8px',
+                          fontSize: '12px',
+                          color: '#fff'
+                       }}
+                       formatter={(value: number) => [`₪${value.toLocaleString()}`, 'הכנסות']}
+                       labelStyle={{ color: '#9CA3AF', marginBottom: '4px' }}
+                    />
+                    <Area type="monotone" dataKey="value" stroke="#2DD4BF" strokeWidth={2} fillOpacity={1} fill="url(#colorRevenueDark)" />
                  </AreaChart>
               </ResponsiveContainer>
            </div>
@@ -253,7 +271,7 @@ export const PatientList = () => {
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
            <h1 className="text-3xl font-bold tracking-tight text-gray-900">מטופלים</h1>
-           <p className="text-muted-foreground">ניהול תיקי לקוחות וטיפולים</p>
+           <p className="text-gray-600">ניהול תיקי לקוחות וטיפולים</p>
         </div>
         <Button className="shadow-sm" onClick={() => setIsAddPatientOpen(true)}>
            <UserPlus className="ml-2 h-4 w-4" /> מטופל חדש
@@ -291,15 +309,39 @@ export const PatientList = () => {
                </tr>
             </thead>
             <tbody className="divide-y divide-gray-100">
-               {filteredPatients.map(patient => (
-                  <tr 
-                    key={patient.id} 
-                    className="hover:bg-gray-50/50 transition-colors cursor-pointer"
+               {/* Loading skeleton */}
+               {patientsLoading && (
+                 <>
+                   {[1,2,3,4,5].map(i => (
+                     <tr key={i} className="animate-pulse">
+                       <td className="px-6 py-4">
+                         <div className="flex items-center gap-3">
+                           <Skeleton className="h-8 w-8 rounded-full" />
+                           <div className="space-y-2">
+                             <Skeleton className="h-4 w-32" />
+                             <Skeleton className="h-3 w-24" />
+                           </div>
+                         </div>
+                       </td>
+                       <td className="px-6 py-4"><Skeleton className="h-4 w-24" /></td>
+                       <td className="px-6 py-4"><Skeleton className="h-4 w-20" /></td>
+                       <td className="px-6 py-4"><Skeleton className="h-4 w-20" /></td>
+                       <td className="px-6 py-4"><Skeleton className="h-6 w-14 rounded-full" /></td>
+                       <td className="px-6 py-4"><Skeleton className="h-6 w-12 rounded-full" /></td>
+                       <td className="px-6 py-4"><Skeleton className="h-8 w-8" /></td>
+                     </tr>
+                   ))}
+                 </>
+               )}
+               {!patientsLoading && filteredPatients.map(patient => (
+                  <tr
+                    key={patient.id}
+                    className="hover:bg-primary/5 transition-all cursor-pointer group border-r-2 border-r-transparent hover:border-r-primary"
                     onClick={() => navigate(`/admin/patients/${patient.id}`)}
                   >
                      <td className="px-6 py-4">
                         <div className="flex items-center gap-3">
-                           <img src={patient.avatar} className="w-8 h-8 rounded-full bg-gray-200 object-cover" />
+                           <img src={patient.avatar} className="w-8 h-8 rounded-full bg-gray-200 object-cover ring-2 ring-transparent group-hover:ring-primary/20 transition-all" />
                            <div>
                               <div className="font-medium text-gray-900">{patient.name}</div>
                               <div className="text-xs text-gray-500">{patient.email}</div>
@@ -314,7 +356,7 @@ export const PatientList = () => {
                               <CalendarIcon size={14} className="ml-1"/>
                               {new Date(patient.upcomingAppointment).toLocaleDateString('he-IL')}
                            </span>
-                        ) : <span className="text-gray-400">-</span>}
+                        ) : <span className="text-gray-500">-</span>}
                      </td>
                      <td className="px-6 py-4">
                         <Badge variant={patient.riskLevel === 'high' ? 'destructive' : patient.riskLevel === 'medium' ? 'warning' : 'success'}>
@@ -337,32 +379,61 @@ export const PatientList = () => {
 
       {/* Mobile List */}
       <div className="md:hidden space-y-4">
-         {filteredPatients.map(patient => (
-            <Card 
-               key={patient.id} 
-               className="p-4 flex flex-col gap-4"
+         {/* Mobile loading skeleton */}
+         {patientsLoading && (
+           <>
+             {[1,2,3,4].map(i => (
+               <Card key={i} className="p-5 animate-pulse">
+                 <div className="flex justify-between items-start">
+                   <div className="flex items-center gap-3">
+                     <Skeleton className="w-12 h-12 rounded-full" />
+                     <div className="space-y-2">
+                       <Skeleton className="h-4 w-28" />
+                       <Skeleton className="h-3 w-24" />
+                     </div>
+                   </div>
+                   <Skeleton className="h-6 w-14 rounded-full" />
+                 </div>
+                 <div className="grid grid-cols-2 gap-2 mt-4 pt-3 border-t">
+                   <div className="space-y-1">
+                     <Skeleton className="h-3 w-16" />
+                     <Skeleton className="h-4 w-20" />
+                   </div>
+                   <div className="space-y-1">
+                     <Skeleton className="h-3 w-16" />
+                     <Skeleton className="h-4 w-20" />
+                   </div>
+                 </div>
+               </Card>
+             ))}
+           </>
+         )}
+         {!patientsLoading && filteredPatients.map(patient => (
+            <Card
+               key={patient.id}
+               className="p-5 flex flex-col gap-4 cursor-pointer active:scale-[0.98] transition-all touch-manipulation hover:shadow-lg border-r-2 border-r-transparent hover:border-r-primary"
                onClick={() => navigate(`/admin/patients/${patient.id}`)}
             >
                <div className="flex justify-between items-start">
                   <div className="flex items-center gap-3">
-                     <img src={patient.avatar} className="w-10 h-10 rounded-full bg-gray-200 object-cover" />
+                     <img src={patient.avatar} className="w-12 h-12 rounded-full bg-gray-200 object-cover" />
                      <div>
                         <div className="font-bold text-gray-900">{patient.name}</div>
-                        <div className="text-sm text-gray-500">{patient.phone}</div>
+                        <div className="text-sm text-gray-600">{patient.phone}</div>
                      </div>
                   </div>
-                  <Badge variant={patient.riskLevel === 'high' ? 'destructive' : 'success'}>
+                  <Badge variant={patient.riskLevel === 'high' ? 'destructive' : patient.riskLevel === 'medium' ? 'warning' : 'success'}>
                      {getStatusLabel(patient.riskLevel)}
                   </Badge>
                </div>
-               
+
                <div className="grid grid-cols-2 gap-2 text-sm border-t pt-3">
                   <div>
-                     <span className="text-gray-500 block text-xs">ביקור אחרון</span>
+                     <span className="text-gray-600 block text-xs">ביקור אחרון</span>
                      {new Date(patient.lastVisit).toLocaleDateString('he-IL')}
                   </div>
                   <div>
-                     <span className="text-gray-500 block text-xs">תור קרוב</span>
+                     <span className="text-gray-600 block text-xs">תור קרוב</span>
                      {patient.upcomingAppointment ? new Date(patient.upcomingAppointment).toLocaleDateString('he-IL') : '-'}
                   </div>
                </div>
@@ -418,11 +489,25 @@ export const PatientList = () => {
 
 // -- CALENDAR --
 export const Calendar = () => {
+  // Default to day view on mobile
   const [currentDate, setCurrentDate] = useState(new Date());
-  const [view, setView] = useState<'week' | 'day'>('week');
-  const { appointments, loading: appointmentsLoading } = useAppointments();
+  const [view, setView] = useState<'week' | 'day'>(() =>
+    typeof window !== 'undefined' && window.innerWidth < 768 ? 'day' : 'week'
+  );
+  const { appointments } = useAppointments();
   const { services } = useServices();
   const [isNewApptOpen, setIsNewApptOpen] = useState(false);
+
+  // Auto-switch to day view on mobile resize
+  useEffect(() => {
+    const handleResize = () => {
+      if (window.innerWidth < 768 && view === 'week') {
+        setView('day');
+      }
+    };
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, [view]);
 
   // Helper to format hours
   const hours = Array.from({ length: 13 }, (_, i) => i + 8); // 08:00 - 20:00
@@ -514,14 +599,19 @@ export const Calendar = () => {
          {/* Time Grid */}
          <div className="flex-1 overflow-y-auto custom-scrollbar relative">
             {hours.map(hour => (
-               <div key={hour} className="flex min-h-[80px]">
-                  <div className="w-14 border-l border-b border-gray-100 bg-gray-50 text-xs text-gray-400 text-center pt-2 relative">
+               <div key={hour} className="flex min-h-[80px]" role="row">
+                  <div className="w-14 border-l border-b border-gray-100 bg-gray-50 text-xs text-gray-500 text-center pt-2 relative" role="rowheader">
                      <span className="-top-3 relative">{hour}:00</span>
                   </div>
                   {weekDays.map((day, i) => {
                      const cellAppts = getAppointmentsForSlot(day, hour);
                      return (
-                        <div key={i} className="flex-1 border-l border-b border-gray-100 relative group transition-colors hover:bg-gray-50">
+                        <div
+                          key={i}
+                          role="gridcell"
+                          aria-label={`${day.toLocaleDateString('he-IL', { weekday: 'long', day: 'numeric', month: 'long' })} ${hour}:00${cellAppts.length > 0 ? `, ${cellAppts.length} תורים` : ''}`}
+                          className="flex-1 border-l border-b border-gray-100 relative group transition-colors hover:bg-gray-50"
+                        >
                            {/* Add Button on Hover */}
                            <button 
                               className="absolute inset-0 w-full h-full opacity-0 group-hover:opacity-100 flex items-center justify-center z-10"
@@ -613,24 +703,6 @@ export const SettingsPage = () => {
     if (tab) setActiveTab(tab);
   }, [searchParams]);
 
-  // -- Services State --
-  const { services, addService } = useServices();
-  const [isAddServiceOpen, setIsAddServiceOpen] = useState(false);
-  const [newService, setNewService] = useState({ name: '', price: '', duration: '', category: 'הזרקות' });
-
-  const handleAddService = async () => {
-    if(!newService.name) return;
-    await addService({
-      name: newService.name,
-      description: 'שירות חדש',
-      price: Number(newService.price) || 0,
-      duration: Number(newService.duration) || 30,
-      category: newService.category
-    });
-    setIsAddServiceOpen(false);
-    setNewService({ name: '', price: '', duration: '', category: 'הזרקות' });
-  };
-
   return (
     <div className="max-w-5xl mx-auto animate-in fade-in pb-10">
       <div className="flex items-center gap-3 mb-8">
@@ -643,17 +715,16 @@ export const SettingsPage = () => {
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
         <TabsList className="w-full justify-start bg-transparent p-0 border-b rounded-none gap-6 h-auto overflow-x-auto no-scrollbar">
-          {['profile', 'general', 'services', 'team', 'billing'].map(tab => (
-            <TabsTrigger 
-              key={tab} 
-              value={tab} 
-              activeValue={activeTab} 
+          {['profile', 'general', 'team', 'billing'].map(tab => (
+            <TabsTrigger
+              key={tab}
+              value={tab}
+              activeValue={activeTab}
               onClick={setActiveTab}
             >
                 <span className={`pb-3 border-b-2 text-base px-2 whitespace-nowrap ${activeTab === tab ? 'border-primary text-primary font-bold' : 'border-transparent text-gray-500 hover:text-gray-700'}`}>
                    {tab === 'profile' && 'אתר ונראות'}
                    {tab === 'general' && 'פרטי עסק'}
-                   {tab === 'services' && 'טיפולים ומחירון'}
                    {tab === 'team' && 'צוות מטפל'}
                    {tab === 'billing' && 'חבילה ותשלומים'}
                 </span>
@@ -775,32 +846,6 @@ export const SettingsPage = () => {
                 </Card>
              </div>
           )}
-          {activeTab === 'services' && (
-            <div className="space-y-6">
-               <div className="flex justify-between items-center">
-                  <h2 className="text-xl font-bold">תפריט טיפולים</h2>
-                  <Button onClick={() => setIsAddServiceOpen(true)}><Plus size={16} className="ml-2"/> הוסף טיפול חדש</Button>
-               </div>
-               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {services.map(service => (
-                     <Card key={service.id} className="p-5 flex flex-col justify-between hover:border-primary/50 transition-colors cursor-pointer group relative rounded-3xl border-stone-100 shadow-soft">
-                        <div>
-                           <div className="flex justify-between items-start mb-2">
-                              <Badge variant="secondary" className="bg-stone-100">{service.category}</Badge>
-                           </div>
-                           <h3 className="font-bold text-lg text-gray-900">{service.name}</h3>
-                           <p className="text-sm text-gray-500 mt-1">{service.description}</p>
-                        </div>
-                        <div className="mt-4 pt-4 border-t flex justify-between items-center font-medium">
-                           <span className="flex items-center text-gray-600"><Clock size={14} className="ml-1"/> {service.duration} דק׳</span>
-                           <span className="text-primary text-lg">₪{service.price}</span>
-                        </div>
-                     </Card>
-                  ))}
-               </div>
-            </div>
-          )}
-
           {/* TEAM TAB */}
           {activeTab === 'team' && (
             <div className="max-w-3xl mx-auto space-y-6 animate-in fade-in">
@@ -1055,12 +1100,6 @@ export const SettingsPage = () => {
           )}
         </div>
       </Tabs>
-
-      {/* Add Service Dialog */}
-      <Dialog open={isAddServiceOpen} onClose={() => setIsAddServiceOpen(false)} title="הוספת טיפול חדש">
-        {/* Same as before */}
-        <div className="p-4">טופס הוספה</div>
-      </Dialog>
     </div>
   );
 };

@@ -4,12 +4,13 @@ import { BrowserRouter, Routes, Route, Navigate, useLocation, Link } from 'react
 import {
   LayoutDashboard, Users, Calendar as CalendarIcon, Settings,
   Menu, Bell, LogOut, ChevronLeft, Package,
-  Crown, Sparkles, X
+  Crown, Sparkles, X, Syringe
 } from 'lucide-react';
 import { LoginPage, HealthDeclaration, SignupPage, LandingPage, LockScreen } from './pages/Public';
 import { ClinicLanding } from './pages/ClinicLanding';
 import { PricingPage } from './pages/Pricing';
 import { Dashboard, PatientList, Calendar, SettingsPage } from './pages/Admin';
+import { ServicesPage } from './pages/Services';
 import { InventoryPage } from './pages/Inventory';
 import { PatientDetails } from './pages/PatientDetails';
 import { BookingApp } from './pages/Booking';
@@ -49,6 +50,7 @@ const AdminLayout = ({ children }: { children?: React.ReactNode }) => {
     { icon: LayoutDashboard, label: 'לוח בקרה', path: '/admin/dashboard' },
     { icon: Users, label: 'מטופלים', path: '/admin/patients' },
     { icon: CalendarIcon, label: 'יומן תורים', path: '/admin/calendar' },
+    { icon: Syringe, label: 'טיפולים ומחירון', path: '/admin/services' },
     { icon: Package, label: 'מלאי', path: '/admin/inventory' },
     { icon: Settings, label: 'הגדרות', path: '/admin/settings' },
   ];
@@ -267,6 +269,7 @@ function App() {
                   <Route path="patients" element={<PatientList />} />
                   <Route path="patients/:id" element={<PatientDetails />} />
                   <Route path="calendar" element={<Calendar />} />
+                  <Route path="services" element={<ServicesPage />} />
                   <Route path="inventory" element={<InventoryPage />} />
                   <Route path="settings" element={<SettingsPage />} />
                   <Route path="*" element={<Navigate to="dashboard" replace />} />

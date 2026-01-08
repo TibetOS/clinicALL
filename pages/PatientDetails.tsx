@@ -1,14 +1,13 @@
 
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { 
-  ArrowRight, Calendar as CalendarIcon, Phone, Mail, 
-  Clock, AlertTriangle, FileText, Image as ImageIcon, 
-  Activity, Save, Plus, ChevronDown, MoreHorizontal, X, ZoomIn,
-  FileSignature, Send, Copy, Eye, CheckCircle2, Sparkles, Smile,
+import {
+  Phone, Mail, AlertTriangle, FileText, Image as ImageIcon,
+  Activity, Save, Plus, MoreHorizontal, X, ZoomIn,
+  FileSignature, Send, Eye, CheckCircle2, Sparkles, Smile,
   SplitSquareHorizontal, ShieldCheck, Download
 } from 'lucide-react';
-import { Button, Card, Badge, Input, Dialog, Tabs, TabsList, TabsTrigger } from '../components/ui';
+import { Button, Card, Badge, Input, Dialog, Tabs, TabsList, TabsTrigger, Breadcrumb } from '../components/ui';
 import { FaceMap } from '../components/FaceMap';
 import { ImageSlider } from '../components/ImageSlider';
 import { usePatients, useAppointments, useClinicalNotes, useDeclarations } from '../hooks';
@@ -106,12 +105,11 @@ export const PatientDetails = () => {
 
   return (
     <div className="space-y-6 animate-in fade-in duration-500 max-w-7xl mx-auto pb-10">
-      {/* Top Navigation */}
-      <div className="flex items-center gap-2 text-sm text-muted-foreground mb-4">
-        <span onClick={() => navigate('/admin/patients')} className="cursor-pointer hover:text-primary">מטופלים</span>
-        <span className="rtl:rotate-180"><ArrowRight size={14}/></span>
-        <span className="text-gray-900 font-medium">{patient.name}</span>
-      </div>
+      {/* Breadcrumb Navigation */}
+      <Breadcrumb items={[
+        { label: 'מטופלים', href: '/admin/patients' },
+        { label: patient.name }
+      ]} />
 
       {/* Header Card */}
       <div className="bg-white rounded-xl p-6 border border-gray-200 shadow-sm flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
