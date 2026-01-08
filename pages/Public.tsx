@@ -237,9 +237,10 @@ export const ResetPasswordPage = () => {
     e.preventDefault();
     setError(null);
 
-    // Validation
-    if (password.length < 8) {
-      setError('הסיסמה חייבת להכיל לפחות 8 תווים');
+    // Validation - use strong password check
+    const passwordCheck = isStrongPassword(password);
+    if (!passwordCheck.valid) {
+      setError(passwordCheck.message);
       return;
     }
 
@@ -1003,14 +1004,14 @@ export const SignupPage = () => {
                               onClick={() => handleChange('coverImage', 'default')}
                               className={`border-2 rounded-xl overflow-hidden cursor-pointer h-24 relative ${formData.coverImage === 'default' ? 'border-primary' : 'border-gray-200'}`}
                             >
-                               <img src="https://images.unsplash.com/photo-1629909613654-28e377c37b09?auto=format&fit=crop&q=80&w=600" className="w-full h-full object-cover" />
+                               <img src="https://images.unsplash.com/photo-1629909613654-28e377c37b09?auto=format&fit=crop&q=80&w=600" alt="תמונת נושא קליניקה רפואית" className="w-full h-full object-cover" />
                                {formData.coverImage === 'default' && <div className="absolute inset-0 bg-primary/20 flex items-center justify-center"><Check className="text-white drop-shadow-md"/></div>}
                             </div>
-                            <div 
+                            <div
                               onClick={() => handleChange('coverImage', 'spa')}
                               className={`border-2 rounded-xl overflow-hidden cursor-pointer h-24 relative ${formData.coverImage === 'spa' ? 'border-primary' : 'border-gray-200'}`}
                             >
-                               <img src="https://images.unsplash.com/photo-1540555700478-4be289fbecef?auto=format&fit=crop&q=80&w=600" className="w-full h-full object-cover" />
+                               <img src="https://images.unsplash.com/photo-1540555700478-4be289fbecef?auto=format&fit=crop&q=80&w=600" alt="תמונת נושא ספא" className="w-full h-full object-cover" />
                                {formData.coverImage === 'spa' && <div className="absolute inset-0 bg-primary/20 flex items-center justify-center"><Check className="text-white drop-shadow-md"/></div>}
                             </div>
                          </div>
@@ -1319,6 +1320,9 @@ export const HealthDeclaration = () => {
      signature: null as string | null
   });
 
+  // Validation error state for inline error messages
+  const [validationErrors, setValidationErrors] = useState<Record<string, string>>({});
+
   // Update form data when token validation completes
   useEffect(() => {
     if (tokenValidation.valid && tokenValidation.token) {
@@ -1350,18 +1354,50 @@ export const HealthDeclaration = () => {
   };
 
   const nextStep = async () => {
-     if (step === 1 && (!formData.fullName || !formData.phone)) {
-        alert(lang === 'he' ? 'אנא מלאי שדות חובה' : 'Please fill mandatory fields');
-        return;
+     // Clear previous validation errors
+     setValidationErrors({});
+     const errors: Record<string, string> = {};
+
+     if (step === 1) {
+        // Validate required fields
+        if (!formData.fullName.trim()) {
+           errors.fullName = lang === 'he' ? 'שם מלא הוא שדה חובה' : 'Full name is required';
+        }
+        if (!formData.phone.trim()) {
+           errors.phone = lang === 'he' ? 'מספר טלפון הוא שדה חובה' : 'Phone number is required';
+        } else if (!isValidIsraeliPhone(formData.phone)) {
+           errors.phone = lang === 'he' ? 'מספר טלפון לא תקין' : 'Invalid phone number format';
+        }
+        // Optional email validation
+        if (formData.email && !isValidEmail(formData.email)) {
+           errors.email = lang === 'he' ? 'כתובת אימייל לא תקינה' : 'Invalid email address';
+        }
+
+        if (Object.keys(errors).length > 0) {
+           setValidationErrors(errors);
+           return;
+        }
      }
-     if (step === 3 && (!formData.consent || !formData.signature)) {
-        alert(lang === 'he' ? 'יש לאשר את התנאים ולחתום' : 'Please sign and agree to terms');
-        return;
+
+     if (step === 3) {
+        if (!formData.consent) {
+           errors.consent = lang === 'he' ? 'יש לאשר את התנאים' : 'You must agree to the terms';
+        }
+        if (!formData.signature) {
+           errors.signature = lang === 'he' ? 'נדרשת חתימה' : 'Signature is required';
+        }
+
+        if (Object.keys(errors).length > 0) {
+           setValidationErrors(errors);
+           return;
+        }
+
+        // On final submission, mark token as used
+        if (tokenValidation.token) {
+           await markTokenAsUsed(tokenValidation.token.id);
+        }
      }
-     // On final submission, mark token as used
-     if (step === 3 && tokenValidation.token) {
-        await markTokenAsUsed(tokenValidation.token.id);
-     }
+
      setStep(prev => prev + 1);
      window.scrollTo(0, 0);
   };
@@ -1523,7 +1559,18 @@ export const HealthDeclaration = () => {
                  <div className="p-6 space-y-6">
                     <div>
                        <Label>{t('שם מלא *', 'FULL NAME *')}</Label>
-                       <Input value={formData.fullName} onChange={e => updateForm('fullName', e.target.value)} className="h-12 bg-gray-50 border-gray-200 focus:bg-white" />
+                       <Input
+                          value={formData.fullName}
+                          onChange={e => updateForm('fullName', e.target.value)}
+                          className={`h-12 bg-gray-50 border-gray-200 focus:bg-white ${validationErrors.fullName ? 'border-red-500 focus:ring-red-500' : ''}`}
+                          aria-invalid={!!validationErrors.fullName}
+                          aria-describedby={validationErrors.fullName ? 'fullName-error' : undefined}
+                       />
+                       {validationErrors.fullName && (
+                          <p id="fullName-error" className="mt-1 text-sm text-red-600 flex items-center gap-1">
+                             <AlertCircle size={14} /> {validationErrors.fullName}
+                          </p>
+                       )}
                     </div>
                     <div className="grid grid-cols-2 gap-4">
                        <div>
@@ -1532,12 +1579,36 @@ export const HealthDeclaration = () => {
                        </div>
                        <div>
                           <Label>{t('טלפון *', 'PHONE *')}</Label>
-                          <Input type="tel" value={formData.phone} onChange={e => updateForm('phone', e.target.value)} className="h-12 bg-gray-50 border-gray-200 focus:bg-white text-left direction-ltr" />
+                          <Input
+                             type="tel"
+                             value={formData.phone}
+                             onChange={e => updateForm('phone', e.target.value)}
+                             className={`h-12 bg-gray-50 border-gray-200 focus:bg-white text-left direction-ltr ${validationErrors.phone ? 'border-red-500 focus:ring-red-500' : ''}`}
+                             aria-invalid={!!validationErrors.phone}
+                             aria-describedby={validationErrors.phone ? 'phone-error' : undefined}
+                          />
+                          {validationErrors.phone && (
+                             <p id="phone-error" className="mt-1 text-sm text-red-600 flex items-center gap-1">
+                                <AlertCircle size={14} /> {validationErrors.phone}
+                             </p>
+                          )}
                        </div>
                     </div>
                     <div>
                        <Label>{t('אימייל', 'EMAIL')}</Label>
-                       <Input type="email" value={formData.email} onChange={e => updateForm('email', e.target.value)} className="h-12 bg-gray-50 border-gray-200 focus:bg-white text-left direction-ltr" />
+                       <Input
+                          type="email"
+                          value={formData.email}
+                          onChange={e => updateForm('email', e.target.value)}
+                          className={`h-12 bg-gray-50 border-gray-200 focus:bg-white text-left direction-ltr ${validationErrors.email ? 'border-red-500 focus:ring-red-500' : ''}`}
+                          aria-invalid={!!validationErrors.email}
+                          aria-describedby={validationErrors.email ? 'email-error' : undefined}
+                       />
+                       {validationErrors.email && (
+                          <p id="email-error" className="mt-1 text-sm text-red-600 flex items-center gap-1">
+                             <AlertCircle size={14} /> {validationErrors.email}
+                          </p>
+                       )}
                     </div>
                  </div>
 

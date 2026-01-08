@@ -3,6 +3,9 @@ import { supabase, isSupabaseConfigured } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
 import { InventoryItem } from '../types';
 import { MOCK_INVENTORY } from '../data';
+import { createLogger } from '../lib/logger';
+
+const logger = createLogger('useInventory');
 
 interface InventoryInput {
   name: string;
@@ -74,7 +77,7 @@ export function useInventory(): UseInventory {
       setItems(transformedItems);
     } catch (err: any) {
       setError(err.message || 'Failed to fetch inventory');
-      console.error('Error fetching inventory:', err);
+      logger.error('Error fetching inventory:', err);
     } finally {
       setLoading(false);
     }
@@ -107,7 +110,7 @@ export function useInventory(): UseInventory {
         status: data.status || calculateStatus(data.quantity, data.min_quantity),
       };
     } catch (err: any) {
-      console.error('Error fetching inventory item:', err);
+      logger.error('Error fetching inventory item:', err);
       return null;
     }
   }, []);
@@ -167,7 +170,7 @@ export function useInventory(): UseInventory {
       setItems(prev => [...prev, newItem]);
       return newItem;
     } catch (err: any) {
-      console.error('Error adding inventory item:', err);
+      logger.error('Error adding inventory item:', err);
       setError(err.message || 'Failed to add inventory item');
       return null;
     }
@@ -233,7 +236,7 @@ export function useInventory(): UseInventory {
       setItems(prev => prev.map(item => item.id === id ? updatedItem : item));
       return updatedItem;
     } catch (err: any) {
-      console.error('Error updating inventory item:', err);
+      logger.error('Error updating inventory item:', err);
       setError(err.message || 'Failed to update inventory item');
       return null;
     }
@@ -261,7 +264,7 @@ export function useInventory(): UseInventory {
       setItems(prev => prev.filter(item => item.id !== id));
       return true;
     } catch (err: any) {
-      console.error('Error deleting inventory item:', err);
+      logger.error('Error deleting inventory item:', err);
       setError(err.message || 'Failed to delete inventory item');
       return false;
     }

@@ -3,6 +3,9 @@ import { supabase, isSupabaseConfigured } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
 import { Patient, RiskLevel } from '../types';
 import { MOCK_PATIENTS } from '../data';
+import { createLogger } from '../lib/logger';
+
+const logger = createLogger('usePatients');
 
 interface PatientInput {
   name: string;
@@ -45,10 +48,17 @@ export function usePatients(): UsePatients {
     setError(null);
 
     try {
-      const { data, error: fetchError } = await supabase
+      let query = supabase
         .from('patients')
         .select('*')
         .order('created_at', { ascending: false });
+
+      // Filter by clinic_id for multi-tenant isolation
+      if (profile?.clinic_id) {
+        query = query.eq('clinic_id', profile.clinic_id);
+      }
+
+      const { data, error: fetchError } = await query;
 
       if (fetchError) throw fetchError;
 
@@ -73,11 +83,11 @@ export function usePatients(): UsePatients {
       setPatients(transformedPatients);
     } catch (err: any) {
       setError(err.message || 'Failed to fetch patients');
-      console.error('Error fetching patients:', err);
+      logger.error('Error fetching patients:', err);
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [profile?.clinic_id]);
 
   const getPatient = useCallback(async (id: string): Promise<Patient | null> => {
     if (!isSupabaseConfigured()) {
@@ -110,7 +120,7 @@ export function usePatients(): UsePatients {
         skinType: data.skin_type,
       };
     } catch (err: any) {
-      console.error('Error fetching patient:', err);
+      logger.error('Error fetching patient:', err);
       return null;
     }
   }, []);
@@ -175,7 +185,7 @@ export function usePatients(): UsePatients {
       setPatients(prev => [newPatient, ...prev]);
       return newPatient;
     } catch (err: any) {
-      console.error('Error adding patient:', err);
+      logger.error('Error adding patient:', err);
       setError(err.message || 'Failed to add patient');
       return null;
     }
@@ -229,7 +239,7 @@ export function usePatients(): UsePatients {
       setPatients(prev => prev.map(p => p.id === id ? updatedPatient : p));
       return updatedPatient;
     } catch (err: any) {
-      console.error('Error updating patient:', err);
+      logger.error('Error updating patient:', err);
       setError(err.message || 'Failed to update patient');
       return null;
     }
@@ -253,7 +263,7 @@ export function usePatients(): UsePatients {
       setPatients(prev => prev.filter(p => p.id !== id));
       return true;
     } catch (err: any) {
-      console.error('Error deleting patient:', err);
+      logger.error('Error deleting patient:', err);
       setError(err.message || 'Failed to delete patient');
       return false;
     }

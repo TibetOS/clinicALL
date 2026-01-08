@@ -3,6 +3,9 @@ import { supabase, isSupabaseConfigured } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
 import { Declaration } from '../types';
 import { MOCK_DECLARATIONS } from '../data';
+import { createLogger } from '../lib/logger';
+
+const logger = createLogger('useDeclarations');
 
 interface DeclarationInput {
   patientId: string;
@@ -76,7 +79,7 @@ export function useDeclarations(options?: UseDeclarationsOptions): UseDeclaratio
       setDeclarations(transformedDeclarations);
     } catch (err: any) {
       setError(err.message || 'Failed to fetch declarations');
-      console.error('Error fetching declarations:', err);
+      logger.error('Error fetching declarations:', err);
     } finally {
       setLoading(false);
     }
@@ -105,7 +108,7 @@ export function useDeclarations(options?: UseDeclarationsOptions): UseDeclaratio
         formData: data.form_data || {},
       };
     } catch (err: any) {
-      console.error('Error fetching declaration:', err);
+      logger.error('Error fetching declaration:', err);
       return null;
     }
   }, []);
@@ -151,7 +154,7 @@ export function useDeclarations(options?: UseDeclarationsOptions): UseDeclaratio
       setDeclarations(prev => [newDeclaration, ...prev]);
       return newDeclaration;
     } catch (err: any) {
-      console.error('Error adding declaration:', err);
+      logger.error('Error adding declaration:', err);
       setError(err.message || 'Failed to add declaration');
       return null;
     }
@@ -193,7 +196,7 @@ export function useDeclarations(options?: UseDeclarationsOptions): UseDeclaratio
       setDeclarations(prev => prev.map(dec => dec.id === id ? updatedDeclaration : dec));
       return updatedDeclaration;
     } catch (err: any) {
-      console.error('Error updating declaration:', err);
+      logger.error('Error updating declaration:', err);
       setError(err.message || 'Failed to update declaration');
       return null;
     }
@@ -221,7 +224,7 @@ export function useDeclarations(options?: UseDeclarationsOptions): UseDeclaratio
       setDeclarations(prev => prev.filter(dec => dec.id !== id));
       return true;
     } catch (err: any) {
-      console.error('Error deleting declaration:', err);
+      logger.error('Error deleting declaration:', err);
       setError(err.message || 'Failed to delete declaration');
       return false;
     }

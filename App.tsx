@@ -156,7 +156,7 @@ const AdminLayout = ({ children }: { children?: React.ReactNode }) => {
             </div>
           </div>
           {/* Close button for mobile */}
-          <button onClick={() => setSidebarOpen(false)} className="lg:hidden text-gray-500 p-1">
+          <button onClick={() => setSidebarOpen(false)} className="lg:hidden text-gray-500 p-1" aria-label="סגור תפריט">
             <X size={24} />
           </button>
         </div>
@@ -226,7 +226,7 @@ const AdminLayout = ({ children }: { children?: React.ReactNode }) => {
       <div className="flex-1 flex flex-col h-screen overflow-hidden bg-stone-50">
         {/* Header */}
         <header className="h-16 lg:h-20 bg-white/90 backdrop-blur-md border-b border-stone-100 flex items-center justify-between px-4 lg:px-10 z-40 sticky top-0 transition-all duration-200">
-          <button onClick={() => setSidebarOpen(!sidebarOpen)} className="lg:hidden p-2 -mr-2 text-gray-600 hover:bg-gray-100 rounded-lg">
+          <button onClick={() => setSidebarOpen(!sidebarOpen)} className="lg:hidden p-2 -mr-2 text-gray-600 hover:bg-gray-100 rounded-lg" aria-label={sidebarOpen ? 'סגור תפריט' : 'פתח תפריט'} aria-expanded={sidebarOpen}>
             <Menu />
           </button>
 
@@ -242,9 +242,12 @@ const AdminLayout = ({ children }: { children?: React.ReactNode }) => {
 
             {/* Notifications Dropdown */}
             <div className="relative" ref={notifRef}>
-              <button 
+              <button
                 className="relative p-2 text-gray-500 hover:bg-gray-100 rounded-full transition-colors"
                 onClick={() => setIsNotifOpen(!isNotifOpen)}
+                aria-label={`התראות${unreadCount > 0 ? ` (${unreadCount} חדשות)` : ''}`}
+                aria-expanded={isNotifOpen}
+                aria-haspopup="true"
               >
                 <Bell size={20} />
                 {unreadCount > 0 && (

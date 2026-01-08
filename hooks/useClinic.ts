@@ -1,6 +1,9 @@
 import { useState, useEffect, useCallback } from 'react';
 import { supabase, isSupabaseConfigured } from '../lib/supabase';
 import { ClinicProfile } from '../types';
+import { createLogger } from '../lib/logger';
+
+const logger = createLogger('useClinic');
 
 // Fallback mock profile for development
 const MOCK_CLINIC: ClinicProfile = {
@@ -98,7 +101,7 @@ export function useClinic(slug: string | undefined): UseClinic {
       setClinic(transformedClinic);
     } catch (err: any) {
       setError(err.message || 'Failed to fetch clinic');
-      console.error('Error fetching clinic:', err);
+      logger.error('Error fetching clinic:', err);
     } finally {
       setLoading(false);
     }

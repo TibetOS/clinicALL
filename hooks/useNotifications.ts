@@ -3,6 +3,9 @@ import { supabase, isSupabaseConfigured } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
 import { Notification, NotificationAction } from '../types';
 import { MOCK_NOTIFICATIONS } from '../data';
+import { createLogger } from '../lib/logger';
+
+const logger = createLogger('useNotifications');
 
 interface NotificationInput {
   title: string;
@@ -73,7 +76,7 @@ export function useNotifications(): UseNotifications {
       setNotifications(transformedNotifications);
     } catch (err: any) {
       setError(err.message || 'Failed to fetch notifications');
-      console.error('Error fetching notifications:', err);
+      logger.error('Error fetching notifications:', err);
     } finally {
       setLoading(false);
     }
@@ -123,7 +126,7 @@ export function useNotifications(): UseNotifications {
       setNotifications(prev => [newNotification, ...prev]);
       return newNotification;
     } catch (err: any) {
-      console.error('Error adding notification:', err);
+      logger.error('Error adding notification:', err);
       setError(err.message || 'Failed to add notification');
       return null;
     }
@@ -150,7 +153,7 @@ export function useNotifications(): UseNotifications {
       ));
       return true;
     } catch (err: any) {
-      console.error('Error marking notification as read:', err);
+      logger.error('Error marking notification as read:', err);
       setError(err.message || 'Failed to update notification');
       return false;
     }
@@ -176,7 +179,7 @@ export function useNotifications(): UseNotifications {
       setNotifications(prev => prev.map(n => ({ ...n, read: true })));
       return true;
     } catch (err: any) {
-      console.error('Error marking all notifications as read:', err);
+      logger.error('Error marking all notifications as read:', err);
       setError(err.message || 'Failed to update notifications');
       return false;
     }
@@ -199,7 +202,7 @@ export function useNotifications(): UseNotifications {
       setNotifications(prev => prev.filter(n => n.id !== id));
       return true;
     } catch (err: any) {
-      console.error('Error deleting notification:', err);
+      logger.error('Error deleting notification:', err);
       setError(err.message || 'Failed to delete notification');
       return false;
     }
@@ -225,7 +228,7 @@ export function useNotifications(): UseNotifications {
       setNotifications([]);
       return true;
     } catch (err: any) {
-      console.error('Error clearing notifications:', err);
+      logger.error('Error clearing notifications:', err);
       setError(err.message || 'Failed to clear notifications');
       return false;
     }

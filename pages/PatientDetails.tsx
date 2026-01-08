@@ -530,7 +530,7 @@ export const PatientDetails = () => {
                               className="group relative aspect-square bg-gray-100 rounded-xl overflow-hidden cursor-pointer shadow-sm hover:shadow-lg transition-all"
                               onClick={() => setLightboxImage(imgSrc)}
                            >
-                              <img src={imgSrc} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" />
+                              <img src={imgSrc} alt={`תמונה קלינית ${i % 2 === 0 ? 'אחרי' : 'לפני'} טיפול`} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" />
                               <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-end p-4">
                                  <div className="text-white translate-y-2 group-hover:translate-y-0 transition-transform">
                                     <Badge className="bg-white/20 hover:bg-white/30 text-white border-none mb-1 text-[10px]">
@@ -561,10 +561,11 @@ export const PatientDetails = () => {
             >
                <X size={32} />
             </button>
-            <img 
-               src={lightboxImage} 
+            <img
+               src={lightboxImage}
+               alt="תמונה קלינית בתצוגה מוגדלת"
                className="max-h-[90vh] max-w-[90vw] object-contain rounded-lg shadow-2xl animate-in zoom-in-95 duration-300"
-               onClick={(e) => e.stopPropagation()} 
+               onClick={(e) => e.stopPropagation()}
             />
          </div>
       )}
