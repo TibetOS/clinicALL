@@ -1,13 +1,15 @@
 
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { 
-  Check, Minus, ChevronDown, ChevronUp, HelpCircle, 
+import {
+  Check, Minus, ChevronDown, ChevronUp, HelpCircle,
   ShieldCheck, CreditCard, ArrowRight, Star, X
 } from 'lucide-react';
 import { Button, Card, Badge, Switch } from '../components/ui';
+import { useAuth } from '../contexts/AuthContext';
 
 export const PricingPage = () => {
+  const { user } = useAuth();
   const [isYearly, setIsYearly] = useState(true);
   const [openFaqIndex, setOpenFaqIndex] = useState<number | null>(0);
   
@@ -96,8 +98,8 @@ export const PricingPage = () => {
               <span className="font-bold text-xl text-gray-900 tracking-tight">ClinicALL</span>
            </Link>
            <div className="flex items-center gap-3">
-              <Link to="/login">
-                <Button variant="ghost">התחבר</Button>
+              <Link to={user ? "/admin/dashboard" : "/login"}>
+                <Button variant="ghost">{user ? "לוח בקרה" : "התחבר"}</Button>
               </Link>
               <Link to="/signup">
                 <Button className="shadow-md">נסה חינם</Button>

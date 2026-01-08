@@ -17,6 +17,8 @@ import { HealthDeclarationToken } from '../types';
 
 // -- LANDING PAGE --
 export const LandingPage = () => {
+  const { user } = useAuth();
+
   return (
     <div className="min-h-screen bg-white">
       {/* Navbar */}
@@ -32,8 +34,8 @@ export const LandingPage = () => {
               <a href="#" className="hover:text-primary">אודות</a>
            </div>
            <div className="flex items-center gap-3">
-              <Link to="/login">
-                <Button variant="ghost">התחבר</Button>
+              <Link to={user ? "/admin/dashboard" : "/login"}>
+                <Button variant="ghost">{user ? "לוח בקרה" : "התחבר"}</Button>
               </Link>
               <Link to="/signup">
                 <Button className="shadow-md">נסה חינם</Button>
