@@ -61,10 +61,10 @@ export const ImageSlider: React.FC<ImageSliderProps> = ({ beforeImage, afterImag
       onTouchStart={handleMouseDown}
     >
       {/* After Image (Background) */}
-      <img 
-        src={afterImage} 
-        alt="After" 
-        className="absolute inset-0 w-full h-full object-cover" 
+      <img
+        src={afterImage}
+        alt="תמונה אחרי טיפול"
+        className="absolute inset-0 w-full h-full object-cover"
         draggable={false}
       />
       
@@ -78,10 +78,10 @@ export const ImageSlider: React.FC<ImageSliderProps> = ({ beforeImage, afterImag
         className="absolute inset-0 overflow-hidden"
         style={{ width: `${sliderPosition}%` }}
       >
-        <img 
-          src={beforeImage} 
-          alt="Before" 
-          className="absolute inset-0 w-full h-full object-cover max-w-none" 
+        <img
+          src={beforeImage}
+          alt="תמונה לפני טיפול"
+          className="absolute inset-0 w-full h-full object-cover max-w-none"
           style={{ width: containerRef.current?.offsetWidth }}
           draggable={false}
         />

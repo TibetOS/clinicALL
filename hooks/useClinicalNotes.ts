@@ -3,6 +3,9 @@ import { supabase, isSupabaseConfigured } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
 import { ClinicalNote, InjectionPoint } from '../types';
 import { MOCK_CLINICAL_NOTES } from '../data';
+import { createLogger } from '../lib/logger';
+
+const logger = createLogger('useClinicalNotes');
 
 interface ClinicalNoteInput {
   patientId: string;
@@ -80,7 +83,7 @@ export function useClinicalNotes(options?: UseClinicalNotesOptions): UseClinical
       setClinicalNotes(transformedNotes);
     } catch (err: any) {
       setError(err.message || 'Failed to fetch clinical notes');
-      console.error('Error fetching clinical notes:', err);
+      logger.error('Error fetching clinical notes:', err);
     } finally {
       setLoading(false);
     }
@@ -111,7 +114,7 @@ export function useClinicalNotes(options?: UseClinicalNotesOptions): UseClinical
         images: data.images || [],
       };
     } catch (err: any) {
-      console.error('Error fetching clinical note:', err);
+      logger.error('Error fetching clinical note:', err);
       return null;
     }
   }, []);
@@ -164,7 +167,7 @@ export function useClinicalNotes(options?: UseClinicalNotesOptions): UseClinical
       setClinicalNotes(prev => [newNote, ...prev]);
       return newNote;
     } catch (err: any) {
-      console.error('Error adding clinical note:', err);
+      logger.error('Error adding clinical note:', err);
       setError(err.message || 'Failed to add clinical note');
       return null;
     }
@@ -211,7 +214,7 @@ export function useClinicalNotes(options?: UseClinicalNotesOptions): UseClinical
       setClinicalNotes(prev => prev.map(note => note.id === id ? updatedNote : note));
       return updatedNote;
     } catch (err: any) {
-      console.error('Error updating clinical note:', err);
+      logger.error('Error updating clinical note:', err);
       setError(err.message || 'Failed to update clinical note');
       return null;
     }
@@ -234,7 +237,7 @@ export function useClinicalNotes(options?: UseClinicalNotesOptions): UseClinical
       setClinicalNotes(prev => prev.filter(note => note.id !== id));
       return true;
     } catch (err: any) {
-      console.error('Error deleting clinical note:', err);
+      logger.error('Error deleting clinical note:', err);
       setError(err.message || 'Failed to delete clinical note');
       return false;
     }

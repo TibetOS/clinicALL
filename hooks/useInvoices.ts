@@ -3,6 +3,9 @@ import { supabase, isSupabaseConfigured } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
 import { Invoice, InvoiceItem } from '../types';
 import { MOCK_INVOICES } from '../data';
+import { createLogger } from '../lib/logger';
+
+const logger = createLogger('useInvoices');
 
 interface InvoiceInput {
   invoiceNumber: string;
@@ -73,7 +76,7 @@ export function useInvoices(): UseInvoices {
       setInvoices(transformedInvoices);
     } catch (err: any) {
       setError(err.message || 'Failed to fetch invoices');
-      console.error('Error fetching invoices:', err);
+      logger.error('Error fetching invoices:', err);
     } finally {
       setLoading(false);
     }
@@ -104,7 +107,7 @@ export function useInvoices(): UseInvoices {
         status: data.status || 'pending',
       };
     } catch (err: any) {
-      console.error('Error fetching invoice:', err);
+      logger.error('Error fetching invoice:', err);
       return null;
     }
   }, []);
@@ -157,7 +160,7 @@ export function useInvoices(): UseInvoices {
       setInvoices(prev => [newInvoice, ...prev]);
       return newInvoice;
     } catch (err: any) {
-      console.error('Error adding invoice:', err);
+      logger.error('Error adding invoice:', err);
       setError(err.message || 'Failed to add invoice');
       return null;
     }
@@ -204,7 +207,7 @@ export function useInvoices(): UseInvoices {
       setInvoices(prev => prev.map(inv => inv.id === id ? updatedInvoice : inv));
       return updatedInvoice;
     } catch (err: any) {
-      console.error('Error updating invoice:', err);
+      logger.error('Error updating invoice:', err);
       setError(err.message || 'Failed to update invoice');
       return null;
     }
@@ -232,7 +235,7 @@ export function useInvoices(): UseInvoices {
       setInvoices(prev => prev.filter(inv => inv.id !== id));
       return true;
     } catch (err: any) {
-      console.error('Error deleting invoice:', err);
+      logger.error('Error deleting invoice:', err);
       setError(err.message || 'Failed to delete invoice');
       return false;
     }

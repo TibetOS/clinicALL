@@ -3,6 +3,9 @@ import { supabase, isSupabaseConfigured } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
 import { Campaign } from '../types';
 import { MOCK_CAMPAIGNS } from '../data';
+import { createLogger } from '../lib/logger';
+
+const logger = createLogger('useCampaigns');
 
 interface CampaignInput {
   name: string;
@@ -64,7 +67,7 @@ export function useCampaigns(): UseCampaigns {
       setCampaigns(transformedCampaigns);
     } catch (err: any) {
       setError(err.message || 'Failed to fetch campaigns');
-      console.error('Error fetching campaigns:', err);
+      logger.error('Error fetching campaigns:', err);
     } finally {
       setLoading(false);
     }
@@ -95,7 +98,7 @@ export function useCampaigns(): UseCampaigns {
         scheduledDate: data.scheduled_date,
       };
     } catch (err: any) {
-      console.error('Error fetching campaign:', err);
+      logger.error('Error fetching campaign:', err);
       return null;
     }
   }, []);
@@ -148,7 +151,7 @@ export function useCampaigns(): UseCampaigns {
       setCampaigns(prev => [newCampaign, ...prev]);
       return newCampaign;
     } catch (err: any) {
-      console.error('Error adding campaign:', err);
+      logger.error('Error adding campaign:', err);
       setError(err.message || 'Failed to add campaign');
       return null;
     }
@@ -195,7 +198,7 @@ export function useCampaigns(): UseCampaigns {
       setCampaigns(prev => prev.map(camp => camp.id === id ? updatedCampaign : camp));
       return updatedCampaign;
     } catch (err: any) {
-      console.error('Error updating campaign:', err);
+      logger.error('Error updating campaign:', err);
       setError(err.message || 'Failed to update campaign');
       return null;
     }
@@ -223,7 +226,7 @@ export function useCampaigns(): UseCampaigns {
       setCampaigns(prev => prev.filter(camp => camp.id !== id));
       return true;
     } catch (err: any) {
-      console.error('Error deleting campaign:', err);
+      logger.error('Error deleting campaign:', err);
       setError(err.message || 'Failed to delete campaign');
       return false;
     }

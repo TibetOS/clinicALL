@@ -3,6 +3,9 @@ import { supabase, isSupabaseConfigured } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
 import { Appointment, AppointmentStatus } from '../types';
 import { MOCK_APPOINTMENTS } from '../data';
+import { createLogger } from '../lib/logger';
+
+const logger = createLogger('useAppointments');
 
 interface AppointmentInput {
   patientId: string;
@@ -107,7 +110,7 @@ export function useAppointments(options?: UseAppointmentsOptions): UseAppointmen
       setAppointments(transformedAppointments);
     } catch (err: any) {
       setError(err.message || 'Failed to fetch appointments');
-      console.error('Error fetching appointments:', err);
+      logger.error('Error fetching appointments:', err);
     } finally {
       setLoading(false);
     }
@@ -144,7 +147,7 @@ export function useAppointments(options?: UseAppointmentsOptions): UseAppointmen
         notes: data.notes,
       };
     } catch (err: any) {
-      console.error('Error fetching appointment:', err);
+      logger.error('Error fetching appointment:', err);
       return null;
     }
   }, []);
@@ -199,7 +202,7 @@ export function useAppointments(options?: UseAppointmentsOptions): UseAppointmen
       setAppointments(prev => [...prev, newAppointment]);
       return newAppointment;
     } catch (err: any) {
-      console.error('Error adding appointment:', err);
+      logger.error('Error adding appointment:', err);
       setError(err.message || 'Failed to add appointment');
       return null;
     }
@@ -253,7 +256,7 @@ export function useAppointments(options?: UseAppointmentsOptions): UseAppointmen
       setAppointments(prev => prev.map(a => a.id === id ? updatedAppointment : a));
       return updatedAppointment;
     } catch (err: any) {
-      console.error('Error updating appointment:', err);
+      logger.error('Error updating appointment:', err);
       setError(err.message || 'Failed to update appointment');
       return null;
     }
@@ -282,7 +285,7 @@ export function useAppointments(options?: UseAppointmentsOptions): UseAppointmen
       setAppointments(prev => prev.filter(a => a.id !== id));
       return true;
     } catch (err: any) {
-      console.error('Error deleting appointment:', err);
+      logger.error('Error deleting appointment:', err);
       setError(err.message || 'Failed to delete appointment');
       return false;
     }

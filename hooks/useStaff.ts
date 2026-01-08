@@ -1,6 +1,9 @@
 import { useState, useEffect, useCallback } from 'react';
 import { supabase, isSupabaseConfigured } from '../lib/supabase';
 import { StaffMember } from '../types';
+import { createLogger } from '../lib/logger';
+
+const logger = createLogger('useStaff');
 
 interface UseStaff {
   staff: StaffMember[];
@@ -52,7 +55,7 @@ export function useStaff(clinicId?: string): UseStaff {
       setStaff(transformedStaff);
     } catch (err: any) {
       setError(err.message || 'Failed to fetch staff');
-      console.error('Error fetching staff:', err);
+      logger.error('Error fetching staff:', err);
     } finally {
       setLoading(false);
     }

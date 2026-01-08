@@ -3,6 +3,9 @@ import { supabase, isSupabaseConfigured } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
 import { Lead, LeadStage } from '../types';
 import { MOCK_LEADS } from '../data';
+import { createLogger } from '../lib/logger';
+
+const logger = createLogger('useLeads');
 
 interface LeadInput {
   name: string;
@@ -66,7 +69,7 @@ export function useLeads(): UseLeads {
       setLeads(transformedLeads);
     } catch (err: any) {
       setError(err.message || 'Failed to fetch leads');
-      console.error('Error fetching leads:', err);
+      logger.error('Error fetching leads:', err);
     } finally {
       setLoading(false);
     }
@@ -98,7 +101,7 @@ export function useLeads(): UseLeads {
         createdAt: data.created_at,
       };
     } catch (err: any) {
-      console.error('Error fetching lead:', err);
+      logger.error('Error fetching lead:', err);
       return null;
     }
   }, []);
@@ -153,7 +156,7 @@ export function useLeads(): UseLeads {
       setLeads(prev => [newLead, ...prev]);
       return newLead;
     } catch (err: any) {
-      console.error('Error adding lead:', err);
+      logger.error('Error adding lead:', err);
       setError(err.message || 'Failed to add lead');
       return null;
     }
@@ -201,7 +204,7 @@ export function useLeads(): UseLeads {
       setLeads(prev => prev.map(lead => lead.id === id ? updatedLead : lead));
       return updatedLead;
     } catch (err: any) {
-      console.error('Error updating lead:', err);
+      logger.error('Error updating lead:', err);
       setError(err.message || 'Failed to update lead');
       return null;
     }
@@ -229,7 +232,7 @@ export function useLeads(): UseLeads {
       setLeads(prev => prev.filter(lead => lead.id !== id));
       return true;
     } catch (err: any) {
-      console.error('Error deleting lead:', err);
+      logger.error('Error deleting lead:', err);
       setError(err.message || 'Failed to delete lead');
       return false;
     }

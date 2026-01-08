@@ -122,7 +122,7 @@ export const SettingsPage = () => {
                     <div>
                       <Label>תמונת נושא (Hero Image)</Label>
                       <div className="h-40 bg-gray-100 rounded-xl border-2 border-dashed border-gray-300 flex items-center justify-center cursor-pointer hover:bg-gray-50 transition-colors relative overflow-hidden group">
-                        <img src="https://images.unsplash.com/photo-1629909613654-28e377c37b09?auto=format&fit=crop&q=80&w=2068" className="w-full h-full object-cover opacity-80" />
+                        <img src="https://images.unsplash.com/photo-1629909613654-28e377c37b09?auto=format&fit=crop&q=80&w=2068" alt="תמונת נושא נוכחית" className="w-full h-full object-cover opacity-80" />
                         <div className="absolute inset-0 flex items-center justify-center bg-black/20 group-hover:bg-black/30 transition-colors">
                           <span className="bg-white/90 px-4 py-2 rounded-lg text-sm font-medium flex items-center">
                             <ImageIcon size={16} className="ml-2" /> החלף תמונה

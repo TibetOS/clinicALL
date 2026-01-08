@@ -461,7 +461,7 @@ export const PatientList = () => {
                 )}
                 <td className="px-6 py-4">
                   <div className="flex items-center gap-3">
-                    <img src={patient.avatar} className="w-8 h-8 rounded-full bg-gray-200 object-cover ring-2 ring-transparent group-hover:ring-primary/20 transition-all" />
+                    <img src={patient.avatar} alt={`תמונת פרופיל של ${patient.name}`} className="w-8 h-8 rounded-full bg-gray-200 object-cover ring-2 ring-transparent group-hover:ring-primary/20 transition-all" />
                     <div>
                       <div className="font-medium text-gray-900">{patient.name}</div>
                       <div className="text-xs text-gray-500">{patient.email}</div>
@@ -568,7 +568,7 @@ export const PatientList = () => {
                     )}
                   </button>
                 )}
-                <img src={patient.avatar} className="w-12 h-12 rounded-full bg-gray-200 object-cover" />
+                <img src={patient.avatar} alt={`תמונת פרופיל של ${patient.name}`} className="w-12 h-12 rounded-full bg-gray-200 object-cover" />
                 <div>
                   <div className="font-bold text-gray-900">{patient.name}</div>
                   <div className="text-sm text-gray-600">{patient.phone}</div>

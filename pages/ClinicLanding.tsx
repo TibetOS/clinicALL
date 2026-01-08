@@ -246,7 +246,7 @@ export const ClinicLanding = () => {
                  { name: 'אנטי-אייג׳ינג', img: 'https://images.unsplash.com/photo-1512290923902-8a9f81dc236c?auto=format&fit=crop&q=80&w=800' }
                ].map((cat, i) => (
                  <div key={i} className="group relative rounded-2xl overflow-hidden aspect-[3/4] cursor-pointer">
-                    <img src={cat.img} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" />
+                    <img src={cat.img} alt={cat.name} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" />
                     <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent flex flex-col justify-end p-8">
                        <h3 className="text-white text-xl font-bold mb-2">{cat.name}</h3>
                        <div className="h-0 group-hover:h-8 overflow-hidden transition-all duration-300">
@@ -427,7 +427,7 @@ export const ClinicLanding = () => {
          {/* We override the Dialog default styling by rendering the BookingApp directly inside a clean container */}
          <div className="h-[80vh] md:h-[600px] w-full max-w-4xl bg-white rounded-2xl overflow-hidden flex flex-col md:flex-row shadow-2xl">
              <div className="hidden md:block w-1/3 relative">
-                <img src={profile.coverUrl} className="h-full w-full object-cover" />
+                <img src={profile.coverUrl} alt={`תמונת רקע של ${profile.name}`} className="h-full w-full object-cover" />
                 <div className="absolute inset-0 bg-stone-900/40 p-8 text-white flex flex-col justify-end">
                    <h3 className="font-bold text-2xl mb-2">{profile.name}</h3>
                    <p className="opacity-90 text-sm mb-4">{profile.address}</p>

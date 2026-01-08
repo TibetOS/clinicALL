@@ -1,6 +1,9 @@
 import { useState, useCallback } from 'react';
 import { supabase, isSupabaseConfigured } from '../lib/supabase';
 import { TimeSlot } from '../types';
+import { createLogger } from '../lib/logger';
+
+const logger = createLogger('useBooking');
 
 // Default clinic operating hours (can be overridden by clinic settings)
 const DEFAULT_OPERATING_HOURS = {
@@ -102,7 +105,7 @@ export function useBooking(): UseBooking {
       });
     } catch (err: any) {
       setError(err.message || 'Failed to fetch available slots');
-      console.error('Error fetching slots:', err);
+      logger.error('Error fetching slots:', err);
       return [];
     } finally {
       setLoading(false);
@@ -180,7 +183,7 @@ export function useBooking(): UseBooking {
     } catch (err: any) {
       const errorMessage = err.message || 'Failed to create booking';
       setError(errorMessage);
-      console.error('Error creating booking:', err);
+      logger.error('Error creating booking:', err);
       return {
         success: false,
         error: errorMessage,

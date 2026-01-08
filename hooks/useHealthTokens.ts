@@ -3,6 +3,9 @@ import { supabase, isSupabaseConfigured } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
 import { HealthDeclarationToken } from '../types';
 import { MOCK_HEALTH_TOKENS } from '../data';
+import { createLogger } from '../lib/logger';
+
+const logger = createLogger('useHealthTokens');
 
 // Generate a secure random token
 export const generateToken = (): string => {
@@ -99,7 +102,7 @@ export function useHealthTokens(): UseHealthTokens {
       setTokens(transformedTokens);
     } catch (err: any) {
       setError(err.message || 'Failed to fetch tokens');
-      console.error('Error fetching health tokens:', err);
+      logger.error('Error fetching health tokens:', err);
     } finally {
       setLoading(false);
     }
@@ -133,7 +136,7 @@ export function useHealthTokens(): UseHealthTokens {
         usedAt: data.used_at,
       };
     } catch (err: any) {
-      console.error('Error fetching token:', err);
+      logger.error('Error fetching token:', err);
       return null;
     }
   }, []);
@@ -212,7 +215,7 @@ export function useHealthTokens(): UseHealthTokens {
       setTokens(prev => [newToken, ...prev]);
       return newToken;
     } catch (err: any) {
-      console.error('Error creating token:', err);
+      logger.error('Error creating token:', err);
       setError(err.message || 'Failed to create token');
       return null;
     }
@@ -242,7 +245,7 @@ export function useHealthTokens(): UseHealthTokens {
       ));
       return true;
     } catch (err: any) {
-      console.error('Error marking token as used:', err);
+      logger.error('Error marking token as used:', err);
       return false;
     }
   }, []);
@@ -265,7 +268,7 @@ export function useHealthTokens(): UseHealthTokens {
       setTokens(prev => prev.filter(t => t.id !== tokenId));
       return true;
     } catch (err: any) {
-      console.error('Error deleting token:', err);
+      logger.error('Error deleting token:', err);
       return false;
     }
   }, []);

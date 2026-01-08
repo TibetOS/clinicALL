@@ -1,6 +1,9 @@
 import React, { createContext, useContext, useEffect, useState, ReactNode } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase, isSupabaseConfigured } from '../lib/supabase';
+import { createLogger } from '../lib/logger';
+
+const logger = createLogger('AuthContext');
 
 interface UserProfile {
   id: string;
@@ -52,7 +55,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     // Timeout to prevent infinite loading
     const timeoutId = setTimeout(() => {
-      console.warn('Auth initialization timed out');
+      logger.warn('Auth initialization timed out');
       setLoading(false);
     }, 5000);
 
@@ -63,7 +66,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         clearTimeout(timeoutId);
 
         if (error) {
-          console.error('Error getting session:', error);
+          logger.error('Error getting session:', error);
           setLoading(false);
           return;
         }
@@ -78,7 +81,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         }
       } catch (err) {
         clearTimeout(timeoutId);
-        console.error('Auth initialization error:', err);
+        logger.error('Auth initialization error:', err);
         setLoading(false);
       }
     };
@@ -117,10 +120,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (!error && data) {
         setProfile(data as UserProfile);
       } else if (error) {
-        console.error('Error fetching profile:', error);
+        logger.error('Error fetching profile:', error);
       }
     } catch (err) {
-      console.error('Profile fetch error:', err);
+      logger.error('Profile fetch error:', err);
     } finally {
       setLoading(false);
     }
@@ -200,7 +203,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       });
       return { error: error as Error | null };
     } catch (err) {
-      console.error('updatePassword exception:', err);
+      logger.error('updatePassword exception:', err);
       return { error: err as Error };
     }
   };

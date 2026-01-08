@@ -2,11 +2,12 @@
 import React, { useState, useEffect } from 'react';
 import {
   Calendar as CalendarIcon, Clock, ChevronRight, ChevronLeft,
-  MapPin, Star, User, Check, CreditCard, ShieldCheck, Lock, Smartphone, X, Loader2
+  MapPin, Star, User, Check, CreditCard, ShieldCheck, Lock, Smartphone, X, Loader2, AlertCircle
 } from 'lucide-react';
 import { Button, Card, Input, Badge } from '../components/ui';
 import { Service, BookingStep, StaffMember, TimeSlot } from '../types';
 import { useServices, useStaff, useBooking } from '../hooks';
+import { isValidIsraeliPhone } from '../lib/validation';
 
 interface BookingAppProps {
   mode?: 'page' | 'modal';
@@ -36,6 +37,7 @@ export const BookingApp: React.FC<BookingAppProps> = ({
   const [slotsLoading, setSlotsLoading] = useState(false);
   const [bookingError, setBookingError] = useState<string | null>(null);
   const [isBooking, setIsBooking] = useState(false);
+  const [phoneValidationError, setPhoneValidationError] = useState<string | null>(null);
 
   // Fetch data from hooks
   const { services, loading: servicesLoading } = useServices();
@@ -238,7 +240,7 @@ export const BookingApp: React.FC<BookingAppProps> = ({
                       onClick={() => { setSelectedStaff(staffMember); setStep('datetime'); }}
                       className="border border-gray-200 rounded-xl p-4 flex flex-col items-center justify-center gap-2 cursor-pointer hover:border-primary hover:shadow-md transition-all aspect-square bg-white"
                     >
-                      <img src={staffMember.avatar} className="h-16 w-16 rounded-full object-cover border-2 border-white shadow-sm" />
+                      <img src={staffMember.avatar} alt={`תמונת פרופיל של ${staffMember.name}`} className="h-16 w-16 rounded-full object-cover border-2 border-white shadow-sm" />
                       <div className="text-center">
                         <div className="font-bold text-sm text-gray-900">{staffMember.name}</div>
                         <div className="text-xs text-gray-500">{staffMember.role}</div>
@@ -353,15 +355,31 @@ export const BookingApp: React.FC<BookingAppProps> = ({
                          name="phone"
                          autoComplete="tel"
                          value={authPhone}
-                         onChange={(e) => setAuthPhone(e.target.value)}
-                         className="text-center text-lg tracking-widest h-12 direction-ltr"
+                         onChange={(e) => {
+                            setAuthPhone(e.target.value);
+                            setPhoneValidationError(null);
+                         }}
+                         className={`text-center text-lg tracking-widest h-12 direction-ltr ${phoneValidationError ? 'border-red-500' : ''}`}
                          placeholder="050-000-0000"
+                         aria-invalid={!!phoneValidationError}
+                         aria-describedby={phoneValidationError ? 'phone-error' : undefined}
                       />
+                      {phoneValidationError && (
+                         <p id="phone-error" className="text-sm text-red-600 flex items-center gap-1 justify-center">
+                            <AlertCircle size={14} /> {phoneValidationError}
+                         </p>
+                      )}
                    </div>
                    <Button
                      className="w-full h-12"
-                     onClick={() => setStep('checkout')}
-                     disabled={authPhone.length < 9}
+                     onClick={() => {
+                        if (!isValidIsraeliPhone(authPhone)) {
+                           setPhoneValidationError('מספר טלפון לא תקין');
+                           return;
+                        }
+                        setStep('checkout');
+                     }}
+                     disabled={!authPhone.trim()}
                    >
                       המשך לאישור
                    </Button>

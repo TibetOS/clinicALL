@@ -3,6 +3,9 @@ import { supabase, isSupabaseConfigured } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
 import { Service } from '../types';
 import { MOCK_SERVICES } from '../data';
+import { createLogger } from '../lib/logger';
+
+const logger = createLogger('useServices');
 
 interface ServiceInput {
   name: string;
@@ -67,7 +70,7 @@ export function useServices(): UseServices {
       setServices(transformedServices);
     } catch (err: any) {
       setError(err.message || 'Failed to fetch services');
-      console.error('Error fetching services:', err);
+      logger.error('Error fetching services:', err);
     } finally {
       setLoading(false);
     }
@@ -97,7 +100,7 @@ export function useServices(): UseServices {
         image: data.image_url,
       };
     } catch (err: any) {
-      console.error('Error fetching service:', err);
+      logger.error('Error fetching service:', err);
       return null;
     }
   }, []);
@@ -149,7 +152,7 @@ export function useServices(): UseServices {
       setServices(prev => [...prev, newService]);
       return newService;
     } catch (err: any) {
-      console.error('Error adding service:', err);
+      logger.error('Error adding service:', err);
       setError(err.message || 'Failed to add service');
       return null;
     }
@@ -196,7 +199,7 @@ export function useServices(): UseServices {
       setServices(prev => prev.map(s => s.id === id ? updatedService : s));
       return updatedService;
     } catch (err: any) {
-      console.error('Error updating service:', err);
+      logger.error('Error updating service:', err);
       setError(err.message || 'Failed to update service');
       return null;
     }
@@ -221,7 +224,7 @@ export function useServices(): UseServices {
       setServices(prev => prev.filter(s => s.id !== id));
       return true;
     } catch (err: any) {
-      console.error('Error deleting service:', err);
+      logger.error('Error deleting service:', err);
       setError(err.message || 'Failed to delete service');
       return false;
     }
