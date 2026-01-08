@@ -251,7 +251,7 @@ export const BookingApp: React.FC<BookingAppProps> = ({
                     disabled={!selectedTime}
                     onClick={() => setStep('auth')}
                  >
-                    המשך <ChevronLeft className="mr-2" />
+                    <span className="flex items-center justify-center gap-2">המשך <ChevronLeft size={18} /></span>
                  </Button>
               </div>
             </div>

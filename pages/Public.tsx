@@ -3,7 +3,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Button, Input, Card, Badge, Label, Switch } from '../components/ui';
 import {
   Check, ChevronLeft, ChevronRight, AlertTriangle, Globe, Building2, User, MapPin,
-  FileBadge, Lock, ArrowRight, ArrowLeft, Star, Calendar, Smartphone, Zap, TrendingUp,
+  FileBadge, Lock, ArrowLeft, Star, Calendar, Smartphone, Zap, TrendingUp,
   Sparkles, Image as ImageIcon, Palette, Heart, Shield, FileText, Clock,
   CheckCircle2, AlertCircle, Loader2, UserCheck, PenTool, Eraser, Eye, EyeOff, Mail, KeyRound
 } from 'lucide-react';
@@ -56,7 +56,7 @@ export const LandingPage = () => {
                <div className="flex flex-col sm:flex-row gap-4 justify-center">
                   <Link to="/signup">
                     <Button size="lg" className="h-14 px-8 text-lg shadow-xl shadow-primary/20">
-                       בנה את הקליניקה שלך בחינם <ArrowLeft className="mr-2" />
+                       <span className="flex items-center justify-center gap-2">בנה את הקליניקה שלך בחינם <ArrowLeft size={18} /></span>
                     </Button>
                   </Link>
                   <Button variant="outline" size="lg" className="h-14 px-8 text-lg bg-white">
@@ -839,7 +839,7 @@ export const SignupPage = () => {
                       </div>
                       <div className="pt-2">
                          <Button onClick={handleNextStep1} className="w-full h-12 text-lg">
-                            התחל לבנות <ChevronLeft size={20} className="mr-2" />
+                            <span className="flex items-center justify-center gap-2">התחל לבנות <ChevronLeft size={20} /></span>
                          </Button>
                       </div>
                    </div>
@@ -907,7 +907,7 @@ export const SignupPage = () => {
                       </div>
                       <div className="flex justify-between pt-4">
                          <Button variant="ghost" onClick={prevStep}>חזור</Button>
-                         <Button onClick={handleNextStep2}>המשך <ChevronLeft size={16} className="mr-2" /></Button>
+                         <Button onClick={handleNextStep2}><span className="flex items-center gap-2">המשך <ChevronLeft size={16} /></span></Button>
                       </div>
                    </div>
                 )}
@@ -962,7 +962,7 @@ export const SignupPage = () => {
 
                       <div className="flex justify-between pt-4">
                          <Button variant="ghost" onClick={prevStep}>חזור</Button>
-                         <Button onClick={nextStep}>ראה תוצאה סופית <ChevronLeft size={16} className="mr-2" /></Button>
+                         <Button onClick={nextStep}><span className="flex items-center gap-2">ראה תוצאה סופית <ChevronLeft size={16} /></span></Button>
                       </div>
                    </div>
                 )}
@@ -1001,7 +1001,7 @@ export const SignupPage = () => {
                             <Loader2 className="h-5 w-5 animate-spin" /> יוצר חשבון...
                           </span>
                         ) : (
-                          <>כניסה למערכת הניהול <ArrowRight size={20} className="mr-2" /></>
+                          <span className="flex items-center justify-center gap-2">כניסה למערכת הניהול <ArrowLeft size={20} /></span>
                         )}
                      </Button>
                    </div>
