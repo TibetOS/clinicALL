@@ -9,3 +9,4 @@ export { useCampaigns } from './useCampaigns';
 export { useClinicalNotes } from './useClinicalNotes';
 export { useDeclarations } from './useDeclarations';
 export { useNotifications } from './useNotifications';
+export { useHealthTokens } from './useHealthTokens';

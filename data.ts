@@ -1,6 +1,6 @@
 
 
-import { Patient, Appointment, Service, Declaration, ClinicalNote, InventoryItem, Notification, Lead, Invoice, Campaign } from './types';
+import { Patient, Appointment, Service, Declaration, ClinicalNote, InventoryItem, Notification, Lead, Invoice, Campaign, HealthDeclarationToken } from './types';
 
 // Helper to create dates relative to today for mock data
 const getRelativeDate = (daysOffset: number): string => {
@@ -30,7 +30,10 @@ export const MOCK_PATIENTS: Patient[] = [
     age: 34,
     gender: 'נקבה',
     aestheticInterests: ['בוטוקס', 'פיסול שפתיים'],
-    avatar: 'https://ui-avatars.com/api/?name=Sarah+Cohen&background=random'
+    avatar: 'https://ui-avatars.com/api/?name=Sarah+Cohen&background=random',
+    // Declaration: Valid (signed 2 months ago)
+    lastDeclarationDate: getRelativeDate(-60),
+    declarationStatus: 'valid'
   },
   {
     id: '2',
@@ -44,7 +47,10 @@ export const MOCK_PATIENTS: Patient[] = [
     age: 42,
     gender: 'נקבה',
     aestheticInterests: ['מיצוק עור', 'פיגמנטציה'],
-    avatar: 'https://ui-avatars.com/api/?name=Michal+Levi&background=random'
+    avatar: 'https://ui-avatars.com/api/?name=Michal+Levi&background=random',
+    // Declaration: Pending (sent, not yet filled)
+    declarationStatus: 'pending',
+    pendingDeclarationToken: 'demo12345678'
   },
   {
     id: '3',
@@ -58,7 +64,10 @@ export const MOCK_PATIENTS: Patient[] = [
     age: 29,
     gender: 'זכר',
     aestheticInterests: ['עיצוב לסת', 'הסרת שיער'],
-    avatar: 'https://ui-avatars.com/api/?name=Daniel+Avraham&background=random'
+    avatar: 'https://ui-avatars.com/api/?name=Daniel+Avraham&background=random',
+    // Declaration: Valid (signed last week)
+    lastDeclarationDate: getRelativeDate(-7),
+    declarationStatus: 'valid'
   },
   {
     id: '4',
@@ -72,7 +81,10 @@ export const MOCK_PATIENTS: Patient[] = [
     age: 38,
     gender: 'נקבה',
     aestheticInterests: ['בוטוקס', 'מזותרפיה'],
-    avatar: 'https://ui-avatars.com/api/?name=Ronit+Shimon&background=random'
+    avatar: 'https://ui-avatars.com/api/?name=Ronit+Shimon&background=random',
+    // Declaration: Expired (signed 14 months ago)
+    lastDeclarationDate: getRelativeDate(-420),
+    declarationStatus: 'expired'
   },
   {
     id: '5',
@@ -86,7 +98,9 @@ export const MOCK_PATIENTS: Patient[] = [
     age: 45,
     gender: 'נקבה',
     aestheticInterests: ['בוטוקס', 'פילינג'],
-    avatar: 'https://ui-avatars.com/api/?name=Yael+Golan&background=random'
+    avatar: 'https://ui-avatars.com/api/?name=Yael+Golan&background=random',
+    // Declaration: None (never signed)
+    declarationStatus: 'none'
   },
   {
     id: '6',
@@ -100,7 +114,9 @@ export const MOCK_PATIENTS: Patient[] = [
     age: 41,
     gender: 'זכר',
     aestheticInterests: ['בוטוקס'],
-    avatar: 'https://ui-avatars.com/api/?name=Avi+Cohen&background=random'
+    avatar: 'https://ui-avatars.com/api/?name=Avi+Cohen&background=random',
+    // Declaration: None (never signed)
+    declarationStatus: 'none'
   }
 ];
 
@@ -114,15 +130,15 @@ export const MOCK_SERVICES: Service[] = [
 
 export const MOCK_APPOINTMENTS: Appointment[] = [
   // Today's appointments
-  { id: '101', patientId: '3', patientName: 'דניאל אברהם', serviceId: '5', serviceName: 'מזותרפיה', date: getRelativeDate(0), time: '09:00', duration: 45, status: 'confirmed' },
-  { id: '102', patientId: '2', patientName: 'מיכל לוי', serviceId: '4', serviceName: 'טיפול פנים קלאסי', date: getRelativeDate(0), time: '10:00', duration: 60, status: 'pending' },
+  { id: '101', patientId: '3', patientName: 'דניאל אברהם', serviceId: '5', serviceName: 'מזותרפיה', date: getRelativeDate(0), time: '09:00', duration: 45, status: 'confirmed', declarationStatus: 'received' },
+  { id: '102', patientId: '2', patientName: 'מיכל לוי', serviceId: '4', serviceName: 'טיפול פנים קלאסי', date: getRelativeDate(0), time: '10:00', duration: 60, status: 'pending', declarationStatus: 'pending' },
   // Past botox appointments (completed ~2 weeks ago - due for follow-up)
-  { id: '103', patientId: '1', patientName: 'שרה כהן', serviceId: '1', serviceName: 'בוטוקס - אזור אחד', date: getRelativeDate(-14), time: '10:00', duration: 15, status: 'completed' },
-  { id: '104', patientId: '4', patientName: 'רונית שמעון', serviceId: '1', serviceName: 'בוטוקס - אזור אחד', date: getRelativeDate(-13), time: '11:00', duration: 15, status: 'completed' },
-  { id: '105', patientId: '5', patientName: 'יעל גולן', serviceId: '1', serviceName: 'בוטוקס - אזור אחד', date: getRelativeDate(-15), time: '14:00', duration: 15, status: 'completed' },
-  { id: '106', patientId: '6', patientName: 'אבי כהן', serviceId: '1', serviceName: 'בוטוקס - אזור אחד', date: getRelativeDate(-12), time: '15:00', duration: 15, status: 'completed' },
+  { id: '103', patientId: '1', patientName: 'שרה כהן', serviceId: '1', serviceName: 'בוטוקס - אזור אחד', date: getRelativeDate(-14), time: '10:00', duration: 15, status: 'completed', declarationStatus: 'received' },
+  { id: '104', patientId: '4', patientName: 'רונית שמעון', serviceId: '1', serviceName: 'בוטוקס - אזור אחד', date: getRelativeDate(-13), time: '11:00', duration: 15, status: 'completed', declarationStatus: 'required' },
+  { id: '105', patientId: '5', patientName: 'יעל גולן', serviceId: '1', serviceName: 'בוטוקס - אזור אחד', date: getRelativeDate(-15), time: '14:00', duration: 15, status: 'completed', declarationStatus: 'required' },
+  { id: '106', patientId: '6', patientName: 'אבי כהן', serviceId: '1', serviceName: 'בוטוקס - אזור אחד', date: getRelativeDate(-12), time: '15:00', duration: 15, status: 'completed', declarationStatus: 'required' },
   // Other past appointments
-  { id: '107', patientId: '3', patientName: 'דניאל אברהם', serviceId: '2', serviceName: 'פיסול שפתיים', date: getRelativeDate(-5), time: '09:30', duration: 30, status: 'completed' },
+  { id: '107', patientId: '3', patientName: 'דניאל אברהם', serviceId: '2', serviceName: 'פיסול שפתיים', date: getRelativeDate(-5), time: '09:30', duration: 30, status: 'completed', declarationStatus: 'received' },
 ];
 
 export const MOCK_DECLARATIONS: Declaration[] = [
@@ -164,6 +180,25 @@ export const MOCK_INVENTORY: InventoryItem[] = [
 ];
 
 export const MOCK_NOTIFICATIONS: Notification[] = [
+  {
+    id: 'n0',
+    title: 'תור חדש נקבע',
+    message: 'מיכל לוי קבעה תור לטיפול פנים קלאסי. האם לשלוח הצהרת בריאות?',
+    type: 'info',
+    timestamp: new Date().toISOString(),
+    read: false,
+    action: 'send_declaration',
+    metadata: {
+      appointmentId: '102',
+      patientId: '2',
+      patientName: 'מיכל לוי',
+      patientPhone: '052-987-6543',
+      patientEmail: 'michal.l@example.com',
+      appointmentDate: getRelativeDate(0),
+      appointmentTime: '10:00',
+      serviceName: 'טיפול פנים קלאסי'
+    }
+  },
   { id: 'n1', title: 'התראה על מלאי נמוך', message: 'מלאי לידוקאין משחה הגיע לסף המינימום.', type: 'warning', timestamp: '2023-10-24T08:30:00', read: false },
   { id: 'n2', title: 'ליד חדש התקבל', message: 'רונית שמעוני השאירה פרטים באינסטגרם.', type: 'success', timestamp: '2023-10-24T09:15:00', read: false },
   { id: 'n3', title: 'הצהרת בריאות', message: 'שרה כהן חתמה על טופס הצהרת בריאות.', type: 'info', timestamp: '2023-10-23T18:30:00', read: true },
@@ -211,4 +246,49 @@ export const MOCK_CAMPAIGNS: Campaign[] = [
   { id: 'c2', name: 'הטבת יום הולדת נובמבר', type: 'whatsapp', status: 'scheduled', audience: 'ילידי נובמבר', sentCount: 45, scheduledDate: '2023-11-01' },
   { id: 'c3', name: 'ניוזלטר חגיגי', type: 'email', status: 'completed', audience: 'כל הלקוחות', sentCount: 1200, openRate: 42 },
   { id: 'c4', name: 'השקת טיפול חדש', type: 'whatsapp', status: 'draft', audience: 'לקוחות VIP', sentCount: 0 }
+];
+
+// Helper to generate a future date for token expiry
+const getExpiryDate = (daysFromNow: number): string => {
+  const date = new Date();
+  date.setDate(date.getDate() + daysFromNow);
+  return date.toISOString();
+};
+
+export const MOCK_HEALTH_TOKENS: HealthDeclarationToken[] = [
+  {
+    id: 'hdt-1',
+    token: 'abc123def456',
+    clinicId: 'clinic-1',
+    patientId: '1',
+    patientName: 'שרה כהן',
+    patientPhone: '050-123-4567',
+    patientEmail: 'sarah.c@example.com',
+    createdAt: getRelativeDate(-7) + 'T10:00:00.000Z',
+    expiresAt: getExpiryDate(-1), // Expired
+    status: 'used',
+    usedAt: getRelativeDate(-6) + 'T14:30:00.000Z'
+  },
+  {
+    id: 'hdt-2',
+    token: 'xyz789ghi012',
+    clinicId: 'clinic-1',
+    patientName: 'לקוח חדש',
+    patientPhone: '052-111-2222',
+    createdAt: new Date().toISOString(),
+    expiresAt: getExpiryDate(7), // Valid for 7 days
+    status: 'active'
+  },
+  {
+    id: 'hdt-3',
+    token: 'demo12345678',
+    clinicId: 'clinic-1',
+    patientId: '2',
+    patientName: 'מיכל לוי',
+    patientPhone: '052-987-6543',
+    patientEmail: 'michal.l@example.com',
+    createdAt: new Date().toISOString(),
+    expiresAt: getExpiryDate(7),
+    status: 'active'
+  }
 ];

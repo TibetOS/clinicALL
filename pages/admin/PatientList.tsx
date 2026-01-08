@@ -1,12 +1,13 @@
 import React, { useState, useMemo } from 'react';
 import {
   Search, Filter, UserPlus, ChevronLeft, Download, Calendar as CalendarIcon,
-  X, CheckSquare, Square, MessageSquare, Trash2, FileDown
+  X, CheckSquare, Square, MessageSquare, Trash2, FileDown, FileHeart, Copy,
+  Check, Send, Mail, Phone, Clock, AlertCircle, FileCheck
 } from 'lucide-react';
 import { Card, Button, Input, Badge, Dialog, Label, Skeleton } from '../../components/ui';
-import { usePatients } from '../../hooks';
+import { usePatients, useHealthTokens } from '../../hooks';
 import { useNavigate } from 'react-router-dom';
-import { Patient, RiskLevel } from '../../types';
+import { Patient, RiskLevel, HealthDeclarationToken, DeclarationStatus } from '../../types';
 
 // Helper for translating status
 const getStatusLabel = (status: string) => {
@@ -16,6 +17,21 @@ const getStatusLabel = (status: string) => {
     'high': 'גבוה',
   };
   return map[status] || status;
+};
+
+// Helper for declaration status
+const getDeclarationStatusConfig = (status?: DeclarationStatus) => {
+  switch (status) {
+    case 'valid':
+      return { label: 'תקין', variant: 'success' as const, icon: FileCheck };
+    case 'pending':
+      return { label: 'ממתין', variant: 'warning' as const, icon: Clock };
+    case 'expired':
+      return { label: 'פג תוקף', variant: 'destructive' as const, icon: AlertCircle };
+    case 'none':
+    default:
+      return { label: 'חסר', variant: 'outline' as const, icon: FileHeart };
+  }
 };
 
 interface PatientFormData {
@@ -75,16 +91,39 @@ const exportToCSV = (patients: Patient[], filename: string) => {
   URL.revokeObjectURL(url);
 };
 
+// Health Declaration Form Data
+interface HealthDeclarationFormData {
+  patientId?: string;
+  patientName: string;
+  patientPhone: string;
+  patientEmail: string;
+}
+
+const INITIAL_HEALTH_FORM: HealthDeclarationFormData = {
+  patientId: undefined,
+  patientName: '',
+  patientPhone: '',
+  patientEmail: '',
+};
+
 export const PatientList = () => {
   const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState('');
   const { patients, loading: patientsLoading, addPatient, deletePatient } = usePatients();
+  const { createToken, generateShareLink, generateWhatsAppLink, generateEmailLink } = useHealthTokens();
   const [isAddPatientOpen, setIsAddPatientOpen] = useState(false);
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [formData, setFormData] = useState<PatientFormData>(INITIAL_FORM);
   const [filters, setFilters] = useState<FilterState>(INITIAL_FILTERS);
   const [saving, setSaving] = useState(false);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
+
+  // Health Declaration Dialog State
+  const [isHealthDeclarationOpen, setIsHealthDeclarationOpen] = useState(false);
+  const [healthFormData, setHealthFormData] = useState<HealthDeclarationFormData>(INITIAL_HEALTH_FORM);
+  const [generatedToken, setGeneratedToken] = useState<HealthDeclarationToken | null>(null);
+  const [linkCopied, setLinkCopied] = useState(false);
+  const [creatingToken, setCreatingToken] = useState(false);
 
   // Multi-select state
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
@@ -185,6 +224,61 @@ export const PatientList = () => {
     }
   };
 
+  // Health Declaration Handlers
+  const openHealthDeclarationDialog = (patient?: Patient) => {
+    if (patient) {
+      setHealthFormData({
+        patientId: patient.id,
+        patientName: patient.name,
+        patientPhone: patient.phone,
+        patientEmail: patient.email || '',
+      });
+    } else {
+      setHealthFormData(INITIAL_HEALTH_FORM);
+    }
+    setGeneratedToken(null);
+    setLinkCopied(false);
+    setIsHealthDeclarationOpen(true);
+  };
+
+  const handleGenerateToken = async () => {
+    if (!healthFormData.patientName || !healthFormData.patientPhone) return;
+
+    setCreatingToken(true);
+    const token = await createToken({
+      patientId: healthFormData.patientId,
+      patientName: healthFormData.patientName,
+      patientPhone: healthFormData.patientPhone,
+      patientEmail: healthFormData.patientEmail,
+    });
+    setCreatingToken(false);
+
+    if (token) {
+      setGeneratedToken(token);
+    }
+  };
+
+  const handleCopyLink = async () => {
+    if (!generatedToken) return;
+    const link = generateShareLink(generatedToken.token);
+    await navigator.clipboard.writeText(link);
+    setLinkCopied(true);
+    showSuccess('הקישור הועתק');
+    setTimeout(() => setLinkCopied(false), 3000);
+  };
+
+  const handleSendWhatsApp = () => {
+    if (!generatedToken || !healthFormData.patientPhone) return;
+    const link = generateWhatsAppLink(generatedToken.token, healthFormData.patientPhone);
+    window.open(link, '_blank');
+  };
+
+  const handleSendEmail = () => {
+    if (!generatedToken || !healthFormData.patientEmail) return;
+    const link = generateEmailLink(generatedToken.token, healthFormData.patientEmail, 'ClinicALL');
+    window.open(link, '_blank');
+  };
+
   return (
     <div className="space-y-6 animate-in fade-in duration-500 pb-10">
       {/* Success Toast */}
@@ -212,6 +306,9 @@ export const PatientList = () => {
           >
             <CheckSquare className="ml-2 h-4 w-4" />
             {isSelectionMode ? 'בטל בחירה' : 'בחירה מרובה'}
+          </Button>
+          <Button variant="outline" onClick={() => openHealthDeclarationDialog()}>
+            <FileHeart className="ml-2 h-4 w-4" /> הצהרת בריאות
           </Button>
           <Button className="shadow-sm" onClick={() => setIsAddPatientOpen(true)}>
             <UserPlus className="ml-2 h-4 w-4" /> מטופל חדש
@@ -302,9 +399,8 @@ export const PatientList = () => {
               <th className="px-6 py-4">שם המטופל</th>
               <th className="px-6 py-4">טלפון</th>
               <th className="px-6 py-4">ביקור אחרון</th>
-              <th className="px-6 py-4">תור קרוב</th>
+              <th className="px-6 py-4">הצהרת בריאות</th>
               <th className="px-6 py-4">רמת סיכון</th>
-              <th className="px-6 py-4">סטטוס</th>
               <th className="px-6 py-4"></th>
             </tr>
           </thead>
@@ -368,20 +464,37 @@ export const PatientList = () => {
                 <td className="px-6 py-4 text-gray-500">{patient.phone}</td>
                 <td className="px-6 py-4 text-gray-500">{patient.lastVisit ? new Date(patient.lastVisit).toLocaleDateString('he-IL') : '-'}</td>
                 <td className="px-6 py-4">
-                  {patient.upcomingAppointment ? (
-                    <span className="flex items-center text-primary font-medium">
-                      <CalendarIcon size={14} className="ml-1" />
-                      {new Date(patient.upcomingAppointment).toLocaleDateString('he-IL')}
-                    </span>
-                  ) : <span className="text-gray-500">-</span>}
+                  {(() => {
+                    const config = getDeclarationStatusConfig(patient.declarationStatus);
+                    const StatusIcon = config.icon;
+                    return (
+                      <div className="flex items-center gap-2">
+                        <Badge variant={config.variant} className="gap-1">
+                          <StatusIcon size={12} />
+                          {config.label}
+                        </Badge>
+                        {(patient.declarationStatus === 'none' || patient.declarationStatus === 'expired') && (
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="h-7 px-2 text-xs"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              openHealthDeclarationDialog(patient);
+                            }}
+                          >
+                            <Send size={12} className="ml-1" />
+                            שלח
+                          </Button>
+                        )}
+                      </div>
+                    );
+                  })()}
                 </td>
                 <td className="px-6 py-4">
                   <Badge variant={patient.riskLevel === 'high' ? 'destructive' : patient.riskLevel === 'medium' ? 'warning' : 'success'}>
                     {getStatusLabel(patient.riskLevel)}
                   </Badge>
-                </td>
-                <td className="px-6 py-4">
-                  <Badge variant="outline">פעיל</Badge>
                 </td>
                 <td className="px-6 py-4">
                   <Button variant="ghost" size="icon" aria-label="פרטי מטופל">
@@ -465,10 +578,35 @@ export const PatientList = () => {
                 {patient.lastVisit ? new Date(patient.lastVisit).toLocaleDateString('he-IL') : '-'}
               </div>
               <div>
-                <span className="text-gray-600 block text-xs">תור קרוב</span>
-                {patient.upcomingAppointment ? new Date(patient.upcomingAppointment).toLocaleDateString('he-IL') : '-'}
+                <span className="text-gray-600 block text-xs">הצהרת בריאות</span>
+                {(() => {
+                  const config = getDeclarationStatusConfig(patient.declarationStatus);
+                  const StatusIcon = config.icon;
+                  return (
+                    <div className="flex items-center gap-1 mt-1">
+                      <Badge variant={config.variant} className="gap-1 text-xs">
+                        <StatusIcon size={10} />
+                        {config.label}
+                      </Badge>
+                    </div>
+                  );
+                })()}
               </div>
             </div>
+            {(patient.declarationStatus === 'none' || patient.declarationStatus === 'expired') && (
+              <Button
+                variant="outline"
+                size="sm"
+                className="w-full mt-2"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  openHealthDeclarationDialog(patient);
+                }}
+              >
+                <Send size={14} className="ml-2" />
+                שלח הצהרת בריאות
+              </Button>
+            )}
           </Card>
         ))}
       </div>
@@ -625,6 +763,135 @@ export const PatientList = () => {
               החל סינון ({filteredPatients.length} תוצאות)
             </Button>
           </div>
+        </div>
+      </Dialog>
+
+      {/* Health Declaration Dialog */}
+      <Dialog
+        open={isHealthDeclarationOpen}
+        onClose={() => setIsHealthDeclarationOpen(false)}
+        title="שליחת הצהרת בריאות"
+      >
+        <div className="space-y-4">
+          {!generatedToken ? (
+            <>
+              {/* Form to collect patient info */}
+              <div className="bg-blue-50 p-4 rounded-xl border border-blue-100 text-sm text-blue-800">
+                <p>צור קישור ייחודי להצהרת בריאות ושלח אותו ללקוח באמצעות WhatsApp או אימייל.</p>
+              </div>
+
+              <div>
+                <Label>שם מלא *</Label>
+                <Input
+                  placeholder="שם הלקוח"
+                  value={healthFormData.patientName}
+                  onChange={(e) => setHealthFormData(prev => ({ ...prev, patientName: e.target.value }))}
+                />
+              </div>
+
+              <div>
+                <Label>טלפון נייד *</Label>
+                <Input
+                  type="tel"
+                  placeholder="050-0000000"
+                  className="direction-ltr"
+                  value={healthFormData.patientPhone}
+                  onChange={(e) => setHealthFormData(prev => ({ ...prev, patientPhone: e.target.value }))}
+                />
+              </div>
+
+              <div>
+                <Label>אימייל (אופציונלי)</Label>
+                <Input
+                  type="email"
+                  placeholder="email@example.com"
+                  className="direction-ltr"
+                  value={healthFormData.patientEmail}
+                  onChange={(e) => setHealthFormData(prev => ({ ...prev, patientEmail: e.target.value }))}
+                />
+              </div>
+
+              <div className="flex justify-end gap-3 pt-4 border-t mt-4">
+                <Button variant="ghost" onClick={() => setIsHealthDeclarationOpen(false)}>
+                  ביטול
+                </Button>
+                <Button
+                  onClick={handleGenerateToken}
+                  disabled={creatingToken || !healthFormData.patientName || !healthFormData.patientPhone}
+                >
+                  {creatingToken ? 'יוצר קישור...' : 'צור קישור'}
+                </Button>
+              </div>
+            </>
+          ) : (
+            <>
+              {/* Token generated - show sharing options */}
+              <div className="bg-green-50 p-4 rounded-xl border border-green-100 text-center">
+                <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-3">
+                  <Check size={24} className="text-green-600" />
+                </div>
+                <h3 className="font-bold text-green-800 mb-1">הקישור נוצר בהצלחה!</h3>
+                <p className="text-sm text-green-700">תוקף הקישור: 7 ימים</p>
+              </div>
+
+              <div className="space-y-2">
+                <Label>קישור להצהרת בריאות</Label>
+                <div className="flex gap-2">
+                  <Input
+                    readOnly
+                    value={generateShareLink(generatedToken.token)}
+                    className="bg-gray-50 text-sm font-mono direction-ltr"
+                  />
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    onClick={handleCopyLink}
+                    className="shrink-0"
+                  >
+                    {linkCopied ? <Check size={16} className="text-green-600" /> : <Copy size={16} />}
+                  </Button>
+                </div>
+              </div>
+
+              <div className="border-t pt-4 mt-4">
+                <Label className="mb-3 block">שלח ללקוח</Label>
+                <div className="grid grid-cols-2 gap-3">
+                  <Button
+                    variant="outline"
+                    className="h-12 gap-2"
+                    onClick={handleSendWhatsApp}
+                  >
+                    <Phone size={18} className="text-green-600" />
+                    <span>WhatsApp</span>
+                  </Button>
+                  <Button
+                    variant="outline"
+                    className="h-12 gap-2"
+                    onClick={handleSendEmail}
+                    disabled={!healthFormData.patientEmail}
+                  >
+                    <Mail size={18} className="text-blue-600" />
+                    <span>אימייל</span>
+                  </Button>
+                </div>
+                {!healthFormData.patientEmail && (
+                  <p className="text-xs text-gray-500 mt-2 text-center">לא הוזן אימייל - לא ניתן לשלוח במייל</p>
+                )}
+              </div>
+
+              <div className="flex justify-end gap-3 pt-4 border-t mt-4">
+                <Button variant="ghost" onClick={() => {
+                  setGeneratedToken(null);
+                  setHealthFormData(INITIAL_HEALTH_FORM);
+                }}>
+                  צור קישור נוסף
+                </Button>
+                <Button onClick={() => setIsHealthDeclarationOpen(false)}>
+                  סיום
+                </Button>
+              </div>
+            </>
+          )}
         </div>
       </Dialog>
     </div>

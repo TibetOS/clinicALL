@@ -35,6 +35,7 @@ export interface ClinicProfile {
 }
 
 export type RiskLevel = 'low' | 'medium' | 'high';
+export type DeclarationStatus = 'valid' | 'expired' | 'pending' | 'none';
 
 export interface Patient {
   id: string;
@@ -51,9 +52,14 @@ export interface Patient {
   gender?: string;
   aestheticInterests?: string[];
   skinType?: string;
+  // Health Declaration fields
+  lastDeclarationDate?: string; // ISO date when last signed
+  declarationStatus?: DeclarationStatus; // Current status
+  pendingDeclarationToken?: string; // Token if declaration is pending
 }
 
 export type AppointmentStatus = 'pending' | 'confirmed' | 'completed' | 'cancelled' | 'no-show';
+export type AppointmentDeclarationStatus = 'required' | 'pending' | 'received' | 'not_required';
 
 export interface Appointment {
   id: string;
@@ -66,6 +72,9 @@ export interface Appointment {
   duration: number; // minutes
   status: AppointmentStatus;
   notes?: string;
+  // Health Declaration tracking for appointments
+  declarationStatus?: AppointmentDeclarationStatus;
+  declarationTokenId?: string; // Reference to the token sent for this appointment
 }
 
 export interface Service {
@@ -142,6 +151,8 @@ export interface InventoryItem {
   status: 'ok' | 'low' | 'critical';
 }
 
+export type NotificationAction = 'send_declaration' | 'view_appointment' | 'view_patient' | 'none';
+
 export interface Notification {
   id: string;
   title: string;
@@ -149,6 +160,18 @@ export interface Notification {
   type: 'info' | 'warning' | 'success' | 'error';
   timestamp: string;
   read: boolean;
+  // Actionable notification support
+  action?: NotificationAction;
+  metadata?: {
+    appointmentId?: string;
+    patientId?: string;
+    patientName?: string;
+    patientPhone?: string;
+    patientEmail?: string;
+    appointmentDate?: string;
+    appointmentTime?: string;
+    serviceName?: string;
+  };
 }
 
 // Booking App Types
@@ -209,4 +232,19 @@ export interface Campaign {
   sentCount: number;
   openRate?: number;
   scheduledDate?: string;
+}
+
+// Health Declaration Token for secure form access
+export interface HealthDeclarationToken {
+  id: string;
+  token: string; // Unique URL-safe token
+  clinicId: string;
+  patientId?: string; // Optional - for existing patients
+  patientName?: string;
+  patientPhone?: string;
+  patientEmail?: string;
+  createdAt: string; // ISO Date
+  expiresAt: string; // ISO Date
+  status: 'active' | 'used' | 'expired';
+  usedAt?: string; // ISO Date - when the form was submitted
 }

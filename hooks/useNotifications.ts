@@ -1,13 +1,24 @@
 import { useState, useEffect, useCallback } from 'react';
 import { supabase, isSupabaseConfigured } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
-import { Notification } from '../types';
+import { Notification, NotificationAction } from '../types';
 import { MOCK_NOTIFICATIONS } from '../data';
 
 interface NotificationInput {
   title: string;
   message: string;
   type?: 'info' | 'warning' | 'success' | 'error';
+  action?: NotificationAction;
+  metadata?: {
+    appointmentId?: string;
+    patientId?: string;
+    patientName?: string;
+    patientPhone?: string;
+    patientEmail?: string;
+    appointmentDate?: string;
+    appointmentTime?: string;
+    serviceName?: string;
+  };
 }
 
 interface UseNotifications {
@@ -77,6 +88,8 @@ export function useNotifications(): UseNotifications {
         type: notification.type || 'info',
         timestamp: new Date().toISOString(),
         read: false,
+        action: notification.action,
+        metadata: notification.metadata,
       };
       setNotifications(prev => [newNotification, ...prev]);
       return newNotification;
