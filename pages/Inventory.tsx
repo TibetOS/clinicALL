@@ -18,6 +18,15 @@ interface NewItemForm {
   supplier: string;
 }
 
+interface AdjustmentForm {
+  itemId: string;
+  itemName: string;
+  currentQuantity: number;
+  adjustmentType: 'add' | 'remove';
+  amount: number;
+  reason: string;
+}
+
 const initialFormState: NewItemForm = {
   name: '',
   sku: '',
@@ -31,11 +40,65 @@ const initialFormState: NewItemForm = {
 export const InventoryPage = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [isAddOpen, setIsAddOpen] = useState(false);
+  const [isAdjustOpen, setIsAdjustOpen] = useState(false);
   const [newItem, setNewItem] = useState<NewItemForm>(initialFormState);
+  const [adjustment, setAdjustment] = useState<AdjustmentForm | null>(null);
   const [saving, setSaving] = useState(false);
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
   // Use hook for data
-  const { inventory, updateQuantity, addItem } = useInventory();
+  const { inventory, loading, updateQuantity, addItem } = useInventory();
+
+  const showSuccess = (message: string) => {
+    setSuccessMessage(message);
+    setTimeout(() => setSuccessMessage(null), 3000);
+  };
+
+  const openAdjustment = (item: InventoryItem, type: 'add' | 'remove') => {
+    setAdjustment({
+      itemId: item.id,
+      itemName: item.name,
+      currentQuantity: item.quantity,
+      adjustmentType: type,
+      amount: 1,
+      reason: '',
+    });
+    setIsAdjustOpen(true);
+  };
+
+  const handleAdjustment = async () => {
+    if (!adjustment || adjustment.amount <= 0) return;
+
+    setSaving(true);
+    try {
+      const newQuantity = adjustment.adjustmentType === 'add'
+        ? adjustment.currentQuantity + adjustment.amount
+        : Math.max(0, adjustment.currentQuantity - adjustment.amount);
+
+      const success = await updateQuantity(adjustment.itemId, newQuantity);
+      if (success) {
+        setIsAdjustOpen(false);
+        setAdjustment(null);
+        showSuccess(
+          adjustment.adjustmentType === 'add'
+            ? `נוספו ${adjustment.amount} יחידות למלאי`
+            : `הופחתו ${adjustment.amount} יחידות מהמלאי`
+        );
+      }
+    } catch (err) {
+      console.error('Failed to adjust quantity:', err);
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleQuickAdjust = async (item: InventoryItem, delta: number) => {
+    const newQuantity = Math.max(0, item.quantity + delta);
+    const success = await updateQuantity(item.id, newQuantity);
+    if (success) {
+      showSuccess(delta > 0 ? `נוספה יחידה אחת` : `הופחתה יחידה אחת`);
+    }
+  };
 
   const handleAddItem = async () => {
     if (!newItem.name.trim()) return;
@@ -75,6 +138,13 @@ export const InventoryPage = () => {
 
   return (
     <div className="space-y-6 animate-in fade-in duration-500 pb-10">
+      {/* Success Toast */}
+      {successMessage && (
+        <div className="fixed top-6 left-1/2 -translate-x-1/2 z-50 bg-green-600 text-white px-6 py-3 rounded-xl shadow-lg animate-in slide-in-from-top-2 duration-300">
+          {successMessage}
+        </div>
+      )}
+
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
            <h1 className="text-3xl font-bold tracking-tight text-gray-900">ניהול מלאי</h1>
@@ -153,7 +223,24 @@ export const InventoryPage = () => {
                   </tr>
                </thead>
                <tbody className="divide-y divide-gray-100">
-                  {filteredItems.map(item => (
+                  {loading ? (
+                    <tr>
+                      <td colSpan={7} className="px-6 py-12 text-center text-gray-500">
+                        <div className="flex flex-col items-center gap-2">
+                          <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+                          <span>טוען מלאי...</span>
+                        </div>
+                      </td>
+                    </tr>
+                  ) : filteredItems.length === 0 ? (
+                    <tr>
+                      <td colSpan={7} className="px-6 py-12 text-center text-gray-500">
+                        <Package size={48} className="mx-auto mb-4 text-gray-300" />
+                        <p className="font-medium">לא נמצאו פריטים</p>
+                        <p className="text-sm">נסה לשנות את מונחי החיפוש או הוסף פריט חדש</p>
+                      </td>
+                    </tr>
+                  ) : filteredItems.map(item => (
                      <tr key={item.id} className="hover:bg-gray-50/50 transition-colors">
                         <td className="px-6 py-4 font-medium text-gray-900">{item.name}</td>
                         <td className="px-6 py-4 text-gray-500 font-mono text-xs">{item.sku}</td>
@@ -179,6 +266,7 @@ export const InventoryPage = () => {
                                 size="icon"
                                 className="h-11 w-11 min-h-[44px] min-w-[44px] text-green-600 hover:text-green-700 hover:bg-green-50 touch-manipulation"
                                 aria-label="הוסף למלאי"
+                                onClick={() => handleQuickAdjust(item, 1)}
                               >
                                  <ArrowUp size={18} />
                               </Button>
@@ -187,6 +275,8 @@ export const InventoryPage = () => {
                                 size="icon"
                                 className="h-11 w-11 min-h-[44px] min-w-[44px] text-red-600 hover:text-red-700 hover:bg-red-50 touch-manipulation"
                                 aria-label="הפחת מהמלאי"
+                                onClick={() => handleQuickAdjust(item, -1)}
+                                disabled={item.quantity <= 0}
                               >
                                  <ArrowDown size={18} />
                               </Button>
@@ -198,6 +288,63 @@ export const InventoryPage = () => {
             </table>
          </div>
       </Card>
+
+      {/* Stock Adjustment Dialog */}
+      <Dialog
+        open={isAdjustOpen}
+        onClose={() => { setIsAdjustOpen(false); setAdjustment(null); }}
+        title={adjustment?.adjustmentType === 'add' ? 'הוספה למלאי' : 'הפחתה מהמלאי'}
+      >
+        {adjustment && (
+          <div className="space-y-4">
+            <div className="p-4 bg-gray-50 rounded-xl">
+              <p className="font-medium text-gray-900">{adjustment.itemName}</p>
+              <p className="text-sm text-gray-500">כמות נוכחית: {adjustment.currentQuantity} יחידות</p>
+            </div>
+            <div>
+              <Label>כמות {adjustment.adjustmentType === 'add' ? 'להוספה' : 'להפחתה'}</Label>
+              <Input
+                type="number"
+                min="1"
+                max={adjustment.adjustmentType === 'remove' ? adjustment.currentQuantity : undefined}
+                value={adjustment.amount}
+                onChange={(e) => setAdjustment(prev => prev ? { ...prev, amount: parseInt(e.target.value) || 0 } : null)}
+              />
+            </div>
+            <div>
+              <Label>סיבה (אופציונלי)</Label>
+              <Input
+                placeholder={adjustment.adjustmentType === 'add' ? 'לדוג׳: קליטת הזמנה' : 'לדוג׳: שימוש בטיפול'}
+                value={adjustment.reason}
+                onChange={(e) => setAdjustment(prev => prev ? { ...prev, reason: e.target.value } : null)}
+              />
+            </div>
+            <div className={`p-3 rounded-lg ${adjustment.adjustmentType === 'add' ? 'bg-green-50' : 'bg-red-50'}`}>
+              <p className="text-sm font-medium">
+                כמות חדשה לאחר {adjustment.adjustmentType === 'add' ? 'הוספה' : 'הפחתה'}:{' '}
+                <span className={adjustment.adjustmentType === 'add' ? 'text-green-600' : 'text-red-600'}>
+                  {adjustment.adjustmentType === 'add'
+                    ? adjustment.currentQuantity + adjustment.amount
+                    : Math.max(0, adjustment.currentQuantity - adjustment.amount)
+                  } יחידות
+                </span>
+              </p>
+            </div>
+            <div className="flex justify-end gap-3 pt-4 border-t mt-4">
+              <Button variant="ghost" onClick={() => { setIsAdjustOpen(false); setAdjustment(null); }} disabled={saving}>
+                ביטול
+              </Button>
+              <Button
+                onClick={handleAdjustment}
+                disabled={saving || adjustment.amount <= 0}
+                className={adjustment.adjustmentType === 'add' ? 'bg-green-600 hover:bg-green-700' : 'bg-red-600 hover:bg-red-700'}
+              >
+                {saving ? 'שומר...' : adjustment.adjustmentType === 'add' ? 'הוסף למלאי' : 'הפחת מהמלאי'}
+              </Button>
+            </div>
+          </div>
+        )}
+      </Dialog>
 
       <Dialog open={isAddOpen} onClose={() => setIsAddOpen(false)} title="קליטת פריט חדש">
         <div className="space-y-4">

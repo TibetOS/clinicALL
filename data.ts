@@ -2,6 +2,20 @@
 
 import { Patient, Appointment, Service, Declaration, ClinicalNote, InventoryItem, Notification, Lead, Invoice, Campaign } from './types';
 
+// Helper to create dates relative to today for mock data
+const getRelativeDate = (daysOffset: number): string => {
+  const date = new Date();
+  date.setDate(date.getDate() + daysOffset);
+  return date.toISOString().split('T')[0];
+};
+
+// Helper to create a birthDate that falls within N days from today (same month/day, any year)
+const getBirthdayInDays = (daysFromNow: number, year: number = 1990): string => {
+  const date = new Date();
+  date.setDate(date.getDate() + daysFromNow);
+  return `${year}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+};
+
 export const MOCK_PATIENTS: Patient[] = [
   {
     id: '1',
@@ -9,9 +23,10 @@ export const MOCK_PATIENTS: Patient[] = [
     email: 'sarah.c@example.com',
     phone: '050-123-4567',
     riskLevel: 'low',
-    lastVisit: '2023-10-15',
-    upcomingAppointment: '2023-11-02',
+    lastVisit: getRelativeDate(-14), // Had botox 2 weeks ago - due for follow-up
+    upcomingAppointment: undefined,
     memberSince: '2022-01-15',
+    birthDate: getBirthdayInDays(3, 1989), // Birthday in 3 days
     age: 34,
     gender: 'נקבה',
     aestheticInterests: ['בוטוקס', 'פיסול שפתיים'],
@@ -23,8 +38,9 @@ export const MOCK_PATIENTS: Patient[] = [
     email: 'michal.l@example.com',
     phone: '052-987-6543',
     riskLevel: 'medium',
-    lastVisit: '2023-09-20',
+    lastVisit: getRelativeDate(-70), // Lapsed client
     memberSince: '2021-11-05',
+    birthDate: getBirthdayInDays(5, 1981), // Birthday in 5 days
     age: 42,
     gender: 'נקבה',
     aestheticInterests: ['מיצוק עור', 'פיגמנטציה'],
@@ -36,12 +52,55 @@ export const MOCK_PATIENTS: Patient[] = [
     email: 'daniel.a@example.com',
     phone: '054-555-4433',
     riskLevel: 'low',
-    lastVisit: '2023-10-01',
+    lastVisit: getRelativeDate(-5),
     memberSince: '2023-05-10',
+    birthDate: '1994-03-15', // Not this week
     age: 29,
     gender: 'זכר',
     aestheticInterests: ['עיצוב לסת', 'הסרת שיער'],
     avatar: 'https://ui-avatars.com/api/?name=Daniel+Avraham&background=random'
+  },
+  {
+    id: '4',
+    name: 'רונית שמעון',
+    email: 'ronit.s@example.com',
+    phone: '050-222-3344',
+    riskLevel: 'low',
+    lastVisit: getRelativeDate(-13), // Had botox ~2 weeks ago
+    memberSince: '2022-06-20',
+    birthDate: getBirthdayInDays(1, 1985), // Birthday tomorrow
+    age: 38,
+    gender: 'נקבה',
+    aestheticInterests: ['בוטוקס', 'מזותרפיה'],
+    avatar: 'https://ui-avatars.com/api/?name=Ronit+Shimon&background=random'
+  },
+  {
+    id: '5',
+    name: 'יעל גולן',
+    email: 'yael.g@example.com',
+    phone: '053-444-5566',
+    riskLevel: 'high',
+    lastVisit: getRelativeDate(-15), // Had botox 2 weeks ago
+    memberSince: '2021-03-10',
+    birthDate: '1978-08-22', // Not this week
+    age: 45,
+    gender: 'נקבה',
+    aestheticInterests: ['בוטוקס', 'פילינג'],
+    avatar: 'https://ui-avatars.com/api/?name=Yael+Golan&background=random'
+  },
+  {
+    id: '6',
+    name: 'אבי כהן',
+    email: 'avi.c@example.com',
+    phone: '054-666-7788',
+    riskLevel: 'low',
+    lastVisit: getRelativeDate(-12), // Had botox ~2 weeks ago
+    memberSince: '2023-01-15',
+    birthDate: '1982-12-05', // Not this week
+    age: 41,
+    gender: 'זכר',
+    aestheticInterests: ['בוטוקס'],
+    avatar: 'https://ui-avatars.com/api/?name=Avi+Cohen&background=random'
   }
 ];
 
@@ -54,9 +113,16 @@ export const MOCK_SERVICES: Service[] = [
 ];
 
 export const MOCK_APPOINTMENTS: Appointment[] = [
-  { id: '101', patientId: '1', patientName: 'שרה כהן', serviceId: '1', serviceName: 'בוטוקס - אזור אחד', date: '2023-10-24', time: '09:00', duration: 15, status: 'confirmed' },
-  { id: '102', patientId: '2', patientName: 'מיכל לוי', serviceId: '4', serviceName: 'טיפול פנים קלאסי', date: '2023-10-24', time: '10:00', duration: 60, status: 'confirmed' },
-  { id: '103', patientId: '3', patientName: 'דניאל אברהם', serviceId: '5', serviceName: 'מזותרפיה', date: '2023-10-24', time: '12:30', duration: 45, status: 'pending' },
+  // Today's appointments
+  { id: '101', patientId: '3', patientName: 'דניאל אברהם', serviceId: '5', serviceName: 'מזותרפיה', date: getRelativeDate(0), time: '09:00', duration: 45, status: 'confirmed' },
+  { id: '102', patientId: '2', patientName: 'מיכל לוי', serviceId: '4', serviceName: 'טיפול פנים קלאסי', date: getRelativeDate(0), time: '10:00', duration: 60, status: 'pending' },
+  // Past botox appointments (completed ~2 weeks ago - due for follow-up)
+  { id: '103', patientId: '1', patientName: 'שרה כהן', serviceId: '1', serviceName: 'בוטוקס - אזור אחד', date: getRelativeDate(-14), time: '10:00', duration: 15, status: 'completed' },
+  { id: '104', patientId: '4', patientName: 'רונית שמעון', serviceId: '1', serviceName: 'בוטוקס - אזור אחד', date: getRelativeDate(-13), time: '11:00', duration: 15, status: 'completed' },
+  { id: '105', patientId: '5', patientName: 'יעל גולן', serviceId: '1', serviceName: 'בוטוקס - אזור אחד', date: getRelativeDate(-15), time: '14:00', duration: 15, status: 'completed' },
+  { id: '106', patientId: '6', patientName: 'אבי כהן', serviceId: '1', serviceName: 'בוטוקס - אזור אחד', date: getRelativeDate(-12), time: '15:00', duration: 15, status: 'completed' },
+  // Other past appointments
+  { id: '107', patientId: '3', patientName: 'דניאל אברהם', serviceId: '2', serviceName: 'פיסול שפתיים', date: getRelativeDate(-5), time: '09:30', duration: 30, status: 'completed' },
 ];
 
 export const MOCK_DECLARATIONS: Declaration[] = [

@@ -9,6 +9,7 @@ interface PatientInput {
   email?: string;
   phone: string;
   riskLevel?: RiskLevel;
+  birthDate?: string;
   age?: number;
   gender?: string;
   aestheticInterests?: string[];
@@ -62,6 +63,7 @@ export function usePatients(): UsePatients {
         lastVisit: p.last_visit || '',
         upcomingAppointment: p.upcoming_appointment,
         memberSince: p.member_since || p.created_at,
+        birthDate: p.birth_date,
         age: p.age,
         gender: p.gender,
         aestheticInterests: p.aesthetic_interests || [],
@@ -101,6 +103,7 @@ export function usePatients(): UsePatients {
         lastVisit: data.last_visit || '',
         upcomingAppointment: data.upcoming_appointment,
         memberSince: data.member_since || data.created_at,
+        birthDate: data.birth_date,
         age: data.age,
         gender: data.gender,
         aestheticInterests: data.aesthetic_interests || [],
@@ -123,6 +126,7 @@ export function usePatients(): UsePatients {
         riskLevel: patient.riskLevel || 'low',
         lastVisit: '',
         memberSince: new Date().toISOString().split('T')[0],
+        birthDate: patient.birthDate,
         age: patient.age,
         gender: patient.gender,
         aestheticInterests: patient.aestheticInterests,
@@ -141,6 +145,7 @@ export function usePatients(): UsePatients {
           email: patient.email,
           phone: patient.phone,
           risk_level: patient.riskLevel || 'low',
+          birth_date: patient.birthDate,
           age: patient.age,
           gender: patient.gender,
           aesthetic_interests: patient.aestheticInterests,
@@ -160,6 +165,7 @@ export function usePatients(): UsePatients {
         riskLevel: data.risk_level || 'low',
         lastVisit: '',
         memberSince: data.member_since,
+        birthDate: data.birth_date,
         age: data.age,
         gender: data.gender,
         aestheticInterests: data.aesthetic_interests || [],
@@ -190,6 +196,7 @@ export function usePatients(): UsePatients {
       if (updates.email !== undefined) dbUpdates.email = updates.email;
       if (updates.phone !== undefined) dbUpdates.phone = updates.phone;
       if (updates.riskLevel !== undefined) dbUpdates.risk_level = updates.riskLevel;
+      if (updates.birthDate !== undefined) dbUpdates.birth_date = updates.birthDate;
       if (updates.age !== undefined) dbUpdates.age = updates.age;
       if (updates.gender !== undefined) dbUpdates.gender = updates.gender;
       if (updates.aestheticInterests !== undefined) dbUpdates.aesthetic_interests = updates.aestheticInterests;
@@ -212,6 +219,7 @@ export function usePatients(): UsePatients {
         riskLevel: data.risk_level || 'low',
         lastVisit: data.last_visit || '',
         memberSince: data.member_since,
+        birthDate: data.birth_date,
         age: data.age,
         gender: data.gender,
         aestheticInterests: data.aesthetic_interests || [],

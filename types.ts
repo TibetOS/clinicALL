@@ -46,6 +46,7 @@ export interface Patient {
   lastVisit: string;
   upcomingAppointment?: string;
   memberSince: string;
+  birthDate?: string; // ISO date string (YYYY-MM-DD)
   age?: number;
   gender?: string;
   aestheticInterests?: string[];
