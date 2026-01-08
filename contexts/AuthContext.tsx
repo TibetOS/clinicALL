@@ -194,10 +194,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       return { error: new Error('Supabase not configured') };
     }
 
-    const { error } = await supabase.auth.updateUser({
-      password: newPassword,
-    });
-    return { error: error as Error | null };
+    try {
+      const { error } = await supabase.auth.updateUser({
+        password: newPassword,
+      });
+      return { error: error as Error | null };
+    } catch (err) {
+      console.error('updatePassword exception:', err);
+      return { error: err as Error };
+    }
   };
 
   return (
