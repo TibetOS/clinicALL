@@ -130,15 +130,15 @@ export const MOCK_SERVICES: Service[] = [
 
 export const MOCK_APPOINTMENTS: Appointment[] = [
   // Today's appointments
-  { id: '101', patientId: '3', patientName: 'דניאל אברהם', serviceId: '5', serviceName: 'מזותרפיה', date: getRelativeDate(0), time: '09:00', duration: 45, status: 'confirmed' },
-  { id: '102', patientId: '2', patientName: 'מיכל לוי', serviceId: '4', serviceName: 'טיפול פנים קלאסי', date: getRelativeDate(0), time: '10:00', duration: 60, status: 'pending' },
+  { id: '101', patientId: '3', patientName: 'דניאל אברהם', serviceId: '5', serviceName: 'מזותרפיה', date: getRelativeDate(0), time: '09:00', duration: 45, status: 'confirmed', declarationStatus: 'received' },
+  { id: '102', patientId: '2', patientName: 'מיכל לוי', serviceId: '4', serviceName: 'טיפול פנים קלאסי', date: getRelativeDate(0), time: '10:00', duration: 60, status: 'pending', declarationStatus: 'pending' },
   // Past botox appointments (completed ~2 weeks ago - due for follow-up)
-  { id: '103', patientId: '1', patientName: 'שרה כהן', serviceId: '1', serviceName: 'בוטוקס - אזור אחד', date: getRelativeDate(-14), time: '10:00', duration: 15, status: 'completed' },
-  { id: '104', patientId: '4', patientName: 'רונית שמעון', serviceId: '1', serviceName: 'בוטוקס - אזור אחד', date: getRelativeDate(-13), time: '11:00', duration: 15, status: 'completed' },
-  { id: '105', patientId: '5', patientName: 'יעל גולן', serviceId: '1', serviceName: 'בוטוקס - אזור אחד', date: getRelativeDate(-15), time: '14:00', duration: 15, status: 'completed' },
-  { id: '106', patientId: '6', patientName: 'אבי כהן', serviceId: '1', serviceName: 'בוטוקס - אזור אחד', date: getRelativeDate(-12), time: '15:00', duration: 15, status: 'completed' },
+  { id: '103', patientId: '1', patientName: 'שרה כהן', serviceId: '1', serviceName: 'בוטוקס - אזור אחד', date: getRelativeDate(-14), time: '10:00', duration: 15, status: 'completed', declarationStatus: 'received' },
+  { id: '104', patientId: '4', patientName: 'רונית שמעון', serviceId: '1', serviceName: 'בוטוקס - אזור אחד', date: getRelativeDate(-13), time: '11:00', duration: 15, status: 'completed', declarationStatus: 'required' },
+  { id: '105', patientId: '5', patientName: 'יעל גולן', serviceId: '1', serviceName: 'בוטוקס - אזור אחד', date: getRelativeDate(-15), time: '14:00', duration: 15, status: 'completed', declarationStatus: 'required' },
+  { id: '106', patientId: '6', patientName: 'אבי כהן', serviceId: '1', serviceName: 'בוטוקס - אזור אחד', date: getRelativeDate(-12), time: '15:00', duration: 15, status: 'completed', declarationStatus: 'required' },
   // Other past appointments
-  { id: '107', patientId: '3', patientName: 'דניאל אברהם', serviceId: '2', serviceName: 'פיסול שפתיים', date: getRelativeDate(-5), time: '09:30', duration: 30, status: 'completed' },
+  { id: '107', patientId: '3', patientName: 'דניאל אברהם', serviceId: '2', serviceName: 'פיסול שפתיים', date: getRelativeDate(-5), time: '09:30', duration: 30, status: 'completed', declarationStatus: 'received' },
 ];
 
 export const MOCK_DECLARATIONS: Declaration[] = [
@@ -180,6 +180,25 @@ export const MOCK_INVENTORY: InventoryItem[] = [
 ];
 
 export const MOCK_NOTIFICATIONS: Notification[] = [
+  {
+    id: 'n0',
+    title: 'תור חדש נקבע',
+    message: 'מיכל לוי קבעה תור לטיפול פנים קלאסי. האם לשלוח הצהרת בריאות?',
+    type: 'info',
+    timestamp: new Date().toISOString(),
+    read: false,
+    action: 'send_declaration',
+    metadata: {
+      appointmentId: '102',
+      patientId: '2',
+      patientName: 'מיכל לוי',
+      patientPhone: '052-987-6543',
+      patientEmail: 'michal.l@example.com',
+      appointmentDate: getRelativeDate(0),
+      appointmentTime: '10:00',
+      serviceName: 'טיפול פנים קלאסי'
+    }
+  },
   { id: 'n1', title: 'התראה על מלאי נמוך', message: 'מלאי לידוקאין משחה הגיע לסף המינימום.', type: 'warning', timestamp: '2023-10-24T08:30:00', read: false },
   { id: 'n2', title: 'ליד חדש התקבל', message: 'רונית שמעוני השאירה פרטים באינסטגרם.', type: 'success', timestamp: '2023-10-24T09:15:00', read: false },
   { id: 'n3', title: 'הצהרת בריאות', message: 'שרה כהן חתמה על טופס הצהרת בריאות.', type: 'info', timestamp: '2023-10-23T18:30:00', read: true },

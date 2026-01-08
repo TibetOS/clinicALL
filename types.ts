@@ -59,6 +59,7 @@ export interface Patient {
 }
 
 export type AppointmentStatus = 'pending' | 'confirmed' | 'completed' | 'cancelled' | 'no-show';
+export type AppointmentDeclarationStatus = 'required' | 'pending' | 'received' | 'not_required';
 
 export interface Appointment {
   id: string;
@@ -71,6 +72,9 @@ export interface Appointment {
   duration: number; // minutes
   status: AppointmentStatus;
   notes?: string;
+  // Health Declaration tracking for appointments
+  declarationStatus?: AppointmentDeclarationStatus;
+  declarationTokenId?: string; // Reference to the token sent for this appointment
 }
 
 export interface Service {
@@ -147,6 +151,8 @@ export interface InventoryItem {
   status: 'ok' | 'low' | 'critical';
 }
 
+export type NotificationAction = 'send_declaration' | 'view_appointment' | 'view_patient' | 'none';
+
 export interface Notification {
   id: string;
   title: string;
@@ -154,6 +160,18 @@ export interface Notification {
   type: 'info' | 'warning' | 'success' | 'error';
   timestamp: string;
   read: boolean;
+  // Actionable notification support
+  action?: NotificationAction;
+  metadata?: {
+    appointmentId?: string;
+    patientId?: string;
+    patientName?: string;
+    patientPhone?: string;
+    patientEmail?: string;
+    appointmentDate?: string;
+    appointmentTime?: string;
+    serviceName?: string;
+  };
 }
 
 // Booking App Types

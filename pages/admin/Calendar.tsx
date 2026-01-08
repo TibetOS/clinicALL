@@ -1,7 +1,23 @@
 import React, { useState, useEffect } from 'react';
-import { Plus, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Plus, ChevronLeft, ChevronRight, FileCheck, Clock, AlertCircle, FileHeart } from 'lucide-react';
 import { Card, Button, Input, Dialog, Label } from '../../components/ui';
-import { useAppointments, useServices } from '../../hooks';
+import { useAppointments, useServices, useNotifications, usePatients } from '../../hooks';
+import { AppointmentDeclarationStatus } from '../../types';
+
+// Declaration status indicator config
+const getDeclarationIndicator = (status?: AppointmentDeclarationStatus) => {
+  switch (status) {
+    case 'received':
+      return { color: 'bg-green-500', title: 'הצהרה התקבלה', Icon: FileCheck };
+    case 'pending':
+      return { color: 'bg-yellow-500', title: 'ממתין להצהרה', Icon: Clock };
+    case 'required':
+      return { color: 'bg-red-500', title: 'נדרשת הצהרה', Icon: AlertCircle };
+    case 'not_required':
+    default:
+      return null;
+  }
+};
 
 export const Calendar = () => {
   // Default to day view on mobile
@@ -11,6 +27,8 @@ export const Calendar = () => {
   );
   const { appointments, addAppointment } = useAppointments();
   const { services } = useServices();
+  const { addNotification } = useNotifications();
+  const { patients } = usePatients();
   const [isNewApptOpen, setIsNewApptOpen] = useState(false);
   const [selectedSlot, setSelectedSlot] = useState<{ date: Date; hour: number } | null>(null);
 
@@ -87,8 +105,13 @@ export const Calendar = () => {
     setSaving(true);
     const service = services.find(s => s.id === apptForm.serviceId);
 
+    // Try to find existing patient by name
+    const existingPatient = patients.find(
+      p => p.name.toLowerCase() === apptForm.patientName.toLowerCase()
+    );
+
     const result = await addAppointment({
-      patientId: `walk-in-${Date.now()}`,
+      patientId: existingPatient?.id || `walk-in-${Date.now()}`,
       patientName: apptForm.patientName,
       serviceId: apptForm.serviceId,
       serviceName: service?.name || '',
@@ -97,11 +120,37 @@ export const Calendar = () => {
       duration: service?.duration || 30,
       status: 'pending',
       notes: apptForm.notes,
+      declarationStatus: 'required', // New appointments need declaration check
     });
 
     setSaving(false);
 
     if (result) {
+      // Check if patient needs a health declaration
+      const needsDeclaration = !existingPatient ||
+        existingPatient.declarationStatus === 'none' ||
+        existingPatient.declarationStatus === 'expired';
+
+      // Create notification for clinic owner about new appointment
+      if (needsDeclaration) {
+        await addNotification({
+          title: 'תור חדש נקבע',
+          message: `${apptForm.patientName} קבע/ה תור ל${service?.name || 'טיפול'}. האם לשלוח הצהרת בריאות?`,
+          type: 'info',
+          action: 'send_declaration',
+          metadata: {
+            appointmentId: result.id,
+            patientId: existingPatient?.id,
+            patientName: apptForm.patientName,
+            patientPhone: existingPatient?.phone,
+            patientEmail: existingPatient?.email,
+            appointmentDate: apptForm.date,
+            appointmentTime: apptForm.time,
+            serviceName: service?.name,
+          },
+        });
+      }
+
       setIsNewApptOpen(false);
       setApptForm({
         patientName: '',
@@ -222,23 +271,34 @@ export const Calendar = () => {
                     </button>
 
                     {/* Appointments */}
-                    {cellAppts.map(appt => (
-                      <div
-                        key={appt.id}
-                        className={`absolute left-1 right-1 p-2 rounded-lg text-xs shadow-sm border-l-4 cursor-pointer z-20 hover:scale-[1.02] transition-transform
-                           ${appt.status === 'confirmed' ? 'bg-green-50 border-green-500 text-green-800' :
-                             appt.status === 'pending' ? 'bg-amber-50 border-amber-500 text-amber-800' : 'bg-gray-100 border-gray-400 text-gray-700'}
-                        `}
-                        style={{
-                          top: `${(parseInt(appt.time.split(':')[1]) / 60) * 100}%`,
-                          height: `${(appt.duration / 60) * 100}%`,
-                          minHeight: '40px'
-                        }}
-                      >
-                        <div className="font-bold truncate">{appt.patientName}</div>
-                        <div className="truncate opacity-80">{appt.serviceName}</div>
-                      </div>
-                    ))}
+                    {cellAppts.map(appt => {
+                      const declIndicator = getDeclarationIndicator(appt.declarationStatus);
+                      return (
+                        <div
+                          key={appt.id}
+                          className={`absolute left-1 right-1 p-2 rounded-lg text-xs shadow-sm border-l-4 cursor-pointer z-20 hover:scale-[1.02] transition-transform
+                             ${appt.status === 'confirmed' ? 'bg-green-50 border-green-500 text-green-800' :
+                               appt.status === 'pending' ? 'bg-amber-50 border-amber-500 text-amber-800' : 'bg-gray-100 border-gray-400 text-gray-700'}
+                          `}
+                          style={{
+                            top: `${(parseInt(appt.time.split(':')[1]) / 60) * 100}%`,
+                            height: `${(appt.duration / 60) * 100}%`,
+                            minHeight: '40px'
+                          }}
+                        >
+                          <div className="flex items-center gap-1">
+                            <span className="font-bold truncate flex-1">{appt.patientName}</span>
+                            {declIndicator && (
+                              <span
+                                className={`w-2 h-2 rounded-full shrink-0 ${declIndicator.color}`}
+                                title={declIndicator.title}
+                              />
+                            )}
+                          </div>
+                          <div className="truncate opacity-80">{appt.serviceName}</div>
+                        </div>
+                      );
+                    })}
                   </div>
                 );
               })}

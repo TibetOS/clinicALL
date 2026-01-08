@@ -4,16 +4,17 @@ import { BrowserRouter, Routes, Route, Navigate, useLocation, Link } from 'react
 import {
   LayoutDashboard, Users, Calendar as CalendarIcon, Settings,
   Menu, Bell, LogOut, ChevronLeft, Package,
-  Crown, Sparkles, X, Syringe
+  Crown, Sparkles, X, Syringe, Send, FileHeart, MessageCircle, Mail
 } from 'lucide-react';
 import { LoginPage, HealthDeclaration, SignupPage, LandingPage, LockScreen, ResetPasswordPage } from './pages/Public';
 import { ClinicLanding } from './pages/ClinicLanding';
 import { PricingPage } from './pages/Pricing';
 import { BookingApp } from './pages/Booking';
-import { Button, Badge } from './components/ui';
-import { useNotifications } from './hooks';
+import { Button, Badge, Dialog } from './components/ui';
+import { useNotifications, useHealthTokens } from './hooks';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { ProtectedRoute } from './components/ProtectedRoute';
+import { Notification } from './types';
 
 // Lazy load admin pages for code splitting
 const Dashboard = lazy(() => import('./pages/admin/Dashboard').then(m => ({ default: m.Dashboard })));
@@ -41,9 +42,68 @@ const AdminLayout = ({ children }: { children?: React.ReactNode }) => {
   const { profile, signOut } = useAuth();
 
   // Notifications State
-  const { notifications, unreadCount, markAsRead, markAllAsRead } = useNotifications();
+  const { notifications, unreadCount, markAsRead, markAllAsRead, deleteNotification } = useNotifications();
   const [isNotifOpen, setIsNotifOpen] = useState(false);
   const notifRef = useRef<HTMLDivElement>(null);
+
+  // Health Declaration Dialog State
+  const { createToken, generateShareLink, generateWhatsAppLink, generateEmailLink } = useHealthTokens();
+  const [declarationDialog, setDeclarationDialog] = useState<{
+    open: boolean;
+    notification: Notification | null;
+    generatedLink: string | null;
+  }>({ open: false, notification: null, generatedLink: null });
+
+  // Handle send declaration action from notification
+  const handleSendDeclaration = async (notif: Notification) => {
+    if (!notif.metadata) return;
+
+    // Generate token for this patient
+    const token = await createToken({
+      patientId: notif.metadata.patientId,
+      patientName: notif.metadata.patientName || '',
+      patientPhone: notif.metadata.patientPhone,
+      patientEmail: notif.metadata.patientEmail,
+    });
+
+    if (token) {
+      const link = generateShareLink(token.token);
+      setDeclarationDialog({ open: true, notification: notif, generatedLink: link });
+      setIsNotifOpen(false);
+    }
+  };
+
+  // Share via WhatsApp
+  const shareViaWhatsApp = () => {
+    if (!declarationDialog.notification?.metadata || !declarationDialog.generatedLink) return;
+    const { patientName, patientPhone } = declarationDialog.notification.metadata;
+    const whatsappLink = generateWhatsAppLink(
+      declarationDialog.generatedLink,
+      patientName || '',
+      patientPhone || ''
+    );
+    window.open(whatsappLink, '_blank');
+  };
+
+  // Share via Email
+  const shareViaEmail = () => {
+    if (!declarationDialog.notification?.metadata || !declarationDialog.generatedLink) return;
+    const { patientName, patientEmail } = declarationDialog.notification.metadata;
+    const emailLink = generateEmailLink(
+      declarationDialog.generatedLink,
+      patientName || '',
+      patientEmail || ''
+    );
+    window.location.href = emailLink;
+  };
+
+  // Close declaration dialog and mark notification as read
+  const closeDeclarationDialog = () => {
+    if (declarationDialog.notification) {
+      markAsRead(declarationDialog.notification.id);
+    }
+    setDeclarationDialog({ open: false, notification: null, generatedLink: null });
+  };
 
   useEffect(() => {
     if (window.innerWidth < 1024) setSidebarOpen(false);
@@ -189,23 +249,66 @@ const AdminLayout = ({ children }: { children?: React.ReactNode }) => {
                     <span className="font-bold text-sm text-gray-900">התראות ({unreadCount})</span>
                     <button className="text-xs text-primary hover:underline" onClick={() => markAllAsRead()}>סמן הכל כנקרא</button>
                   </div>
-                  <div className="max-h-[300px] overflow-y-auto custom-scrollbar">
+                  <div className="max-h-[400px] overflow-y-auto custom-scrollbar">
                     {notifications.length > 0 ? (
                       notifications.map(notif => (
-                        <div 
-                          key={notif.id} 
+                        <div
+                          key={notif.id}
                           className={`p-3 border-b border-gray-50 hover:bg-gray-50 transition-colors ${!notif.read ? 'bg-blue-50/50' : ''}`}
-                          onClick={() => markAsRead(notif.id)}
+                          onClick={() => !notif.action && markAsRead(notif.id)}
                         >
                           <div className="flex gap-3">
                             <div className={`mt-1 h-2 w-2 rounded-full shrink-0 ${
-                              notif.type === 'warning' ? 'bg-orange-500' : 
-                              notif.type === 'success' ? 'bg-green-500' : 
+                              notif.type === 'warning' ? 'bg-orange-500' :
+                              notif.type === 'success' ? 'bg-green-500' :
                               notif.type === 'error' ? 'bg-red-500' : 'bg-blue-500'
                             }`} />
                             <div className="flex-1">
                               <p className={`text-sm ${!notif.read ? 'font-bold text-gray-900' : 'text-gray-700'}`}>{notif.title}</p>
                               <p className="text-xs text-gray-500 mt-1 line-clamp-2">{notif.message}</p>
+
+                              {/* Appointment details for actionable notifications */}
+                              {notif.action === 'send_declaration' && notif.metadata && (
+                                <div className="mt-2 p-2 bg-gray-100 rounded-lg text-xs space-y-1">
+                                  <div className="flex justify-between">
+                                    <span className="text-gray-500">תאריך:</span>
+                                    <span className="font-medium">{notif.metadata.appointmentDate} {notif.metadata.appointmentTime}</span>
+                                  </div>
+                                  <div className="flex justify-between">
+                                    <span className="text-gray-500">טיפול:</span>
+                                    <span className="font-medium">{notif.metadata.serviceName}</span>
+                                  </div>
+                                </div>
+                              )}
+
+                              {/* Action buttons for send_declaration */}
+                              {notif.action === 'send_declaration' && (
+                                <div className="mt-2 flex gap-2">
+                                  <Button
+                                    size="sm"
+                                    className="text-xs h-7 gap-1 flex-1"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      handleSendDeclaration(notif);
+                                    }}
+                                  >
+                                    <FileHeart size={12} />
+                                    שלח הצהרה
+                                  </Button>
+                                  <Button
+                                    size="sm"
+                                    variant="ghost"
+                                    className="text-xs h-7 text-gray-500"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      markAsRead(notif.id);
+                                    }}
+                                  >
+                                    לא נדרש
+                                  </Button>
+                                </div>
+                              )}
+
                               <p className="text-[10px] text-gray-400 mt-1.5">{new Date(notif.timestamp).toLocaleTimeString('he-IL', {hour: '2-digit', minute:'2-digit'})}</p>
                             </div>
                           </div>
@@ -243,11 +346,105 @@ const AdminLayout = ({ children }: { children?: React.ReactNode }) => {
       
       {/* Mobile Overlay */}
       {sidebarOpen && (
-        <div 
+        <div
           className="fixed inset-0 bg-black/40 backdrop-blur-sm z-40 lg:hidden transition-opacity"
           onClick={() => setSidebarOpen(false)}
         />
       )}
+
+      {/* Send Declaration Dialog */}
+      <Dialog
+        open={declarationDialog.open}
+        onClose={closeDeclarationDialog}
+        title="שליחת הצהרת בריאות"
+      >
+        <div className="space-y-4">
+          {declarationDialog.notification?.metadata && (
+            <>
+              {/* Patient Info */}
+              <div className="bg-gray-50 rounded-lg p-4 space-y-2">
+                <h4 className="font-bold text-sm text-gray-900">פרטי המטופל</h4>
+                <div className="grid grid-cols-2 gap-2 text-sm">
+                  <div>
+                    <span className="text-gray-500">שם:</span>
+                    <span className="font-medium mr-2">{declarationDialog.notification.metadata.patientName}</span>
+                  </div>
+                  <div>
+                    <span className="text-gray-500">טלפון:</span>
+                    <span className="font-medium mr-2">{declarationDialog.notification.metadata.patientPhone}</span>
+                  </div>
+                  {declarationDialog.notification.metadata.patientEmail && (
+                    <div className="col-span-2">
+                      <span className="text-gray-500">אימייל:</span>
+                      <span className="font-medium mr-2">{declarationDialog.notification.metadata.patientEmail}</span>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Appointment Info */}
+              <div className="bg-blue-50 rounded-lg p-4 space-y-2">
+                <h4 className="font-bold text-sm text-gray-900">פרטי התור</h4>
+                <div className="grid grid-cols-2 gap-2 text-sm">
+                  <div>
+                    <span className="text-gray-500">תאריך:</span>
+                    <span className="font-medium mr-2">{declarationDialog.notification.metadata.appointmentDate}</span>
+                  </div>
+                  <div>
+                    <span className="text-gray-500">שעה:</span>
+                    <span className="font-medium mr-2">{declarationDialog.notification.metadata.appointmentTime}</span>
+                  </div>
+                  <div className="col-span-2">
+                    <span className="text-gray-500">טיפול:</span>
+                    <span className="font-medium mr-2">{declarationDialog.notification.metadata.serviceName}</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Generated Link */}
+              {declarationDialog.generatedLink && (
+                <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+                  <h4 className="font-bold text-sm text-green-800 mb-2">קישור נוצר בהצלחה</h4>
+                  <div className="bg-white p-2 rounded border text-xs break-all text-gray-600">
+                    {declarationDialog.generatedLink}
+                  </div>
+                </div>
+              )}
+
+              {/* Share Buttons */}
+              <div className="flex flex-col gap-3 pt-4 border-t">
+                <h4 className="font-bold text-sm text-gray-900">שליחת הקישור</h4>
+                <div className="flex gap-3">
+                  <Button
+                    className="flex-1 gap-2 bg-green-600 hover:bg-green-700"
+                    onClick={shareViaWhatsApp}
+                  >
+                    <MessageCircle size={18} />
+                    WhatsApp
+                  </Button>
+                  {declarationDialog.notification.metadata.patientEmail && (
+                    <Button
+                      variant="outline"
+                      className="flex-1 gap-2"
+                      onClick={shareViaEmail}
+                    >
+                      <Mail size={18} />
+                      Email
+                    </Button>
+                  )}
+                </div>
+              </div>
+            </>
+          )}
+
+          {/* Close Button */}
+          <div className="flex justify-end pt-2">
+            <Button variant="ghost" onClick={closeDeclarationDialog}>
+              סגור
+            </Button>
+          </div>
+        </div>
+      </Dialog>
     </div>
   );
 };
