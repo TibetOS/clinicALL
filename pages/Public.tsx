@@ -233,6 +233,7 @@ export const SignupPage = () => {
   const [step, setStep] = useState(1);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const [formData, setFormData] = useState({
     fullName: '',
     email: '',
@@ -249,10 +250,71 @@ export const SignupPage = () => {
 
   const handleChange = (field: string, value: any) => {
     setFormData(prev => ({ ...prev, [field]: value }));
+    // Clear field error when user types
+    if (fieldErrors[field]) {
+      setFieldErrors(prev => ({ ...prev, [field]: '' }));
+    }
+  };
+
+  // Validation functions
+  const isValidEmail = (email: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+
+  const validateStep1 = () => {
+    const errors: Record<string, string> = {};
+
+    if (!formData.fullName.trim()) {
+      errors.fullName = 'נא להזין שם מלא';
+    }
+
+    if (!formData.email.trim()) {
+      errors.email = 'נא להזין כתובת אימייל';
+    } else if (!isValidEmail(formData.email)) {
+      errors.email = 'כתובת האימייל אינה תקינה';
+    }
+
+    if (!formData.password) {
+      errors.password = 'נא להזין סיסמה';
+    } else if (formData.password.length < 6) {
+      errors.password = 'הסיסמה חייבת להכיל לפחות 6 תווים';
+    }
+
+    setFieldErrors(errors);
+    return Object.keys(errors).length === 0;
+  };
+
+  const validateStep2 = () => {
+    const errors: Record<string, string> = {};
+
+    if (!formData.clinicName.trim()) {
+      errors.clinicName = 'נא להזין שם קליניקה';
+    }
+
+    if (!formData.businessId.trim()) {
+      errors.businessId = 'נא להזין ת.ז. או ח.פ.';
+    }
+
+    if (!formData.slug.trim()) {
+      errors.slug = 'נא להזין כתובת URL';
+    }
+
+    setFieldErrors(errors);
+    return Object.keys(errors).length === 0;
   };
 
   const nextStep = () => setStep(prev => prev + 1);
   const prevStep = () => setStep(prev => prev - 1);
+
+  const handleNextStep1 = () => {
+    if (validateStep1()) {
+      nextStep();
+    }
+  };
+
+  const handleNextStep2 = () => {
+    if (validateStep2()) {
+      nextStep();
+    }
+  };
 
   const handleSubmit = async () => {
     setLoading(true);
@@ -339,34 +401,38 @@ export const SignupPage = () => {
                    <div className="space-y-6 animate-in fade-in slide-in-from-right-8 duration-300">
                       <div>
                          <label className="text-sm font-medium text-gray-700">שם מלא</label>
-                         <Input 
-                            value={formData.fullName} 
+                         <Input
+                            value={formData.fullName}
                             onChange={e => handleChange('fullName', e.target.value)}
-                            placeholder="ישראל ישראלי" 
+                            placeholder="ישראל ישראלי"
                             autoFocus
+                            className={fieldErrors.fullName ? 'border-red-500' : ''}
                          />
+                         {fieldErrors.fullName && <p className="text-red-500 text-xs mt-1">{fieldErrors.fullName}</p>}
                       </div>
                       <div>
                          <label className="text-sm font-medium text-gray-700">אימייל</label>
-                         <Input 
+                         <Input
                             type="email"
-                            value={formData.email} 
+                            value={formData.email}
                             onChange={e => handleChange('email', e.target.value)}
-                            placeholder="name@example.com" 
-                            className="direction-ltr text-right"
+                            placeholder="name@example.com"
+                            className={`direction-ltr text-right ${fieldErrors.email ? 'border-red-500' : ''}`}
                          />
+                         {fieldErrors.email && <p className="text-red-500 text-xs mt-1">{fieldErrors.email}</p>}
                       </div>
                       <div>
                          <label className="text-sm font-medium text-gray-700">סיסמה</label>
-                         <Input 
+                         <Input
                             type="password"
-                            value={formData.password} 
+                            value={formData.password}
                             onChange={e => handleChange('password', e.target.value)}
-                            className="direction-ltr text-right"
+                            className={`direction-ltr text-right ${fieldErrors.password ? 'border-red-500' : ''}`}
                          />
+                         {fieldErrors.password && <p className="text-red-500 text-xs mt-1">{fieldErrors.password}</p>}
                       </div>
                       <div className="pt-4">
-                         <Button onClick={nextStep} className="w-full h-12 text-lg">
+                         <Button onClick={handleNextStep1} className="w-full h-12 text-lg">
                             התחל לבנות <ChevronLeft size={20} className="mr-2" />
                          </Button>
                       </div>
@@ -378,8 +444,8 @@ export const SignupPage = () => {
                    <div className="space-y-6 animate-in fade-in slide-in-from-right-8 duration-300">
                       <div>
                          <label className="text-sm font-medium text-gray-700">שם הקליניקה</label>
-                         <Input 
-                            value={formData.clinicName} 
+                         <Input
+                            value={formData.clinicName}
                             onChange={e => {
                                handleChange('clinicName', e.target.value);
                                // Auto-generate slug
@@ -387,38 +453,45 @@ export const SignupPage = () => {
                                   handleChange('slug', e.target.value.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, ''));
                                }
                             }}
-                            placeholder="לדוג׳: אסתטיקה ויופי - ד״ר כהן" 
+                            placeholder="לדוג׳: אסתטיקה ויופי - ד״ר כהן"
                             autoFocus
+                            className={fieldErrors.clinicName ? 'border-red-500' : ''}
                          />
+                         {fieldErrors.clinicName && <p className="text-red-500 text-xs mt-1">{fieldErrors.clinicName}</p>}
                       </div>
                       <div>
                          <label className="text-sm font-medium text-gray-700">ת.ז. / ח.פ. (לצורכי חשבונית)</label>
-                         <Input 
+                         <Input
                             value={formData.businessId}
                             onChange={e => handleChange('businessId', e.target.value)}
                             placeholder="000000000"
-                            className="direction-ltr text-right"
+                            className={`direction-ltr text-right ${fieldErrors.businessId ? 'border-red-500' : ''}`}
                          />
+                         {fieldErrors.businessId && <p className="text-red-500 text-xs mt-1">{fieldErrors.businessId}</p>}
                       </div>
                       <div>
                          <label className="text-sm font-medium text-gray-700">כתובת ה-URL שלך (Slug)</label>
-                         <div className="flex direction-ltr">
+                         <div className={`flex direction-ltr ${fieldErrors.slug ? '[&>input]:border-red-500' : ''}`}>
                             <span className="inline-flex items-center px-3 rounded-l-lg border border-r-0 border-gray-200 bg-gray-50 text-gray-500 text-sm">
                                clinicall.com/c/
                             </span>
-                            <Input 
-                               value={formData.slug} 
+                            <Input
+                               value={formData.slug}
                                onChange={e => handleChange('slug', e.target.value)}
-                               className="rounded-l-none"
+                               className={`rounded-l-none ${fieldErrors.slug ? 'border-red-500' : ''}`}
                             />
                          </div>
-                         <p className="text-xs text-gray-500 mt-1">זו הכתובת שבה המטופלים ימצאו אותך.</p>
+                         {fieldErrors.slug ? (
+                            <p className="text-red-500 text-xs mt-1">{fieldErrors.slug}</p>
+                         ) : (
+                            <p className="text-xs text-gray-500 mt-1">זו הכתובת שבה המטופלים ימצאו אותך.</p>
+                         )}
                       </div>
                       <div>
                          <label className="text-sm font-medium text-gray-700">כתובת פיזית</label>
                          <div className="relative">
                             <MapPin className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
-                            <Input 
+                            <Input
                                value={formData.address}
                                onChange={e => handleChange('address', e.target.value)}
                                className="pr-9"
@@ -428,7 +501,7 @@ export const SignupPage = () => {
                       </div>
                       <div className="flex justify-between pt-4">
                          <Button variant="ghost" onClick={prevStep}>חזור</Button>
-                         <Button onClick={nextStep} disabled={!formData.businessId}>המשך <ChevronLeft size={16} className="mr-2" /></Button>
+                         <Button onClick={handleNextStep2}>המשך <ChevronLeft size={16} className="mr-2" /></Button>
                       </div>
                    </div>
                 )}
