@@ -325,6 +325,8 @@ export const ResetPasswordPage = () => {
             <div className="relative">
               <Input
                 type={showPassword ? "text" : "password"}
+                name="new-password"
+                autoComplete="new-password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="לפחות 8 תווים"
@@ -347,6 +349,8 @@ export const ResetPasswordPage = () => {
             <div className="relative">
               <Input
                 type={showConfirmPassword ? "text" : "password"}
+                name="confirm-password"
+                autoComplete="new-password"
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
                 placeholder="הזן סיסמה שוב"
@@ -465,7 +469,17 @@ export const LoginPage = () => {
         <form onSubmit={handleLogin} className="space-y-4">
           <div>
             <label className="text-sm font-medium mb-1 block text-gray-700">אימייל</label>
-            <Input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="name@example.com" required className="text-left" dir="ltr" />
+            <Input
+              type="email"
+              name="email"
+              autoComplete="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder="name@example.com"
+              required
+              className="text-left"
+              dir="ltr"
+            />
           </div>
           <div>
             <div className="flex justify-between items-center mb-1">
@@ -481,6 +495,8 @@ export const LoginPage = () => {
             <div className="relative">
               <Input
                 type={showPassword ? "text" : "password"}
+                name="password"
+                autoComplete="current-password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="הזן סיסמה"
@@ -775,6 +791,8 @@ export const SignupPage = () => {
                       <div>
                          <label className="text-sm font-medium text-gray-700">שם מלא</label>
                          <Input
+                            name="name"
+                            autoComplete="name"
                             value={formData.fullName}
                             onChange={e => handleChange('fullName', e.target.value)}
                             placeholder="ישראל ישראלי"
@@ -787,6 +805,8 @@ export const SignupPage = () => {
                          <label className="text-sm font-medium text-gray-700">אימייל</label>
                          <Input
                             type="email"
+                            name="email"
+                            autoComplete="email"
                             value={formData.email}
                             onChange={e => handleChange('email', e.target.value)}
                             placeholder="name@example.com"
@@ -800,6 +820,8 @@ export const SignupPage = () => {
                          <div className="relative">
                             <Input
                                type={showPassword ? "text" : "password"}
+                               name="new-password"
+                               autoComplete="new-password"
                                value={formData.password}
                                onChange={e => handleChange('password', e.target.value)}
                                placeholder="לפחות 8 תווים"
@@ -821,6 +843,8 @@ export const SignupPage = () => {
                          <div className="relative">
                             <Input
                                type={showConfirmPassword ? "text" : "password"}
+                               name="confirm-password"
+                               autoComplete="new-password"
                                value={formData.confirmPassword}
                                onChange={e => handleChange('confirmPassword', e.target.value)}
                                placeholder="הזן סיסמה שוב"
