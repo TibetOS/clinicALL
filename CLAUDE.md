@@ -256,15 +256,49 @@ This is a **healthcare application** - handle data carefully:
 
 ```
 clinicall/
-├── components/       # Reusable components
+├── components/       # Reusable components (see components/CLAUDE.md)
 │   └── ui.tsx       # Design system components
-├── contexts/        # React contexts (AuthContext)
-├── hooks/           # Data fetching hooks
-├── lib/             # Utilities (Supabase client)
-├── pages/           # Route components
-│   └── admin/       # Admin dashboard (lazy loaded)
+├── contexts/        # React contexts (see contexts/CLAUDE.md)
+├── hooks/           # Data fetching hooks (see hooks/CLAUDE.md)
+├── lib/             # Utilities (see lib/CLAUDE.md)
+├── pages/           # Route components (see pages/CLAUDE.md)
+│   └── admin/       # Admin dashboard (see pages/admin/CLAUDE.md)
 ├── App.tsx          # Router + AdminLayout
 ├── data.ts          # Mock data
 ├── types.ts         # TypeScript interfaces
 └── index.tsx        # Entry point
 ```
+
+---
+
+## Directory-Level Documentation
+
+Each major directory contains its own `CLAUDE.md` file with specific guidance:
+
+| Directory | Documentation |
+|-----------|---------------|
+| `components/` | UI component patterns, variants, adding new components |
+| `contexts/` | Context patterns, AuthContext API, adding new contexts |
+| `hooks/` | Hook patterns, CRUD operations, mock mode handling |
+| `lib/` | Library configurations, environment variables |
+| `pages/` | Route structure, page patterns, RTL considerations |
+| `pages/admin/` | Admin page patterns, lazy loading, status labels |
+
+### Keeping Documentation Updated
+
+**IMPORTANT**: When making code changes, update the relevant `CLAUDE.md` files:
+
+1. **Adding a new component** → Update `components/CLAUDE.md`
+2. **Adding a new hook** → Update `hooks/CLAUDE.md` (add to files table)
+3. **Adding a new admin page** → Update `pages/admin/CLAUDE.md` (add to files table)
+4. **Adding a new route** → Update `pages/CLAUDE.md` (add to route structure)
+5. **Adding a new context** → Update `contexts/CLAUDE.md`
+6. **Adding a new library** → Update `lib/CLAUDE.md`
+7. **Changing existing patterns** → Update the relevant directory's `CLAUDE.md`
+
+**Documentation update checklist**:
+- [ ] Add new files to the files table in the directory's `CLAUDE.md`
+- [ ] Update route structure if routes changed
+- [ ] Add new exports/APIs to the documentation
+- [ ] Update examples if patterns changed
+- [ ] Update this main `CLAUDE.md` if architecture changed
