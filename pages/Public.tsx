@@ -5,7 +5,7 @@ import {
   Check, ChevronLeft, ChevronRight, AlertTriangle, Globe, Building2, User, MapPin,
   FileBadge, Lock, ArrowRight, Star, Calendar, Smartphone, Zap, TrendingUp,
   Sparkles, Image as ImageIcon, Palette, Heart, Shield, FileText, Clock,
-  CheckCircle2, AlertCircle, Loader2, UserCheck, PenTool, Eraser
+  CheckCircle2, AlertCircle, Loader2, UserCheck, PenTool, Eraser, Eye, EyeOff, Mail
 } from 'lucide-react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { MOCK_PATIENTS } from '../data';
@@ -109,7 +109,7 @@ export const LandingPage = () => {
                <span className="font-bold text-xl">ClinicALL</span>
             </div>
             <p className="max-w-sm mx-auto mb-6">מערכת הניהול המתקדמת ביותר לקליניקות אסתטיות. חכמה, פשוטה ומעוצבת.</p>
-            <div className="text-sm">© 2023 ClinicALL. כל הזכויות שמורות.</div>
+            <div className="text-sm">© {new Date().getFullYear()} ClinicALL. כל הזכויות שמורות.</div>
          </div>
       </footer>
     </div>
@@ -119,6 +119,13 @@ export const LandingPage = () => {
 // -- LOCK SCREEN --
 export const LockScreen = () => {
   const navigate = useNavigate();
+  const { signOut } = useAuth();
+
+  const handleLogout = async () => {
+    await signOut();
+    navigate('/login');
+  };
+
   return (
     <div className="min-h-screen bg-gray-900 flex items-center justify-center p-4">
       <div className="max-w-md w-full bg-white rounded-2xl shadow-2xl p-8 text-center relative overflow-hidden">
@@ -137,7 +144,7 @@ export const LockScreen = () => {
           <Button className="w-full h-12 text-lg shadow-lg" onClick={() => navigate('/admin/settings?tab=billing')}>
              עדכן אמצעי תשלום
           </Button>
-          <Button variant="ghost" className="w-full" onClick={() => navigate('/login')}>
+          <Button variant="ghost" className="w-full" onClick={handleLogout}>
              יציאה מהמערכת
           </Button>
         </div>
@@ -148,11 +155,19 @@ export const LockScreen = () => {
 
 export const LoginPage = () => {
   const navigate = useNavigate();
-  const { signIn, user } = useAuth();
+  const { signIn, resetPassword, user } = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // Forgot password state
+  const [showForgotPassword, setShowForgotPassword] = useState(false);
+  const [forgotEmail, setForgotEmail] = useState('');
+  const [forgotLoading, setForgotLoading] = useState(false);
+  const [forgotSuccess, setForgotSuccess] = useState(false);
+  const [forgotError, setForgotError] = useState<string | null>(null);
 
   // Redirect if already logged in
   useEffect(() => {
@@ -166,7 +181,7 @@ export const LoginPage = () => {
     setLoading(true);
     setError(null);
 
-    const { error } = await signIn(email, password);
+    const { error } = await signIn(email.trim(), password);
 
     if (error) {
       setError('אימייל או סיסמה שגויים');
@@ -174,6 +189,29 @@ export const LoginPage = () => {
     } else {
       navigate('/admin/dashboard');
     }
+  };
+
+  const handleForgotPassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setForgotLoading(true);
+    setForgotError(null);
+
+    const { error } = await resetPassword(forgotEmail.trim());
+
+    if (error) {
+      setForgotError('שגיאה בשליחת הקישור. אנא נסה שוב.');
+      setForgotLoading(false);
+    } else {
+      setForgotSuccess(true);
+      setForgotLoading(false);
+    }
+  };
+
+  const closeForgotPassword = () => {
+    setShowForgotPassword(false);
+    setForgotEmail('');
+    setForgotSuccess(false);
+    setForgotError(null);
   };
 
   return (
@@ -198,14 +236,37 @@ export const LoginPage = () => {
         <form onSubmit={handleLogin} className="space-y-4">
           <div>
             <label className="text-sm font-medium mb-1 block text-gray-700">אימייל</label>
-            <Input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="name@example.com" required className="text-right direction-ltr" dir="ltr" />
+            <Input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="name@example.com" required className="text-left" dir="ltr" />
           </div>
           <div>
             <div className="flex justify-between items-center mb-1">
               <label className="text-sm font-medium text-gray-700">סיסמה</label>
-              <a href="#" className="text-xs text-primary hover:underline">שכחת סיסמה?</a>
+              <button
+                type="button"
+                onClick={() => { setShowForgotPassword(true); setForgotEmail(email); }}
+                className="text-xs text-primary hover:underline"
+              >
+                שכחת סיסמה?
+              </button>
             </div>
-            <Input type="password" value={password} onChange={(e) => setPassword(e.target.value)} required className="text-right" dir="ltr" />
+            <div className="relative">
+              <Input
+                type={showPassword ? "text" : "password"}
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="הזן סיסמה"
+                required
+                className="text-left pl-10"
+                dir="ltr"
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+              >
+                {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+              </button>
+            </div>
           </div>
           <Button type="submit" className="w-full shadow-md" disabled={loading}>
             {loading ? (
@@ -223,6 +284,80 @@ export const LoginPage = () => {
           </Link>
         </div>
       </Card>
+
+      {/* Forgot Password Modal */}
+      {showForgotPassword && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50" onClick={closeForgotPassword}>
+          <Card className="w-full max-w-md p-8 shadow-xl border-0 animate-in zoom-in-95 duration-200" onClick={e => e.stopPropagation()}>
+            {!forgotSuccess ? (
+              <>
+                <div className="flex justify-center mb-6">
+                  <div className="h-16 w-16 bg-primary/10 rounded-full flex items-center justify-center">
+                    <Mail className="h-8 w-8 text-primary" />
+                  </div>
+                </div>
+                <h2 className="text-xl font-bold text-center mb-2 text-gray-900">איפוס סיסמה</h2>
+                <p className="text-center text-muted-foreground mb-6 text-sm">
+                  הזן את כתובת האימייל שלך ונשלח לך קישור לאיפוס הסיסמה
+                </p>
+
+                {forgotError && (
+                  <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg text-red-600 text-sm text-center">
+                    {forgotError}
+                  </div>
+                )}
+
+                <form onSubmit={handleForgotPassword} className="space-y-4">
+                  <div>
+                    <label className="text-sm font-medium mb-1 block text-gray-700">אימייל</label>
+                    <Input
+                      type="email"
+                      value={forgotEmail}
+                      onChange={(e) => setForgotEmail(e.target.value)}
+                      placeholder="name@example.com"
+                      required
+                      className="text-left"
+                      dir="ltr"
+                      autoFocus
+                    />
+                  </div>
+                  <div className="flex gap-3">
+                    <Button type="button" variant="outline" className="flex-1" onClick={closeForgotPassword}>
+                      ביטול
+                    </Button>
+                    <Button type="submit" className="flex-1 shadow-md" disabled={forgotLoading}>
+                      {forgotLoading ? (
+                        <span className="flex items-center justify-center gap-2">
+                          <Loader2 className="h-4 w-4 animate-spin" /> שולח...
+                        </span>
+                      ) : 'שלח קישור'}
+                    </Button>
+                  </div>
+                </form>
+              </>
+            ) : (
+              <>
+                <div className="flex justify-center mb-6">
+                  <div className="h-16 w-16 bg-green-100 rounded-full flex items-center justify-center">
+                    <CheckCircle2 className="h-8 w-8 text-green-600" />
+                  </div>
+                </div>
+                <h2 className="text-xl font-bold text-center mb-2 text-gray-900">הקישור נשלח!</h2>
+                <p className="text-center text-muted-foreground mb-6 text-sm">
+                  שלחנו קישור לאיפוס סיסמה ל-<br/>
+                  <span className="font-medium text-gray-900">{forgotEmail}</span>
+                </p>
+                <p className="text-center text-xs text-gray-500 mb-6">
+                  לא קיבלת את המייל? בדוק את תיקיית הספאם או נסה שוב
+                </p>
+                <Button className="w-full" onClick={closeForgotPassword}>
+                  חזרה להתחברות
+                </Button>
+              </>
+            )}
+          </Card>
+        </div>
+      )}
     </div>
   );
 };
@@ -234,10 +369,13 @@ export const SignupPage = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [formData, setFormData] = useState({
     fullName: '',
     email: '',
     password: '',
+    confirmPassword: '',
     clinicName: '',
     businessId: '',
     slug: '',
@@ -268,14 +406,20 @@ export const SignupPage = () => {
 
     if (!formData.email.trim()) {
       errors.email = 'נא להזין כתובת אימייל';
-    } else if (!isValidEmail(formData.email)) {
+    } else if (!isValidEmail(formData.email.trim())) {
       errors.email = 'כתובת האימייל אינה תקינה';
     }
 
     if (!formData.password) {
       errors.password = 'נא להזין סיסמה';
-    } else if (formData.password.length < 6) {
-      errors.password = 'הסיסמה חייבת להכיל לפחות 6 תווים';
+    } else if (formData.password.length < 8) {
+      errors.password = 'הסיסמה חייבת להכיל לפחות 8 תווים';
+    }
+
+    if (!formData.confirmPassword) {
+      errors.confirmPassword = 'נא לאשר סיסמה';
+    } else if (formData.password !== formData.confirmPassword) {
+      errors.confirmPassword = 'הסיסמאות אינן תואמות';
     }
 
     setFieldErrors(errors);
@@ -398,7 +542,7 @@ export const SignupPage = () => {
              <div className="p-8 min-h-[400px]">
                 {/* STEP 1: ACCOUNT */}
                 {step === 1 && (
-                   <div className="space-y-6 animate-in fade-in slide-in-from-right-8 duration-300">
+                   <div className="space-y-5 animate-in fade-in slide-in-from-right-8 duration-300">
                       <div>
                          <label className="text-sm font-medium text-gray-700">שם מלא</label>
                          <Input
@@ -417,21 +561,54 @@ export const SignupPage = () => {
                             value={formData.email}
                             onChange={e => handleChange('email', e.target.value)}
                             placeholder="name@example.com"
-                            className={`direction-ltr text-right ${fieldErrors.email ? 'border-red-500' : ''}`}
+                            className={`text-left ${fieldErrors.email ? 'border-red-500' : ''}`}
+                            dir="ltr"
                          />
                          {fieldErrors.email && <p className="text-red-500 text-xs mt-1">{fieldErrors.email}</p>}
                       </div>
                       <div>
                          <label className="text-sm font-medium text-gray-700">סיסמה</label>
-                         <Input
-                            type="password"
-                            value={formData.password}
-                            onChange={e => handleChange('password', e.target.value)}
-                            className={`direction-ltr text-right ${fieldErrors.password ? 'border-red-500' : ''}`}
-                         />
+                         <div className="relative">
+                            <Input
+                               type={showPassword ? "text" : "password"}
+                               value={formData.password}
+                               onChange={e => handleChange('password', e.target.value)}
+                               placeholder="לפחות 8 תווים"
+                               className={`text-left pl-10 ${fieldErrors.password ? 'border-red-500' : ''}`}
+                               dir="ltr"
+                            />
+                            <button
+                               type="button"
+                               onClick={() => setShowPassword(!showPassword)}
+                               className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                            >
+                               {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                            </button>
+                         </div>
                          {fieldErrors.password && <p className="text-red-500 text-xs mt-1">{fieldErrors.password}</p>}
                       </div>
-                      <div className="pt-4">
+                      <div>
+                         <label className="text-sm font-medium text-gray-700">אישור סיסמה</label>
+                         <div className="relative">
+                            <Input
+                               type={showConfirmPassword ? "text" : "password"}
+                               value={formData.confirmPassword}
+                               onChange={e => handleChange('confirmPassword', e.target.value)}
+                               placeholder="הזן סיסמה שוב"
+                               className={`text-left pl-10 ${fieldErrors.confirmPassword ? 'border-red-500' : ''}`}
+                               dir="ltr"
+                            />
+                            <button
+                               type="button"
+                               onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                               className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                            >
+                               {showConfirmPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                            </button>
+                         </div>
+                         {fieldErrors.confirmPassword && <p className="text-red-500 text-xs mt-1">{fieldErrors.confirmPassword}</p>}
+                      </div>
+                      <div className="pt-2">
                          <Button onClick={handleNextStep1} className="w-full h-12 text-lg">
                             התחל לבנות <ChevronLeft size={20} className="mr-2" />
                          </Button>
