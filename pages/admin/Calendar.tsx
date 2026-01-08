@@ -125,49 +125,65 @@ export const Calendar = () => {
       )}
 
       <div className="flex flex-col sm:flex-row justify-between items-center mb-6 gap-4">
-        <div className="flex items-center gap-4 bg-white p-1 rounded-xl shadow-sm border border-gray-200">
-          <Button variant="ghost" size="icon" onClick={() => {
-            const d = new Date(currentDate);
-            d.setDate(d.getDate() - 7);
-            setCurrentDate(d);
-          }}>
+        <div className="flex items-center gap-4 bg-white p-1 rounded-xl shadow-sm border border-gray-200" role="group" aria-label="ניווט בלוח שנה">
+          <Button
+            variant="ghost"
+            size="icon"
+            aria-label="שבוע קודם"
+            onClick={() => {
+              const d = new Date(currentDate);
+              d.setDate(d.getDate() - 7);
+              setCurrentDate(d);
+            }}
+          >
             <ChevronRight />
           </Button>
-          <span className="font-bold text-lg min-w-[150px] text-center">
+          <span className="font-bold text-lg min-w-[150px] text-center" aria-live="polite">
             {currentDate.toLocaleDateString('he-IL', { month: 'long', year: 'numeric' })}
           </span>
-          <Button variant="ghost" size="icon" onClick={() => {
-            const d = new Date(currentDate);
-            d.setDate(d.getDate() + 7);
-            setCurrentDate(d);
-          }}>
+          <Button
+            variant="ghost"
+            size="icon"
+            aria-label="שבוע הבא"
+            onClick={() => {
+              const d = new Date(currentDate);
+              d.setDate(d.getDate() + 7);
+              setCurrentDate(d);
+            }}
+          >
             <ChevronLeft />
           </Button>
         </div>
 
         <div className="flex gap-3">
-          <div className="bg-gray-100 p-1 rounded-lg flex text-sm">
+          <div className="bg-gray-100 p-1 rounded-lg flex text-sm" role="tablist" aria-label="תצוגת לוח שנה">
             <button
-              className={`px-3 py-1.5 rounded-md transition-all ${view === 'day' ? 'bg-white shadow-sm font-bold' : 'text-gray-500 hover:text-gray-900'}`}
+              role="tab"
+              aria-selected={view === 'day'}
+              aria-controls="calendar-grid"
+              className={`px-3 py-1.5 rounded-md transition-all focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 ${view === 'day' ? 'bg-white shadow-sm font-bold' : 'text-gray-500 hover:text-gray-900'}`}
               onClick={() => setView('day')}
             >
               יום
             </button>
             <button
-              className={`px-3 py-1.5 rounded-md transition-all ${view === 'week' ? 'bg-white shadow-sm font-bold' : 'text-gray-500 hover:text-gray-900'}`}
+              role="tab"
+              aria-selected={view === 'week'}
+              aria-controls="calendar-grid"
+              className={`px-3 py-1.5 rounded-md transition-all focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 ${view === 'week' ? 'bg-white shadow-sm font-bold' : 'text-gray-500 hover:text-gray-900'}`}
               onClick={() => setView('week')}
             >
               שבוע
             </button>
           </div>
-          <Button onClick={() => openNewApptDialog()} className="shadow-sm">
+          <Button onClick={() => openNewApptDialog()} className="shadow-sm" aria-label="קביעת תור חדש">
             <Plus size={16} className="ml-2" /> תור חדש
           </Button>
         </div>
       </div>
 
       {/* Calendar Grid */}
-      <Card className="flex-1 overflow-hidden flex flex-col border-stone-200">
+      <Card id="calendar-grid" role="grid" aria-label="לוח תורים" className="flex-1 overflow-hidden flex flex-col border-stone-200">
         {/* Header Row */}
         <div className="flex border-b border-gray-100">
           <div className="w-14 border-l border-gray-100 shrink-0 bg-gray-50"></div>
