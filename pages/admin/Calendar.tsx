@@ -1,0 +1,306 @@
+import React, { useState, useEffect } from 'react';
+import { Plus, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Card, Button, Input, Dialog, Label } from '../../components/ui';
+import { useAppointments, useServices } from '../../hooks';
+
+export const Calendar = () => {
+  // Default to day view on mobile
+  const [currentDate, setCurrentDate] = useState(new Date());
+  const [view, setView] = useState<'week' | 'day'>(() =>
+    typeof window !== 'undefined' && window.innerWidth < 768 ? 'day' : 'week'
+  );
+  const { appointments, addAppointment } = useAppointments();
+  const { services } = useServices();
+  const [isNewApptOpen, setIsNewApptOpen] = useState(false);
+  const [selectedSlot, setSelectedSlot] = useState<{ date: Date; hour: number } | null>(null);
+
+  // Form state
+  const [apptForm, setApptForm] = useState({
+    patientName: '',
+    serviceId: '',
+    date: new Date().toISOString().split('T')[0],
+    time: '10:00',
+    notes: '',
+  });
+  const [saving, setSaving] = useState(false);
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
+
+  // Auto-switch to day view on mobile resize
+  useEffect(() => {
+    const handleResize = () => {
+      if (window.innerWidth < 768 && view === 'week') {
+        setView('day');
+      }
+    };
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, [view]);
+
+  // Helper to format hours
+  const hours = Array.from({ length: 13 }, (_, i) => i + 8); // 08:00 - 20:00
+
+  // Helper to get days of week
+  const getDaysOfWeek = (date: Date) => {
+    const start = new Date(date);
+    start.setDate(start.getDate() - start.getDay()); // Sunday
+    return Array.from({ length: 7 }, (_, i) => {
+      const d = new Date(start);
+      d.setDate(d.getDate() + i);
+      return d;
+    });
+  };
+
+  const weekDays = getDaysOfWeek(currentDate);
+
+  const getAppointmentsForSlot = (day: Date, hour: number) => {
+    return appointments.filter(a => {
+      const apptDate = new Date(a.date);
+      const apptHour = parseInt(a.time.split(':')[0]);
+      return (
+        apptDate.getDate() === day.getDate() &&
+        apptDate.getMonth() === day.getMonth() &&
+        apptHour === hour
+      );
+    });
+  };
+
+  const showSuccess = (message: string) => {
+    setSuccessMessage(message);
+    setTimeout(() => setSuccessMessage(null), 3000);
+  };
+
+  const openNewApptDialog = (day?: Date, hour?: number) => {
+    if (day && hour !== undefined) {
+      setApptForm(prev => ({
+        ...prev,
+        date: day.toISOString().split('T')[0],
+        time: `${hour.toString().padStart(2, '0')}:00`,
+      }));
+      setSelectedSlot({ date: day, hour });
+    }
+    setIsNewApptOpen(true);
+  };
+
+  const handleAddAppointment = async () => {
+    if (!apptForm.patientName || !apptForm.serviceId) return;
+
+    setSaving(true);
+    const service = services.find(s => s.id === apptForm.serviceId);
+
+    const result = await addAppointment({
+      patientId: `walk-in-${Date.now()}`,
+      patientName: apptForm.patientName,
+      serviceId: apptForm.serviceId,
+      serviceName: service?.name || '',
+      date: apptForm.date,
+      time: apptForm.time,
+      duration: service?.duration || 30,
+      status: 'pending',
+      notes: apptForm.notes,
+    });
+
+    setSaving(false);
+
+    if (result) {
+      setIsNewApptOpen(false);
+      setApptForm({
+        patientName: '',
+        serviceId: '',
+        date: new Date().toISOString().split('T')[0],
+        time: '10:00',
+        notes: '',
+      });
+      setSelectedSlot(null);
+      showSuccess('התור נקבע בהצלחה');
+    }
+  };
+
+  return (
+    <div className="h-[calc(100vh-140px)] flex flex-col animate-in fade-in duration-500">
+      {/* Success Toast */}
+      {successMessage && (
+        <div className="fixed top-6 left-1/2 -translate-x-1/2 z-50 bg-green-600 text-white px-6 py-3 rounded-xl shadow-lg animate-in slide-in-from-top-2 duration-300">
+          {successMessage}
+        </div>
+      )}
+
+      <div className="flex flex-col sm:flex-row justify-between items-center mb-6 gap-4">
+        <div className="flex items-center gap-4 bg-white p-1 rounded-xl shadow-sm border border-gray-200">
+          <Button variant="ghost" size="icon" onClick={() => {
+            const d = new Date(currentDate);
+            d.setDate(d.getDate() - 7);
+            setCurrentDate(d);
+          }}>
+            <ChevronRight />
+          </Button>
+          <span className="font-bold text-lg min-w-[150px] text-center">
+            {currentDate.toLocaleDateString('he-IL', { month: 'long', year: 'numeric' })}
+          </span>
+          <Button variant="ghost" size="icon" onClick={() => {
+            const d = new Date(currentDate);
+            d.setDate(d.getDate() + 7);
+            setCurrentDate(d);
+          }}>
+            <ChevronLeft />
+          </Button>
+        </div>
+
+        <div className="flex gap-3">
+          <div className="bg-gray-100 p-1 rounded-lg flex text-sm">
+            <button
+              className={`px-3 py-1.5 rounded-md transition-all ${view === 'day' ? 'bg-white shadow-sm font-bold' : 'text-gray-500 hover:text-gray-900'}`}
+              onClick={() => setView('day')}
+            >
+              יום
+            </button>
+            <button
+              className={`px-3 py-1.5 rounded-md transition-all ${view === 'week' ? 'bg-white shadow-sm font-bold' : 'text-gray-500 hover:text-gray-900'}`}
+              onClick={() => setView('week')}
+            >
+              שבוע
+            </button>
+          </div>
+          <Button onClick={() => openNewApptDialog()} className="shadow-sm">
+            <Plus size={16} className="ml-2" /> תור חדש
+          </Button>
+        </div>
+      </div>
+
+      {/* Calendar Grid */}
+      <Card className="flex-1 overflow-hidden flex flex-col border-stone-200">
+        {/* Header Row */}
+        <div className="flex border-b border-gray-100">
+          <div className="w-14 border-l border-gray-100 shrink-0 bg-gray-50"></div>
+          {weekDays.map((day, i) => (
+            <div key={i} className={`flex-1 text-center py-3 border-l border-gray-100 ${day.toDateString() === new Date().toDateString() ? 'bg-primary/5' : ''}`}>
+              <div className="text-xs text-gray-500 mb-1">{day.toLocaleDateString('he-IL', { weekday: 'short' })}</div>
+              <div className={`text-lg font-bold inline-flex items-center justify-center w-8 h-8 rounded-full ${day.toDateString() === new Date().toDateString() ? 'bg-primary text-white shadow-md' : 'text-gray-900'}`}>
+                {day.getDate()}
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {/* Time Grid */}
+        <div className="flex-1 overflow-y-auto custom-scrollbar relative">
+          {hours.map(hour => (
+            <div key={hour} className="flex min-h-[80px]" role="row">
+              <div className="w-14 border-l border-b border-gray-100 bg-gray-50 text-xs text-gray-500 text-center pt-2 relative" role="rowheader">
+                <span className="-top-3 relative">{hour}:00</span>
+              </div>
+              {weekDays.map((day, i) => {
+                const cellAppts = getAppointmentsForSlot(day, hour);
+                return (
+                  <div
+                    key={i}
+                    role="gridcell"
+                    aria-label={`${day.toLocaleDateString('he-IL', { weekday: 'long', day: 'numeric', month: 'long' })} ${hour}:00${cellAppts.length > 0 ? `, ${cellAppts.length} תורים` : ''}`}
+                    className="flex-1 border-l border-b border-gray-100 relative group transition-colors hover:bg-gray-50"
+                  >
+                    {/* Add Button on Hover */}
+                    <button
+                      className="absolute inset-0 w-full h-full opacity-0 group-hover:opacity-100 flex items-center justify-center z-10"
+                      onClick={() => openNewApptDialog(day, hour)}
+                    >
+                      <Plus className="text-primary bg-white rounded-full shadow-sm p-1 w-6 h-6 border border-gray-100" />
+                    </button>
+
+                    {/* Appointments */}
+                    {cellAppts.map(appt => (
+                      <div
+                        key={appt.id}
+                        className={`absolute left-1 right-1 p-2 rounded-lg text-xs shadow-sm border-l-4 cursor-pointer z-20 hover:scale-[1.02] transition-transform
+                           ${appt.status === 'confirmed' ? 'bg-green-50 border-green-500 text-green-800' :
+                             appt.status === 'pending' ? 'bg-amber-50 border-amber-500 text-amber-800' : 'bg-gray-100 border-gray-400 text-gray-700'}
+                        `}
+                        style={{
+                          top: `${(parseInt(appt.time.split(':')[1]) / 60) * 100}%`,
+                          height: `${(appt.duration / 60) * 100}%`,
+                          minHeight: '40px'
+                        }}
+                      >
+                        <div className="font-bold truncate">{appt.patientName}</div>
+                        <div className="truncate opacity-80">{appt.serviceName}</div>
+                      </div>
+                    ))}
+                  </div>
+                );
+              })}
+            </div>
+          ))}
+
+          {/* Current Time Indicator */}
+          <div
+            className="absolute left-14 right-0 border-t-2 border-red-400 z-30 pointer-events-none flex items-center"
+            style={{ top: `${((new Date().getHours() - 8) * 80) + ((new Date().getMinutes() / 60) * 80)}px` }}
+          >
+            <div className="w-2 h-2 bg-red-400 rounded-full -ml-1"></div>
+          </div>
+        </div>
+      </Card>
+
+      {/* New Appointment Dialog */}
+      <Dialog open={isNewApptOpen} onClose={() => { setIsNewApptOpen(false); setSelectedSlot(null); }} title="קביעת תור חדש">
+        <div className="space-y-4">
+          <div>
+            <Label>שם המטופל</Label>
+            <Input
+              placeholder="הכנס שם מטופל..."
+              value={apptForm.patientName}
+              onChange={(e) => setApptForm(prev => ({ ...prev, patientName: e.target.value }))}
+            />
+          </div>
+          <div>
+            <Label>טיפול</Label>
+            <select
+              className="flex h-10 w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm"
+              value={apptForm.serviceId}
+              onChange={(e) => setApptForm(prev => ({ ...prev, serviceId: e.target.value }))}
+            >
+              <option value="">בחר טיפול...</option>
+              {services.map(s => <option key={s.id} value={s.id}>{s.name} ({s.duration} דק׳)</option>)}
+            </select>
+          </div>
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <Label>תאריך</Label>
+              <Input
+                type="date"
+                value={apptForm.date}
+                onChange={(e) => setApptForm(prev => ({ ...prev, date: e.target.value }))}
+              />
+            </div>
+            <div>
+              <Label>שעה</Label>
+              <Input
+                type="time"
+                value={apptForm.time}
+                onChange={(e) => setApptForm(prev => ({ ...prev, time: e.target.value }))}
+              />
+            </div>
+          </div>
+          <div>
+            <Label>הערות</Label>
+            <textarea
+              className="w-full h-20 border border-gray-200 rounded-lg p-2 text-sm"
+              placeholder="הערות מיוחדות..."
+              value={apptForm.notes}
+              onChange={(e) => setApptForm(prev => ({ ...prev, notes: e.target.value }))}
+            />
+          </div>
+          <div className="flex justify-end gap-3 pt-4 border-t mt-4">
+            <Button variant="ghost" onClick={() => { setIsNewApptOpen(false); setSelectedSlot(null); }} disabled={saving}>
+              ביטול
+            </Button>
+            <Button
+              onClick={handleAddAppointment}
+              disabled={saving || !apptForm.patientName || !apptForm.serviceId}
+            >
+              {saving ? 'שומר...' : 'שמור ביומן'}
+            </Button>
+          </div>
+        </div>
+      </Dialog>
+    </div>
+  );
+};
