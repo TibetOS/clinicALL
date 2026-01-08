@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect, useRef, lazy, Suspense } from 'react';
-import { BrowserRouter, Routes, Route, Navigate, useLocation, Link } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate, useLocation, Link, useNavigate } from 'react-router-dom';
 import {
   LayoutDashboard, Users, Calendar as CalendarIcon, Settings,
   Menu, Bell, LogOut, ChevronLeft, Package,
@@ -39,6 +39,7 @@ const PageLoader = () => (
 const AdminLayout = ({ children }: { children?: React.ReactNode }) => {
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const location = useLocation();
+  const navigate = useNavigate();
   const { profile, signOut } = useAuth();
 
   // Notifications State
@@ -206,7 +207,10 @@ const AdminLayout = ({ children }: { children?: React.ReactNode }) => {
            <Button
              variant="ghost"
              className="w-full justify-start text-red-500 hover:text-red-600 hover:bg-red-50 rounded-xl"
-             onClick={() => signOut()}
+             onClick={async () => {
+               await signOut();
+               navigate('/login');
+             }}
            >
              <LogOut size={20} className="ml-3" /> התנתק
            </Button>
