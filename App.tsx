@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, lazy, Suspense } from 'react';
 import { BrowserRouter, Routes, Route, Navigate, useLocation, Link } from 'react-router-dom';
 import {
   LayoutDashboard, Users, Calendar as CalendarIcon, Settings,
@@ -9,16 +9,31 @@ import {
 import { LoginPage, HealthDeclaration, SignupPage, LandingPage, LockScreen } from './pages/Public';
 import { ClinicLanding } from './pages/ClinicLanding';
 import { PricingPage } from './pages/Pricing';
-import { Dashboard, PatientList, Calendar, SettingsPage } from './pages/Admin';
-import { ServicesPage } from './pages/Services';
-import { InventoryPage } from './pages/Inventory';
-import { PatientDetails } from './pages/PatientDetails';
 import { BookingApp } from './pages/Booking';
 import { Button, Badge } from './components/ui';
 import { ClinicAI } from './components/ClinicAI';
 import { useNotifications } from './hooks';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { ProtectedRoute } from './components/ProtectedRoute';
+
+// Lazy load admin pages for code splitting
+const Dashboard = lazy(() => import('./pages/admin/Dashboard').then(m => ({ default: m.Dashboard })));
+const PatientList = lazy(() => import('./pages/admin/PatientList').then(m => ({ default: m.PatientList })));
+const Calendar = lazy(() => import('./pages/admin/Calendar').then(m => ({ default: m.Calendar })));
+const SettingsPage = lazy(() => import('./pages/admin/SettingsPage').then(m => ({ default: m.SettingsPage })));
+const ServicesPage = lazy(() => import('./pages/Services').then(m => ({ default: m.ServicesPage })));
+const InventoryPage = lazy(() => import('./pages/Inventory').then(m => ({ default: m.InventoryPage })));
+const PatientDetails = lazy(() => import('./pages/PatientDetails').then(m => ({ default: m.PatientDetails })));
+
+// Loading spinner for lazy loaded routes
+const PageLoader = () => (
+  <div className="flex items-center justify-center h-64">
+    <div className="flex flex-col items-center gap-4">
+      <div className="w-10 h-10 border-4 border-primary border-t-transparent rounded-full animate-spin" />
+      <p className="text-gray-500 text-sm">טוען...</p>
+    </div>
+  </div>
+);
 
 // Layout Component
 const AdminLayout = ({ children }: { children?: React.ReactNode }) => {
@@ -264,16 +279,18 @@ function App() {
           <Route path="/admin/*" element={
             <ProtectedRoute>
               <AdminLayout>
-                <Routes>
-                  <Route path="dashboard" element={<Dashboard />} />
-                  <Route path="patients" element={<PatientList />} />
-                  <Route path="patients/:id" element={<PatientDetails />} />
-                  <Route path="calendar" element={<Calendar />} />
-                  <Route path="services" element={<ServicesPage />} />
-                  <Route path="inventory" element={<InventoryPage />} />
-                  <Route path="settings" element={<SettingsPage />} />
-                  <Route path="*" element={<Navigate to="dashboard" replace />} />
-                </Routes>
+                <Suspense fallback={<PageLoader />}>
+                  <Routes>
+                    <Route path="dashboard" element={<Dashboard />} />
+                    <Route path="patients" element={<PatientList />} />
+                    <Route path="patients/:id" element={<PatientDetails />} />
+                    <Route path="calendar" element={<Calendar />} />
+                    <Route path="services" element={<ServicesPage />} />
+                    <Route path="inventory" element={<InventoryPage />} />
+                    <Route path="settings" element={<SettingsPage />} />
+                    <Route path="*" element={<Navigate to="dashboard" replace />} />
+                  </Routes>
+                </Suspense>
               </AdminLayout>
             </ProtectedRoute>
           } />

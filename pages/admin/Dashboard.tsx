@@ -119,6 +119,38 @@ export const Dashboard = () => {
     new Date(p.lastVisit) < sixtyDaysAgo && !p.upcomingAppointment
   );
 
+  // Due for Follow-up: Patients with completed botox appointments ~2 weeks ago (10-17 days)
+  const botoxFollowUpDays = { min: 10, max: 17 };
+  const botoxKeywords = ['בוטוקס', 'botox', 'dysport', 'דיספורט'];
+  const dueForFollowUp = appointments.filter(appt => {
+    if (appt.status !== 'completed') return false;
+    const isBotox = botoxKeywords.some(keyword =>
+      appt.serviceName.toLowerCase().includes(keyword.toLowerCase())
+    );
+    if (!isBotox) return false;
+
+    const apptDate = new Date(appt.date);
+    const daysSince = Math.floor((today.getTime() - apptDate.getTime()) / (1000 * 60 * 60 * 24));
+    return daysSince >= botoxFollowUpDays.min && daysSince <= botoxFollowUpDays.max;
+  });
+
+  // Upcoming Birthdays: Patients with birthdays in the next 7 days
+  const upcomingBirthdays = patients.filter(p => {
+    if (!p.birthDate) return false;
+    const birthDate = new Date(p.birthDate);
+
+    // Check next 7 days
+    for (let i = 0; i <= 7; i++) {
+      const checkDate = new Date(today);
+      checkDate.setDate(checkDate.getDate() + i);
+      if (birthDate.getMonth() === checkDate.getMonth() &&
+          birthDate.getDate() === checkDate.getDate()) {
+        return true;
+      }
+    }
+    return false;
+  });
+
   // Total alerts count
   const totalAlerts = pendingDeclarations.length + expiringProducts.length +
     lowStockItems.length + overdueInvoices.length + newLeads.length;
@@ -548,7 +580,7 @@ export const Dashboard = () => {
                 <Phone size={16} className="text-teal-600" />
                 <span className="text-sm font-medium text-teal-900">לביקורת מעקב</span>
               </div>
-              <p className="text-2xl font-bold text-teal-700">5</p>
+              <p className="text-2xl font-bold text-teal-700">{dueForFollowUp.length}</p>
               <p className="text-xs text-teal-600">בוטוקס 2 שבועות</p>
             </div>
 
@@ -561,7 +593,7 @@ export const Dashboard = () => {
                 <Gift size={16} className="text-pink-600" />
                 <span className="text-sm font-medium text-pink-900">ימי הולדת</span>
               </div>
-              <p className="text-2xl font-bold text-pink-700">3</p>
+              <p className="text-2xl font-bold text-pink-700">{upcomingBirthdays.length}</p>
               <p className="text-xs text-pink-600">השבוע</p>
             </div>
 
