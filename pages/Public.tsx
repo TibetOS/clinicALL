@@ -448,8 +448,8 @@ export const LoginPage = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 p-4">
-      <Card className="w-full max-w-md p-8 shadow-lg border-0">
+    <div className="min-h-screen flex items-center justify-center bg-gray-50 p-4" dir="ltr">
+      <Card className="w-full max-w-md p-8 shadow-lg border-0" dir="rtl">
         <div className="flex justify-center mb-6">
           <Link to="/">
              <div className="h-12 w-12 bg-primary rounded-xl flex items-center justify-center shadow-md">
