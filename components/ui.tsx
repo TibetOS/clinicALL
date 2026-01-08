@@ -126,13 +126,20 @@ export const TabsList = ({ children, className }: { children?: React.ReactNode, 
   </div>
 );
 
-export const TabsTrigger = ({ value, activeValue, onClick, children }: { value: string, activeValue?: string, onClick?: (v: string) => void, children?: React.ReactNode }) => (
+interface TabsTriggerProps extends Omit<React.ButtonHTMLAttributes<HTMLButtonElement>, 'onClick'> {
+  value: string;
+  activeValue?: string;
+  onClick?: (v: string) => void;
+}
+
+export const TabsTrigger = ({ value, activeValue, onClick, children, ...props }: TabsTriggerProps) => (
   <button
     onClick={() => onClick?.(value)}
     className={cn(
       "inline-flex items-center justify-center whitespace-nowrap rounded-md px-3 py-1.5 text-sm font-medium ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50",
       activeValue === value ? "bg-white text-gray-900 shadow-sm" : "hover:bg-gray-200/50 hover:text-gray-900"
     )}
+    {...props}
   >
     {children}
   </button>
@@ -266,9 +273,12 @@ export const Dialog = ({ open, onClose, children, title }: { open: boolean; onCl
 };
 
 // Skeleton loading placeholder
-export const Skeleton = ({ className }: { className?: string }) => (
-  <div className={cn("animate-pulse bg-gray-200 rounded", className)} />
+export const Skeleton = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElement>>(
+  ({ className, ...props }, ref) => (
+    <div ref={ref} className={cn("animate-pulse bg-gray-200 rounded", className)} {...props} />
+  )
 );
+Skeleton.displayName = "Skeleton";
 
 // Breadcrumb navigation
 interface BreadcrumbItem {

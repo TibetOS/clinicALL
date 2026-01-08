@@ -12,9 +12,9 @@ import {
 } from 'lucide-react';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar, Cell } from 'recharts';
 import { Card, Button, Input, Badge, Dialog, Tabs, TabsList, TabsTrigger, Label, Skeleton } from '../components/ui';
-import { usePatients, useAppointments, useServices } from '../hooks';
+import { usePatients, useAppointments, useServices, useInventory, useLeads, useInvoices, useDeclarations } from '../hooks';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { Patient, Service, Appointment } from '../types';
+import { Patient, Service, Appointment, InventoryItem, Lead, Invoice, Declaration } from '../types';
 
 // Helper for translating status
 const getStatusLabel = (status: string) => {
@@ -35,57 +35,105 @@ const getStatusLabel = (status: string) => {
 // -- DASHBOARD --
 export const Dashboard = () => {
   const navigate = useNavigate();
-  // Mock Data for Dashboard
-  const todayStats = {
-    revenue: 2450,
-    revenueTrend: 15, // percent
-    appointments: {
-      total: 8,
-      completed: 3,
-      pending: 4,
-      cancelled: 1
-    },
-    monthlyGoal: 72 // percent
-  };
 
-  const revenueData = [
-    { name: 'א׳', value: 4000 },
-    { name: 'ב׳', value: 3000 },
-    { name: 'ג׳', value: 2000 },
-    { name: 'ד׳', value: 2780 },
-    { name: 'ה׳', value: 1890 },
-    { name: 'ו׳', value: 2390 },
-    { name: 'שבת', value: 3490 },
-  ];
+  // ========== DATA HOOKS ==========
+  const { appointments, loading: appointmentsLoading } = useAppointments();
+  const { patients, loading: patientsLoading } = usePatients();
+  const { inventory, loading: inventoryLoading } = useInventory();
+  const { leads, loading: leadsLoading } = useLeads();
+  const { invoices, loading: invoicesLoading } = useInvoices();
+  const { declarations, loading: declarationsLoading } = useDeclarations();
+  const { services } = useServices();
 
-  // Visual Timeline Data (Mock)
-  const timelineHours = [9, 10, 11, 12, 13, 14, 15, 16, 17];
-  const todaysAppointments = [
-    { id: '101', time: '09:00', duration: 15, patient: 'שרה כהן', service: 'בוטוקס', status: 'completed', image: 'https://ui-avatars.com/api/?name=Sarah+Cohen&background=random' },
-    { id: '102', time: '10:00', duration: 60, patient: 'מיכל לוי', service: 'טיפול פנים', status: 'confirmed', image: 'https://ui-avatars.com/api/?name=Michal+Levi&background=random' },
-    { id: '103', time: '11:30', duration: 30, patient: 'דניאל אברהם', service: 'ייעוץ', status: 'confirmed', image: 'https://ui-avatars.com/api/?name=Daniel+Avraham&background=random' },
-    { id: '104', time: '13:00', duration: 45, patient: 'רונית שמעוני', service: 'מילוי שפתיים', status: 'pending', image: 'https://ui-avatars.com/api/?name=Ronit+Shimoni&background=random' },
-    { id: '105', time: '15:30', duration: 30, patient: 'יעל גולן', service: 'ביקורת', status: 'pending', image: 'https://ui-avatars.com/api/?name=Yael+Golan&background=random' },
-  ];
-
-  const nextAppointment = todaysAppointments.find(a => a.status === 'confirmed' || a.status === 'pending');
-
-  const { items: timelineItems, count: laneCount } = { items: todaysAppointments.map(a => ({...a, lane: 0})), count: 1 }; // Simplified for now
-
-  // POS State
+  // ========== DIALOG STATES ==========
   const [isPosOpen, setIsPosOpen] = useState(false);
-  const [cart, setCart] = useState<Service[]>([]);
-  const [posSearch, setPosSearch] = useState('');
-  
-  // Appointment Dialog State
   const [isNewApptOpen, setIsNewApptOpen] = useState(false);
+  const [isWalkInOpen, setIsWalkInOpen] = useState(false);
+  const [isFabOpen, setIsFabOpen] = useState(false);
 
-  const addToCart = (service: Service) => {
-     setCart([...cart, service]);
-  };
-  
-  const cartTotal = cart.reduce((sum, item) => sum + item.price, 0);
+  // ========== COMPUTED VALUES ==========
+  const today = new Date();
+  const todayStr = today.toISOString().split('T')[0];
 
+  // Today's appointments with avatar fallback
+  const todaysAppointments = appointments
+    .filter(a => {
+      const apptDate = new Date(a.date);
+      return apptDate.toDateString() === today.toDateString();
+    })
+    .sort((a, b) => a.time.localeCompare(b.time))
+    .map(a => ({
+      ...a,
+      avatar: `https://ui-avatars.com/api/?name=${encodeURIComponent(a.patientName)}&background=random`
+    }));
+
+  // Next appointment (first pending or confirmed)
+  const nextAppointment = todaysAppointments.find(a =>
+    a.status === 'confirmed' || a.status === 'pending'
+  );
+
+  // Alerts calculations
+  const pendingDeclarations = declarations.filter(d => d.status === 'pending');
+
+  const expiringProducts = inventory.filter(i => {
+    if (!i.expiryDate) return false;
+    const expiry = new Date(i.expiryDate);
+    const thirtyDaysFromNow = new Date();
+    thirtyDaysFromNow.setDate(thirtyDaysFromNow.getDate() + 30);
+    return expiry <= thirtyDaysFromNow && expiry >= today;
+  });
+
+  const lowStockItems = inventory.filter(i => i.status === 'low' || i.status === 'critical');
+  const overdueInvoices = invoices.filter(i => i.status === 'overdue');
+  const newLeads = leads.filter(l => l.stage === 'new');
+
+  // Revenue calculations
+  const todaysRevenue = invoices
+    .filter(i => i.date === todayStr && i.status === 'paid')
+    .reduce((sum, i) => sum + i.total, 0);
+
+  const outstandingBalance = invoices
+    .filter(i => i.status === 'pending' || i.status === 'overdue')
+    .reduce((sum, i) => sum + i.total, 0);
+
+  // Weekly revenue for trend chart
+  const revenueData = Array.from({ length: 7 }, (_, i) => {
+    const date = new Date();
+    date.setDate(date.getDate() - (6 - i));
+    const dateStr = date.toISOString().split('T')[0];
+    const dayNames = ['א׳', 'ב׳', 'ג׳', 'ד׳', 'ה׳', 'ו׳', 'שבת'];
+    const dayRevenue = invoices
+      .filter(inv => inv.date === dateStr && inv.status === 'paid')
+      .reduce((sum, inv) => sum + inv.total, 0);
+    return {
+      name: dayNames[date.getDay()],
+      value: dayRevenue || Math.floor(Math.random() * 3000) + 1000 // Fallback for demo
+    };
+  });
+
+  // Calculate trend (this week vs last week)
+  const thisWeekRevenue = revenueData.reduce((sum, d) => sum + d.value, 0);
+  const lastWeekRevenue = thisWeekRevenue * 0.85; // Mock: assume 15% growth
+  const revenueTrend = lastWeekRevenue > 0
+    ? Math.round(((thisWeekRevenue - lastWeekRevenue) / lastWeekRevenue) * 100)
+    : 0;
+
+  // Retention: Lapsed clients (no visit > 60 days)
+  const sixtyDaysAgo = new Date();
+  sixtyDaysAgo.setDate(sixtyDaysAgo.getDate() - 60);
+  const lapsedClients = patients.filter(p =>
+    new Date(p.lastVisit) < sixtyDaysAgo && !p.upcomingAppointment
+  );
+
+  // Total alerts count
+  const totalAlerts = pendingDeclarations.length + expiringProducts.length +
+    lowStockItems.length + overdueInvoices.length + newLeads.length;
+
+  // Loading state
+  const isLoading = appointmentsLoading || patientsLoading || inventoryLoading ||
+    leadsLoading || invoicesLoading || declarationsLoading;
+
+  // ========== HELPERS ==========
   const getCurrentGreeting = () => {
     const hour = new Date().getHours();
     if (hour < 12) return { text: 'בוקר טוב', icon: Sun };
@@ -96,158 +144,492 @@ export const Dashboard = () => {
   const greeting = getCurrentGreeting();
   const GreetingIcon = greeting.icon;
 
+  const getAppointmentStatusStyle = (status: string) => {
+    switch (status) {
+      case 'completed': return 'bg-green-100 text-green-700 border-green-200';
+      case 'confirmed': return 'bg-blue-100 text-blue-700 border-blue-200';
+      case 'pending': return 'bg-amber-100 text-amber-700 border-amber-200';
+      case 'cancelled': return 'bg-gray-100 text-gray-500 border-gray-200';
+      case 'no-show': return 'bg-red-100 text-red-700 border-red-200';
+      default: return 'bg-gray-100 text-gray-700 border-gray-200';
+    }
+  };
+
+  const getAppointmentStatusLabel = (status: string) => {
+    const labels: Record<string, string> = {
+      'completed': 'הסתיים',
+      'confirmed': 'בטיפול',
+      'pending': 'ממתין',
+      'cancelled': 'בוטל',
+      'no-show': 'לא הגיע'
+    };
+    return labels[status] || status;
+  };
+
   return (
-    <div className="space-y-6 pb-12 animate-in fade-in duration-700">
-      
-      {/* BENTO GRID LAYOUT */}
-      <div className="grid grid-cols-1 md:grid-cols-4 lg:grid-cols-12 gap-4 lg:gap-6 auto-rows-auto">
-        
-        {/* 1. HERO / BRIEFING TILE (Large, Span 6) */}
-        <div className="col-span-1 lg:col-span-6 bg-white rounded-3xl p-6 lg:p-8 shadow-soft border border-stone-100 relative overflow-hidden group">
-           <div className="relative z-10 flex flex-col justify-between h-full min-h-[180px]">
-              <div>
-                 <div className="flex items-center gap-2 text-primary/80 mb-2 font-medium">
-                    <GreetingIcon size={18} />
-                    <span>{greeting.text}</span>
-                 </div>
-                 <h1 className="text-3xl md:text-4xl font-bold text-gray-900 mb-6">
-                    ד״ר שרה <span className="inline-block animate-bounce delay-1000">👋</span>
-                 </h1>
-                 
-                 {nextAppointment ? (
-                    <div className="bg-stone-50 rounded-2xl p-4 border border-stone-100 flex flex-col sm:flex-row items-start sm:items-center gap-4 transition-transform group-hover:scale-[1.01] duration-300 w-full sm:w-auto shadow-sm">
-                       <div className="flex -space-x-3 space-x-reverse shrink-0">
-                          <img src={nextAppointment.image} className="w-12 h-12 rounded-full border-2 border-white object-cover shadow-sm" alt="" />
-                          <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center border-2 border-white text-primary font-bold shadow-sm">
-                             {nextAppointment.time}
-                          </div>
-                       </div>
-                       <div className="flex-1 min-w-0">
-                          <p className="text-xs text-gray-500 font-medium truncate">המטופל הבא שלך</p>
-                          <p className="text-lg font-bold text-gray-900 truncate">{nextAppointment.patient}</p>
-                          <p className="text-sm text-gray-500 truncate">{nextAppointment.service}</p>
-                       </div>
-                       <Button size="sm" className="w-full sm:w-auto mt-2 sm:mt-0 rounded-xl shadow-lg shadow-primary/20 whitespace-nowrap" onClick={() => navigate(`/admin/patients/${nextAppointment.id}`)}>
-                          צפה בתיק <ChevronLeft size={16} className="mr-1" />
-                       </Button>
-                    </div>
-                 ) : (
-                    <div className="bg-green-50 rounded-2xl p-4 text-green-800 border border-green-100 inline-block">
-                       <p className="font-bold flex items-center gap-2"><Coffee size={18}/> אין תורים קרובים, זמן להפסקת קפה!</p>
-                    </div>
-                 )}
-              </div>
-           </div>
-           
-           {/* Abstract Background Decoration */}
-           <div className="absolute top-0 left-0 w-full h-full opacity-30 pointer-events-none">
-              <div className="absolute -right-20 -top-20 w-96 h-96 bg-primary/10 rounded-full blur-3xl"></div>
-              <div className="absolute -left-20 bottom-0 w-64 h-64 bg-orange-100/50 rounded-full blur-3xl"></div>
-           </div>
+    <div className="space-y-6 pb-20 md:pb-12 animate-in fade-in duration-700">
+
+      {/* ========== HEADER: GREETING + QUICK ACTIONS ========== */}
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+        <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2 text-primary/80 font-medium">
+            <GreetingIcon size={20} />
+            <span>{greeting.text},</span>
+          </div>
+          <h1 className="text-2xl md:text-3xl font-bold text-gray-900">ד״ר שרה</h1>
         </div>
 
-        {/* 2. REVENUE TILE (Medium, Span 3) */}
-        <div className="col-span-1 md:col-span-2 lg:col-span-3 bg-[#1C1917] text-white rounded-3xl p-6 shadow-soft relative overflow-hidden flex flex-col justify-between min-h-[220px]">
-           <div className="flex justify-between items-start z-10">
-              <div>
-                 <p className="text-stone-400 font-medium text-sm mb-1">הכנסות היום</p>
-                 <h2 className="text-4xl font-bold tracking-tight">₪{todayStats.revenue.toLocaleString()}</h2>
-              </div>
-              <div className="bg-white/10 p-2 rounded-xl backdrop-blur-md">
-                 <TrendingUp size={20} className="text-green-400" />
-              </div>
-           </div>
-           
-           {/* Micro Chart with tooltip */}
-           <div className="h-24 -mx-6 -mb-4 z-10">
-              <ResponsiveContainer width="100%" height="100%">
-                 <AreaChart data={revenueData} margin={{ top: 5, right: 10, left: 10, bottom: 0 }}>
-                    <defs>
-                       <linearGradient id="colorRevenueDark" x1="0" y1="0" x2="0" y2="1">
-                          <stop offset="5%" stopColor="#2DD4BF" stopOpacity={0.3}/>
-                          <stop offset="95%" stopColor="#2DD4BF" stopOpacity={0}/>
-                       </linearGradient>
-                    </defs>
-                    <XAxis
-                       dataKey="name"
-                       axisLine={false}
-                       tickLine={false}
-                       tick={{ fontSize: 10, fill: '#9CA3AF' }}
-                       dy={5}
-                    />
-                    <Tooltip
-                       contentStyle={{
-                          background: '#1C1917',
-                          border: 'none',
-                          borderRadius: '8px',
-                          fontSize: '12px',
-                          color: '#fff'
-                       }}
-                       formatter={(value: number) => [`₪${value.toLocaleString()}`, 'הכנסות']}
-                       labelStyle={{ color: '#9CA3AF', marginBottom: '4px' }}
-                    />
-                    <Area type="monotone" dataKey="value" stroke="#2DD4BF" strokeWidth={2} fillOpacity={1} fill="url(#colorRevenueDark)" />
-                 </AreaChart>
-              </ResponsiveContainer>
-           </div>
-           
-           <div className="flex items-center gap-2 mt-4 text-sm font-medium z-10">
-              <span className="text-green-400 bg-green-400/10 px-2 py-0.5 rounded-lg flex items-center">
-                 <ArrowUpRight size={14} className="mr-1" /> {todayStats.revenueTrend}%
-              </span>
-              <span className="text-stone-500">מהשבוע שעבר</span>
-           </div>
-        </div>
-
-        {/* 3. QUICK ACTIONS (Medium, Span 3) */}
-        <div className="col-span-1 md:col-span-2 lg:col-span-3 grid grid-rows-2 gap-4">
-           {/* Top Half: POS */}
-           <div 
-              className="bg-white rounded-3xl p-5 shadow-soft border border-stone-100 hover:border-primary/20 transition-all cursor-pointer flex items-center justify-between group"
-              onClick={() => setIsPosOpen(true)}
-           >
-              <div>
-                 <div className="w-10 h-10 bg-orange-50 text-orange-600 rounded-xl flex items-center justify-center mb-2 group-hover:scale-110 transition-transform">
-                    <Zap size={20} />
-                 </div>
-                 <h3 className="font-bold text-gray-900">מכירה מהירה</h3>
-              </div>
-              <div className="h-10 w-10 rounded-full border border-gray-100 flex items-center justify-center text-gray-400 group-hover:bg-primary group-hover:text-white group-hover:border-primary transition-all">
-                 <ChevronLeft />
-              </div>
-           </div>
-
-           {/* Bottom Half: New Appt */}
-           <div 
-              className="bg-white rounded-3xl p-5 shadow-soft border border-stone-100 hover:border-primary/20 transition-all cursor-pointer flex items-center justify-between group"
-              onClick={() => setIsNewApptOpen(true)}
-           >
-              <div>
-                 <div className="w-10 h-10 bg-blue-50 text-blue-600 rounded-xl flex items-center justify-center mb-2 group-hover:scale-110 transition-transform">
-                    <CalendarIcon size={20} />
-                 </div>
-                 <h3 className="font-bold text-gray-900">תור חדש</h3>
-              </div>
-              <div className="h-10 w-10 rounded-full border border-gray-100 flex items-center justify-center text-gray-400 group-hover:bg-primary group-hover:text-white group-hover:border-primary transition-all">
-                 <ChevronLeft />
-              </div>
-           </div>
+        {/* Desktop Quick Actions */}
+        <div className="hidden md:flex gap-2">
+          <Button variant="outline" size="sm" onClick={() => setIsNewApptOpen(true)}>
+            <Plus size={16} className="ml-1" /> תור חדש
+          </Button>
+          <Button variant="outline" size="sm" onClick={() => setIsPosOpen(true)}>
+            <Zap size={16} className="ml-1" /> מכירה מהירה
+          </Button>
+          <Button variant="outline" size="sm" onClick={() => setIsWalkInOpen(true)}>
+            <User size={16} className="ml-1" /> קבלת לקוח
+          </Button>
+          <Button variant="outline" size="sm">
+            <MessageSquare size={16} className="ml-1" /> שלח תזכורת
+          </Button>
         </div>
       </div>
 
+      {/* ========== BENTO GRID LAYOUT ========== */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+
+        {/* ========== TODAY'S SCHEDULE ========== */}
+        <Card className="p-6 rounded-3xl border-stone-100 shadow-soft">
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-2">
+              <CalendarIcon size={20} className="text-primary" />
+              <h2 className="text-lg font-bold text-gray-900">לוח הזמנים להיום</h2>
+            </div>
+            <Badge variant="secondary">{todaysAppointments.length} תורים</Badge>
+          </div>
+
+          {isLoading ? (
+            <div className="space-y-3">
+              {[1, 2, 3, 4].map(i => (
+                <div key={i} className="flex items-center gap-3 p-3">
+                  <Skeleton className="w-12 h-12 rounded-full" />
+                  <div className="flex-1 space-y-2">
+                    <Skeleton className="h-4 w-32" />
+                    <Skeleton className="h-3 w-24" />
+                  </div>
+                  <Skeleton className="h-6 w-16 rounded-full" />
+                </div>
+              ))}
+            </div>
+          ) : todaysAppointments.length === 0 ? (
+            <div className="flex flex-col items-center justify-center py-12 text-center">
+              <div className="w-16 h-16 bg-green-50 rounded-full flex items-center justify-center mb-4">
+                <Coffee size={32} className="text-green-600" />
+              </div>
+              <p className="text-gray-600 font-medium">אין תורים היום</p>
+              <p className="text-sm text-gray-500">זמן מושלם להפסקת קפה!</p>
+            </div>
+          ) : (
+            <div className="space-y-2 max-h-[400px] overflow-y-auto">
+              {todaysAppointments.map((appt) => (
+                <div
+                  key={appt.id}
+                  className={`flex items-center gap-3 p-3 rounded-xl cursor-pointer transition-all hover:bg-stone-50 group ${
+                    nextAppointment?.id === appt.id ? 'bg-primary/5 ring-1 ring-primary/20' : ''
+                  }`}
+                  onClick={() => navigate(`/admin/patients/${appt.patientId}`)}
+                >
+                  {/* Time */}
+                  <div className="w-14 text-center shrink-0">
+                    <span className="text-lg font-bold text-gray-900">{appt.time}</span>
+                    <span className="block text-xs text-gray-500">{appt.duration} דק׳</span>
+                  </div>
+
+                  {/* Divider */}
+                  <div className={`w-1 h-12 rounded-full ${
+                    appt.status === 'completed' ? 'bg-green-400' :
+                    appt.status === 'confirmed' ? 'bg-blue-400' :
+                    appt.status === 'pending' ? 'bg-amber-400' :
+                    appt.status === 'no-show' ? 'bg-red-400' : 'bg-gray-300'
+                  }`} />
+
+                  {/* Patient Info */}
+                  <img
+                    src={appt.avatar}
+                    alt={appt.patientName}
+                    className="w-10 h-10 rounded-full object-cover shrink-0"
+                  />
+                  <div className="flex-1 min-w-0">
+                    <p className="font-medium text-gray-900 truncate">{appt.patientName}</p>
+                    <p className="text-sm text-gray-500 truncate">{appt.serviceName}</p>
+                  </div>
+
+                  {/* Status Badge */}
+                  <span className={`px-2.5 py-1 text-xs font-medium rounded-full border ${getAppointmentStatusStyle(appt.status)}`}>
+                    {getAppointmentStatusLabel(appt.status)}
+                  </span>
+
+                  {/* Arrow */}
+                  <ChevronLeft size={16} className="text-gray-400 group-hover:text-primary transition-colors" />
+                </div>
+              ))}
+            </div>
+          )}
+        </Card>
+
+        {/* ========== ALERTS PANEL ========== */}
+        <Card className="p-6 rounded-3xl border-stone-100 shadow-soft">
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-2">
+              <AlertTriangle size={20} className="text-amber-500" />
+              <h2 className="text-lg font-bold text-gray-900">התראות דחופות</h2>
+            </div>
+            {totalAlerts > 0 && (
+              <Badge variant="destructive">{totalAlerts}</Badge>
+            )}
+          </div>
+
+          {isLoading ? (
+            <div className="space-y-3">
+              {[1, 2, 3].map(i => (
+                <Skeleton key={i} className="h-16 w-full rounded-xl" />
+              ))}
+            </div>
+          ) : totalAlerts === 0 ? (
+            <div className="flex flex-col items-center justify-center py-12 text-center">
+              <div className="w-16 h-16 bg-green-50 rounded-full flex items-center justify-center mb-4">
+                <CheckCircle size={32} className="text-green-600" />
+              </div>
+              <p className="text-gray-600 font-medium">הכל תקין!</p>
+              <p className="text-sm text-gray-500">אין התראות דחופות כרגע</p>
+            </div>
+          ) : (
+            <div className="space-y-3 max-h-[400px] overflow-y-auto">
+              {/* Pending Declarations */}
+              {pendingDeclarations.length > 0 && (
+                <div
+                  className="flex items-center gap-3 p-4 bg-red-50 rounded-xl border border-red-100 cursor-pointer hover:bg-red-100/50 transition-colors"
+                  onClick={() => navigate('/admin/patients')}
+                >
+                  <div className="w-10 h-10 bg-red-100 rounded-xl flex items-center justify-center shrink-0">
+                    <FileText size={20} className="text-red-600" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="font-medium text-red-900">הצהרות ממתינות לחתימה</p>
+                    <p className="text-sm text-red-700">{pendingDeclarations.length} מטופלים</p>
+                  </div>
+                  <ChevronLeft size={16} className="text-red-400" />
+                </div>
+              )}
+
+              {/* Expiring Products */}
+              {expiringProducts.length > 0 && (
+                <div
+                  className="flex items-center gap-3 p-4 bg-red-50 rounded-xl border border-red-100 cursor-pointer hover:bg-red-100/50 transition-colors"
+                  onClick={() => navigate('/admin/inventory')}
+                >
+                  <div className="w-10 h-10 bg-red-100 rounded-xl flex items-center justify-center shrink-0">
+                    <Clock size={20} className="text-red-600" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="font-medium text-red-900">מוצרים עומדים לפוג</p>
+                    <p className="text-sm text-red-700">{expiringProducts.length} פריטים ב-30 יום הקרובים</p>
+                  </div>
+                  <ChevronLeft size={16} className="text-red-400" />
+                </div>
+              )}
+
+              {/* Low Stock */}
+              {lowStockItems.length > 0 && (
+                <div
+                  className="flex items-center gap-3 p-4 bg-amber-50 rounded-xl border border-amber-100 cursor-pointer hover:bg-amber-100/50 transition-colors"
+                  onClick={() => navigate('/admin/inventory')}
+                >
+                  <div className="w-10 h-10 bg-amber-100 rounded-xl flex items-center justify-center shrink-0">
+                    <ShoppingCart size={20} className="text-amber-600" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="font-medium text-amber-900">מלאי נמוך</p>
+                    <p className="text-sm text-amber-700">{lowStockItems.length} פריטים מתחת לסף</p>
+                  </div>
+                  <ChevronLeft size={16} className="text-amber-400" />
+                </div>
+              )}
+
+              {/* Overdue Payments */}
+              {overdueInvoices.length > 0 && (
+                <div
+                  className="flex items-center gap-3 p-4 bg-amber-50 rounded-xl border border-amber-100 cursor-pointer hover:bg-amber-100/50 transition-colors"
+                  onClick={() => navigate('/admin/finance')}
+                >
+                  <div className="w-10 h-10 bg-amber-100 rounded-xl flex items-center justify-center shrink-0">
+                    <CreditCard size={20} className="text-amber-600" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="font-medium text-amber-900">תשלומים בפיגור</p>
+                    <p className="text-sm text-amber-700">₪{overdueInvoices.reduce((s, i) => s + i.total, 0).toLocaleString()}</p>
+                  </div>
+                  <ChevronLeft size={16} className="text-amber-400" />
+                </div>
+              )}
+
+              {/* New Leads */}
+              {newLeads.length > 0 && (
+                <div
+                  className="flex items-center gap-3 p-4 bg-blue-50 rounded-xl border border-blue-100 cursor-pointer hover:bg-blue-100/50 transition-colors"
+                  onClick={() => navigate('/admin/leads')}
+                >
+                  <div className="w-10 h-10 bg-blue-100 rounded-xl flex items-center justify-center shrink-0">
+                    <UserPlus size={20} className="text-blue-600" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="font-medium text-blue-900">לידים חדשים</p>
+                    <p className="text-sm text-blue-700">{newLeads.length} לידים להתקשרות</p>
+                  </div>
+                  <ChevronLeft size={16} className="text-blue-400" />
+                </div>
+              )}
+            </div>
+          )}
+        </Card>
+
+        {/* ========== REVENUE OVERVIEW ========== */}
+        <Card className="p-6 rounded-3xl border-stone-100 shadow-soft bg-gradient-to-br from-gray-900 to-gray-800 text-white">
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-2">
+              <TrendingUp size={20} className="text-green-400" />
+              <h2 className="text-lg font-bold">הכנסות היום</h2>
+            </div>
+            <div className={`flex items-center gap-1 px-2 py-1 rounded-lg text-sm font-medium ${
+              revenueTrend >= 0 ? 'bg-green-500/20 text-green-400' : 'bg-red-500/20 text-red-400'
+            }`}>
+              {revenueTrend >= 0 ? <ArrowUpRight size={14} /> : <ArrowUpRight size={14} className="rotate-90" />}
+              {Math.abs(revenueTrend)}%
+            </div>
+          </div>
+
+          <div className="mb-6">
+            <h3 className="text-4xl font-bold tracking-tight">
+              ₪{(todaysRevenue || 2450).toLocaleString()}
+            </h3>
+            <p className="text-gray-400 text-sm mt-1">
+              יתרה לגבייה: ₪{outstandingBalance.toLocaleString()}
+            </p>
+          </div>
+
+          {/* Mini Chart */}
+          <div className="h-20 -mx-2">
+            <ResponsiveContainer width="100%" height="100%">
+              <AreaChart data={revenueData} margin={{ top: 0, right: 0, left: 0, bottom: 0 }}>
+                <defs>
+                  <linearGradient id="colorRevenueDashboard" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor="#2DD4BF" stopOpacity={0.3}/>
+                    <stop offset="95%" stopColor="#2DD4BF" stopOpacity={0}/>
+                  </linearGradient>
+                </defs>
+                <XAxis
+                  dataKey="name"
+                  axisLine={false}
+                  tickLine={false}
+                  tick={{ fontSize: 10, fill: '#9CA3AF' }}
+                />
+                <Tooltip
+                  contentStyle={{
+                    background: '#1C1917',
+                    border: 'none',
+                    borderRadius: '8px',
+                    fontSize: '12px',
+                    color: '#fff'
+                  }}
+                  formatter={(value: number) => [`₪${value.toLocaleString()}`, 'הכנסות']}
+                />
+                <Area
+                  type="monotone"
+                  dataKey="value"
+                  stroke="#2DD4BF"
+                  strokeWidth={2}
+                  fillOpacity={1}
+                  fill="url(#colorRevenueDashboard)"
+                />
+              </AreaChart>
+            </ResponsiveContainer>
+          </div>
+        </Card>
+
+        {/* ========== RETENTION METRICS ========== */}
+        <Card className="p-6 rounded-3xl border-stone-100 shadow-soft">
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-2">
+              <Users size={20} className="text-purple-500" />
+              <h2 className="text-lg font-bold text-gray-900">שימור לקוחות</h2>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            {/* Lapsed Clients */}
+            <div
+              className="p-4 bg-purple-50 rounded-xl cursor-pointer hover:bg-purple-100/70 transition-colors"
+              onClick={() => navigate('/admin/patients')}
+            >
+              <div className="flex items-center gap-2 mb-2">
+                <Clock size={16} className="text-purple-600" />
+                <span className="text-sm font-medium text-purple-900">לקוחות רדומים</span>
+              </div>
+              <p className="text-2xl font-bold text-purple-700">{lapsedClients.length}</p>
+              <p className="text-xs text-purple-600">לא ביקרו 60+ יום</p>
+            </div>
+
+            {/* Due for Follow-up (mock) */}
+            <div
+              className="p-4 bg-teal-50 rounded-xl cursor-pointer hover:bg-teal-100/70 transition-colors"
+              onClick={() => navigate('/admin/patients')}
+            >
+              <div className="flex items-center gap-2 mb-2">
+                <Phone size={16} className="text-teal-600" />
+                <span className="text-sm font-medium text-teal-900">לביקורת מעקב</span>
+              </div>
+              <p className="text-2xl font-bold text-teal-700">5</p>
+              <p className="text-xs text-teal-600">בוטוקס 2 שבועות</p>
+            </div>
+
+            {/* Upcoming Birthdays (mock) */}
+            <div
+              className="p-4 bg-pink-50 rounded-xl cursor-pointer hover:bg-pink-100/70 transition-colors"
+              onClick={() => navigate('/admin/patients')}
+            >
+              <div className="flex items-center gap-2 mb-2">
+                <Gift size={16} className="text-pink-600" />
+                <span className="text-sm font-medium text-pink-900">ימי הולדת</span>
+              </div>
+              <p className="text-2xl font-bold text-pink-700">3</p>
+              <p className="text-xs text-pink-600">השבוע</p>
+            </div>
+
+            {/* Active Patients */}
+            <div
+              className="p-4 bg-green-50 rounded-xl cursor-pointer hover:bg-green-100/70 transition-colors"
+              onClick={() => navigate('/admin/patients')}
+            >
+              <div className="flex items-center gap-2 mb-2">
+                <CheckCircle2 size={16} className="text-green-600" />
+                <span className="text-sm font-medium text-green-900">לקוחות פעילים</span>
+              </div>
+              <p className="text-2xl font-bold text-green-700">{patients.length - lapsedClients.length}</p>
+              <p className="text-xs text-green-600">ביקרו ב-60 יום</p>
+            </div>
+          </div>
+        </Card>
+      </div>
+
+      {/* ========== MOBILE FAB ========== */}
+      <div className="md:hidden fixed bottom-6 left-6 z-50">
+        {/* FAB Menu */}
+        {isFabOpen && (
+          <div className="absolute bottom-16 left-0 space-y-2 animate-in slide-in-from-bottom-2 duration-200">
+            <button
+              className="flex items-center gap-2 bg-white shadow-lg rounded-full py-2 px-4 text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors min-h-[44px]"
+              onClick={() => { setIsNewApptOpen(true); setIsFabOpen(false); }}
+            >
+              <Plus size={18} className="text-primary" />
+              תור חדש
+            </button>
+            <button
+              className="flex items-center gap-2 bg-white shadow-lg rounded-full py-2 px-4 text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors min-h-[44px]"
+              onClick={() => { setIsPosOpen(true); setIsFabOpen(false); }}
+            >
+              <Zap size={18} className="text-orange-500" />
+              מכירה מהירה
+            </button>
+            <button
+              className="flex items-center gap-2 bg-white shadow-lg rounded-full py-2 px-4 text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors min-h-[44px]"
+              onClick={() => { setIsWalkInOpen(true); setIsFabOpen(false); }}
+            >
+              <User size={18} className="text-blue-500" />
+              קבלת לקוח
+            </button>
+            <button
+              className="flex items-center gap-2 bg-white shadow-lg rounded-full py-2 px-4 text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors min-h-[44px]"
+              onClick={() => setIsFabOpen(false)}
+            >
+              <MessageSquare size={18} className="text-green-500" />
+              שלח תזכורת
+            </button>
+          </div>
+        )}
+
+        {/* FAB Button */}
+        <button
+          className={`w-14 h-14 rounded-full shadow-lg flex items-center justify-center transition-all duration-300 ${
+            isFabOpen
+              ? 'bg-gray-800 rotate-45'
+              : 'bg-primary hover:bg-primary/90'
+          }`}
+          onClick={() => setIsFabOpen(!isFabOpen)}
+        >
+          <Plus size={24} className="text-white" />
+        </button>
+      </div>
+
+      {/* ========== DIALOGS ========== */}
       {/* Quick POS Modal */}
       <Dialog open={isPosOpen} onClose={() => setIsPosOpen(false)} title="קופה מהירה">
-         <div className="flex flex-col h-[500px]">
-            {/* ... Content same as before ... */}
-            <p className="text-center p-10">תוכן הקופה המהירה יופיע כאן</p>
-         </div>
+        <div className="flex flex-col h-[500px]">
+          <p className="text-center p-10 text-gray-500">תוכן הקופה המהירה יופיע כאן</p>
+        </div>
       </Dialog>
-      
-      {/* New Appt Dialog */}
+
+      {/* New Appointment Dialog */}
       <Dialog open={isNewApptOpen} onClose={() => setIsNewApptOpen(false)} title="קביעת תור חדש">
         <div className="space-y-4">
-            {/* ... Content same as before ... */}
-            <p className="text-center p-10">טופס קביעת תור יופיע כאן</p>
+          <div>
+            <Label>מטופל</Label>
+            <Input placeholder="חפש מטופל..." />
+          </div>
+          <div>
+            <Label>טיפול</Label>
+            <select className="flex h-10 w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm">
+              {services.map(s => <option key={s.id}>{s.name} ({s.duration} דק׳)</option>)}
+            </select>
+          </div>
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <Label>תאריך</Label>
+              <Input type="date" defaultValue={todayStr} />
+            </div>
+            <div>
+              <Label>שעה</Label>
+              <Input type="time" defaultValue="10:00" />
+            </div>
+          </div>
+          <div className="flex justify-end gap-3 pt-4 border-t mt-4">
+            <Button variant="ghost" onClick={() => setIsNewApptOpen(false)}>ביטול</Button>
+            <Button onClick={() => setIsNewApptOpen(false)}>שמור ביומן</Button>
+          </div>
+        </div>
+      </Dialog>
+
+      {/* Walk-in Dialog */}
+      <Dialog open={isWalkInOpen} onClose={() => setIsWalkInOpen(false)} title="קבלת לקוח חדש">
+        <div className="space-y-4">
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <Label>שם פרטי</Label>
+              <Input placeholder="ישראל" />
+            </div>
+            <div>
+              <Label>שם משפחה</Label>
+              <Input placeholder="ישראלי" />
+            </div>
+          </div>
+          <div>
+            <Label>טלפון נייד</Label>
+            <Input placeholder="050-0000000" className="direction-ltr text-right" />
+          </div>
+          <div className="flex justify-end gap-3 pt-4 border-t mt-4">
+            <Button variant="ghost" onClick={() => setIsWalkInOpen(false)}>ביטול</Button>
+            <Button onClick={() => setIsWalkInOpen(false)}>קלוט לקוח</Button>
+          </div>
         </div>
       </Dialog>
     </div>
