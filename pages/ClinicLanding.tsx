@@ -432,11 +432,12 @@ export const ClinicLanding = () => {
                 </div>
              </div>
              <div className="flex-1 relative">
-                <BookingApp 
-                   mode="modal" 
-                   onClose={closeBooking} 
+                <BookingApp
+                   mode="modal"
+                   onClose={closeBooking}
                    preSelectedService={selectedService}
                    clinicName={profile.name}
+                   clinicId={profile.id}
                 />
              </div>
          </div>
