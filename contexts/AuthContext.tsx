@@ -30,6 +30,7 @@ interface AuthContextType {
   signIn: (email: string, password: string) => Promise<{ error: Error | null }>;
   signUp: (data: SignUpData) => Promise<{ error: Error | null }>;
   signOut: () => Promise<void>;
+  resetPassword: (email: string) => Promise<{ error: Error | null }>;
   isConfigured: boolean;
 }
 
@@ -176,6 +177,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setSession(null);
   };
 
+  const resetPassword = async (email: string) => {
+    if (!isConfigured) {
+      return { error: new Error('Supabase not configured') };
+    }
+
+    const { error } = await supabase.auth.resetPasswordForEmail(email, {
+      redirectTo: `${window.location.origin}/reset-password`,
+    });
+    return { error: error as Error | null };
+  };
+
   return (
     <AuthContext.Provider value={{
       user,
@@ -185,6 +197,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       signIn,
       signUp,
       signOut,
+      resetPassword,
       isConfigured,
     }}>
       {children}
