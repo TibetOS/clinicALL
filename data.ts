@@ -30,7 +30,10 @@ export const MOCK_PATIENTS: Patient[] = [
     age: 34,
     gender: 'נקבה',
     aestheticInterests: ['בוטוקס', 'פיסול שפתיים'],
-    avatar: 'https://ui-avatars.com/api/?name=Sarah+Cohen&background=random'
+    avatar: 'https://ui-avatars.com/api/?name=Sarah+Cohen&background=random',
+    // Declaration: Valid (signed 2 months ago)
+    lastDeclarationDate: getRelativeDate(-60),
+    declarationStatus: 'valid'
   },
   {
     id: '2',
@@ -44,7 +47,10 @@ export const MOCK_PATIENTS: Patient[] = [
     age: 42,
     gender: 'נקבה',
     aestheticInterests: ['מיצוק עור', 'פיגמנטציה'],
-    avatar: 'https://ui-avatars.com/api/?name=Michal+Levi&background=random'
+    avatar: 'https://ui-avatars.com/api/?name=Michal+Levi&background=random',
+    // Declaration: Pending (sent, not yet filled)
+    declarationStatus: 'pending',
+    pendingDeclarationToken: 'demo12345678'
   },
   {
     id: '3',
@@ -58,7 +64,10 @@ export const MOCK_PATIENTS: Patient[] = [
     age: 29,
     gender: 'זכר',
     aestheticInterests: ['עיצוב לסת', 'הסרת שיער'],
-    avatar: 'https://ui-avatars.com/api/?name=Daniel+Avraham&background=random'
+    avatar: 'https://ui-avatars.com/api/?name=Daniel+Avraham&background=random',
+    // Declaration: Valid (signed last week)
+    lastDeclarationDate: getRelativeDate(-7),
+    declarationStatus: 'valid'
   },
   {
     id: '4',
@@ -72,7 +81,10 @@ export const MOCK_PATIENTS: Patient[] = [
     age: 38,
     gender: 'נקבה',
     aestheticInterests: ['בוטוקס', 'מזותרפיה'],
-    avatar: 'https://ui-avatars.com/api/?name=Ronit+Shimon&background=random'
+    avatar: 'https://ui-avatars.com/api/?name=Ronit+Shimon&background=random',
+    // Declaration: Expired (signed 14 months ago)
+    lastDeclarationDate: getRelativeDate(-420),
+    declarationStatus: 'expired'
   },
   {
     id: '5',
@@ -86,7 +98,9 @@ export const MOCK_PATIENTS: Patient[] = [
     age: 45,
     gender: 'נקבה',
     aestheticInterests: ['בוטוקס', 'פילינג'],
-    avatar: 'https://ui-avatars.com/api/?name=Yael+Golan&background=random'
+    avatar: 'https://ui-avatars.com/api/?name=Yael+Golan&background=random',
+    // Declaration: None (never signed)
+    declarationStatus: 'none'
   },
   {
     id: '6',
@@ -100,7 +114,9 @@ export const MOCK_PATIENTS: Patient[] = [
     age: 41,
     gender: 'זכר',
     aestheticInterests: ['בוטוקס'],
-    avatar: 'https://ui-avatars.com/api/?name=Avi+Cohen&background=random'
+    avatar: 'https://ui-avatars.com/api/?name=Avi+Cohen&background=random',
+    // Declaration: None (never signed)
+    declarationStatus: 'none'
   }
 ];
 

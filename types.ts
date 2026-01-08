@@ -35,6 +35,7 @@ export interface ClinicProfile {
 }
 
 export type RiskLevel = 'low' | 'medium' | 'high';
+export type DeclarationStatus = 'valid' | 'expired' | 'pending' | 'none';
 
 export interface Patient {
   id: string;
@@ -51,6 +52,10 @@ export interface Patient {
   gender?: string;
   aestheticInterests?: string[];
   skinType?: string;
+  // Health Declaration fields
+  lastDeclarationDate?: string; // ISO date when last signed
+  declarationStatus?: DeclarationStatus; // Current status
+  pendingDeclarationToken?: string; // Token if declaration is pending
 }
 
 export type AppointmentStatus = 'pending' | 'confirmed' | 'completed' | 'cancelled' | 'no-show';

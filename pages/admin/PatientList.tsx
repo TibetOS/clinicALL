@@ -2,12 +2,12 @@ import React, { useState, useMemo } from 'react';
 import {
   Search, Filter, UserPlus, ChevronLeft, Download, Calendar as CalendarIcon,
   X, CheckSquare, Square, MessageSquare, Trash2, FileDown, FileHeart, Copy,
-  Check, Send, Mail, Phone
+  Check, Send, Mail, Phone, Clock, AlertCircle, FileCheck
 } from 'lucide-react';
 import { Card, Button, Input, Badge, Dialog, Label, Skeleton } from '../../components/ui';
 import { usePatients, useHealthTokens } from '../../hooks';
 import { useNavigate } from 'react-router-dom';
-import { Patient, RiskLevel, HealthDeclarationToken } from '../../types';
+import { Patient, RiskLevel, HealthDeclarationToken, DeclarationStatus } from '../../types';
 
 // Helper for translating status
 const getStatusLabel = (status: string) => {
@@ -17,6 +17,21 @@ const getStatusLabel = (status: string) => {
     'high': 'גבוה',
   };
   return map[status] || status;
+};
+
+// Helper for declaration status
+const getDeclarationStatusConfig = (status?: DeclarationStatus) => {
+  switch (status) {
+    case 'valid':
+      return { label: 'תקין', variant: 'success' as const, icon: FileCheck };
+    case 'pending':
+      return { label: 'ממתין', variant: 'warning' as const, icon: Clock };
+    case 'expired':
+      return { label: 'פג תוקף', variant: 'destructive' as const, icon: AlertCircle };
+    case 'none':
+    default:
+      return { label: 'חסר', variant: 'outline' as const, icon: FileHeart };
+  }
 };
 
 interface PatientFormData {
@@ -384,9 +399,8 @@ export const PatientList = () => {
               <th className="px-6 py-4">שם המטופל</th>
               <th className="px-6 py-4">טלפון</th>
               <th className="px-6 py-4">ביקור אחרון</th>
-              <th className="px-6 py-4">תור קרוב</th>
+              <th className="px-6 py-4">הצהרת בריאות</th>
               <th className="px-6 py-4">רמת סיכון</th>
-              <th className="px-6 py-4">סטטוס</th>
               <th className="px-6 py-4"></th>
             </tr>
           </thead>
@@ -450,20 +464,37 @@ export const PatientList = () => {
                 <td className="px-6 py-4 text-gray-500">{patient.phone}</td>
                 <td className="px-6 py-4 text-gray-500">{patient.lastVisit ? new Date(patient.lastVisit).toLocaleDateString('he-IL') : '-'}</td>
                 <td className="px-6 py-4">
-                  {patient.upcomingAppointment ? (
-                    <span className="flex items-center text-primary font-medium">
-                      <CalendarIcon size={14} className="ml-1" />
-                      {new Date(patient.upcomingAppointment).toLocaleDateString('he-IL')}
-                    </span>
-                  ) : <span className="text-gray-500">-</span>}
+                  {(() => {
+                    const config = getDeclarationStatusConfig(patient.declarationStatus);
+                    const StatusIcon = config.icon;
+                    return (
+                      <div className="flex items-center gap-2">
+                        <Badge variant={config.variant} className="gap-1">
+                          <StatusIcon size={12} />
+                          {config.label}
+                        </Badge>
+                        {(patient.declarationStatus === 'none' || patient.declarationStatus === 'expired') && (
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="h-7 px-2 text-xs"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              openHealthDeclarationDialog(patient);
+                            }}
+                          >
+                            <Send size={12} className="ml-1" />
+                            שלח
+                          </Button>
+                        )}
+                      </div>
+                    );
+                  })()}
                 </td>
                 <td className="px-6 py-4">
                   <Badge variant={patient.riskLevel === 'high' ? 'destructive' : patient.riskLevel === 'medium' ? 'warning' : 'success'}>
                     {getStatusLabel(patient.riskLevel)}
                   </Badge>
-                </td>
-                <td className="px-6 py-4">
-                  <Badge variant="outline">פעיל</Badge>
                 </td>
                 <td className="px-6 py-4">
                   <Button variant="ghost" size="icon" aria-label="פרטי מטופל">
@@ -547,10 +578,35 @@ export const PatientList = () => {
                 {patient.lastVisit ? new Date(patient.lastVisit).toLocaleDateString('he-IL') : '-'}
               </div>
               <div>
-                <span className="text-gray-600 block text-xs">תור קרוב</span>
-                {patient.upcomingAppointment ? new Date(patient.upcomingAppointment).toLocaleDateString('he-IL') : '-'}
+                <span className="text-gray-600 block text-xs">הצהרת בריאות</span>
+                {(() => {
+                  const config = getDeclarationStatusConfig(patient.declarationStatus);
+                  const StatusIcon = config.icon;
+                  return (
+                    <div className="flex items-center gap-1 mt-1">
+                      <Badge variant={config.variant} className="gap-1 text-xs">
+                        <StatusIcon size={10} />
+                        {config.label}
+                      </Badge>
+                    </div>
+                  );
+                })()}
               </div>
             </div>
+            {(patient.declarationStatus === 'none' || patient.declarationStatus === 'expired') && (
+              <Button
+                variant="outline"
+                size="sm"
+                className="w-full mt-2"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  openHealthDeclarationDialog(patient);
+                }}
+              >
+                <Send size={14} className="ml-2" />
+                שלח הצהרת בריאות
+              </Button>
+            )}
           </Card>
         ))}
       </div>
