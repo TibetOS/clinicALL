@@ -180,22 +180,15 @@ export const ResetPasswordPage = () => {
 
     if (urlError || errorCode) {
       // There's an error in the URL - link is invalid/expired
+      console.error('Password reset error in URL:', { urlError, errorCode });
       setHasValidSession(false);
       setSessionChecked(true);
       return;
     }
 
-    const checkSession = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (session) {
-        setHasValidSession(true);
-        setSessionChecked(true);
-      }
-    };
-    checkSession();
-
-    // Listen for auth state changes (recovery token verification)
+    // Set up auth state listener FIRST to catch any events
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      console.log('Auth state change:', event, !!session);
       if (event === 'PASSWORD_RECOVERY') {
         setHasValidSession(true);
         setSessionChecked(true);
@@ -203,21 +196,47 @@ export const ResetPasswordPage = () => {
         // Sometimes recovery comes as SIGNED_IN
         setHasValidSession(true);
         setSessionChecked(true);
+      } else if (event === 'TOKEN_REFRESHED' && session) {
+        // Token was refreshed - session is valid
+        setHasValidSession(true);
+        setSessionChecked(true);
       }
     });
 
-    // Timeout to prevent infinite loading
-    const timeout = setTimeout(() => {
-      if (!sessionChecked) {
+    // Then check for existing session (in case event already fired)
+    const checkSession = async () => {
+      try {
+        const { data: { session }, error } = await supabase.auth.getSession();
+        if (error) {
+          console.error('Error getting session:', error);
+          setSessionChecked(true);
+          return;
+        }
+        if (session) {
+          console.log('Found existing session');
+          setHasValidSession(true);
+          setSessionChecked(true);
+        }
+      } catch (err) {
+        console.error('Session check exception:', err);
         setSessionChecked(true);
       }
-    }, 3000);
+    };
+    checkSession();
+
+    // Timeout to prevent infinite loading - show error page if no session found
+    const timeout = setTimeout(() => {
+      if (!sessionChecked) {
+        console.warn('Session check timed out');
+        setSessionChecked(true);
+      }
+    }, 5000);
 
     return () => {
       subscription.unsubscribe();
       clearTimeout(timeout);
     };
-  }, []);
+  }, [sessionChecked]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -236,13 +255,19 @@ export const ResetPasswordPage = () => {
 
     setLoading(true);
 
-    const { error } = await updatePassword(password);
+    try {
+      const { error } = await updatePassword(password);
 
-    if (error) {
+      if (error) {
+        console.error('Password update error:', error);
+        setError('שגיאה בעדכון הסיסמה. אנא נסה שוב.');
+      } else {
+        setSuccess(true);
+      }
+    } catch (err) {
+      console.error('Password update exception:', err);
       setError('שגיאה בעדכון הסיסמה. אנא נסה שוב.');
-      setLoading(false);
-    } else {
-      setSuccess(true);
+    } finally {
       setLoading(false);
     }
   };
