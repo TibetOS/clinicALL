@@ -7,6 +7,9 @@ import {
 import { Card, Button, Input, Badge, Dialog, Label } from '../components/ui';
 import { useInventory } from '../hooks';
 import { InventoryItem } from '../types';
+import { createLogger } from '../lib/logger';
+
+const logger = createLogger('Inventory');
 
 interface NewItemForm {
   name: string;
@@ -86,7 +89,7 @@ export const InventoryPage = () => {
         );
       }
     } catch (err) {
-      console.error('Failed to adjust quantity:', err);
+      logger.error('Failed to adjust quantity:', err);
     } finally {
       setSaving(false);
     }
@@ -117,7 +120,7 @@ export const InventoryPage = () => {
       setNewItem(initialFormState);
       setIsAddOpen(false);
     } catch (err) {
-      console.error('Failed to add item:', err);
+      logger.error('Failed to add item:', err);
     } finally {
       setSaving(false);
     }

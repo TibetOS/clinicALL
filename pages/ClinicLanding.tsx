@@ -11,6 +11,9 @@ import { useClinic, useServices } from '../hooks';
 import { ClinicProfile, Service } from '../types';
 import { ImageSlider } from '../components/ImageSlider';
 import { isSupabaseConfigured } from '../lib/supabase';
+import { createLogger } from '../lib/logger';
+
+const logger = createLogger('ClinicLanding');
 
 export const ClinicLanding = () => {
   const { slug } = useParams();
@@ -54,7 +57,7 @@ export const ClinicLanding = () => {
   // Show error state
   if (clinicError || !profile) {
     // Log technical error for debugging
-    if (clinicError) console.error('Clinic load error:', clinicError);
+    if (clinicError) logger.error('Clinic load error:', clinicError);
     return (
       <div className="min-h-screen bg-stone-50 flex items-center justify-center">
         <div className="text-center">

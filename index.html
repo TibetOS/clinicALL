@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta http-equiv="Content-Security-Policy" content="
       default-src 'self';
-      script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.tailwindcss.com https://esm.sh;
+      script-src 'self' https://esm.sh;
       style-src 'self' 'unsafe-inline' https://fonts.googleapis.com;
       font-src 'self' https://fonts.gstatic.com;
       img-src 'self' data: https: blob:;
@@ -15,110 +15,9 @@
       form-action 'self';
     ">
     <title>ClinicALL - ניהול קליניקה אסתטית</title>
-    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Heebo:wght@300;400;500;700&display=swap" rel="stylesheet">
-    <script>
-      tailwind.config = {
-        darkMode: 'class',
-        theme: {
-          extend: {
-            colors: {
-              border: '#E7E5E4', // Stone-200
-              input: '#E7E5E4',
-              ring: '#0D9488',
-              background: '#FAFAF9', // Stone-50 (Warm background)
-              foreground: '#1C1917', // Stone-900
-              primary: { 
-                DEFAULT: '#0D9488', // Teal-600
-                foreground: '#FFFFFF' 
-              },
-              secondary: { 
-                DEFAULT: '#F5F5F4', // Stone-100
-                foreground: '#1C1917' 
-              },
-              destructive: { 
-                DEFAULT: '#EF4444', 
-                foreground: '#FFFFFF' 
-              },
-              muted: { 
-                DEFAULT: '#F5F5F4', 
-                foreground: '#78716C' // Stone-500
-              },
-              accent: { 
-                DEFAULT: '#F5F5F4', 
-                foreground: '#1C1917' 
-              },
-              card: { 
-                DEFAULT: '#FFFFFF', 
-                foreground: '#1C1917' 
-              },
-              // New Palette for "Soft Medical"
-              stone: {
-                50: '#FAFAF9',
-                100: '#F5F5F4',
-                200: '#E7E5E4',
-                300: '#D6D3D1',
-                800: '#292524',
-                900: '#1C1917',
-              },
-              sand: '#F3F4F6', // Cool gray for contrast
-            },
-            fontFamily: {
-              sans: ['Heebo', 'Inter', 'sans-serif'],
-            },
-            borderRadius: {
-              'xl': '0.75rem',
-              '2xl': '1rem',
-              '3xl': '1.5rem', // For the soft organic feel
-            },
-            boxShadow: {
-              'soft': '0 4px 20px -2px rgba(0, 0, 0, 0.05)',
-              'glow': '0 0 15px rgba(13, 148, 136, 0.3)',
-            }
-          },
-        },
-      }
-    </script>
-    <style>
-      body {
-        font-family: 'Heebo', sans-serif;
-        background-color: #FAFAF9; /* Stone-50 */
-        color: #1C1917;
-        -webkit-font-smoothing: antialiased;
-      }
-      /* Custom Scrollbar */
-      ::-webkit-scrollbar {
-        width: 6px;
-        height: 6px;
-      }
-      ::-webkit-scrollbar-track {
-        background: transparent; 
-      }
-      ::-webkit-scrollbar-thumb {
-        background: #D6D3D1; 
-        border-radius: 10px;
-      }
-      ::-webkit-scrollbar-thumb:hover {
-        background: #A8A29E; 
-      }
-      
-      /* Input calendar icon adjustment for RTL */
-      input[type="date"]::-webkit-calendar-picker-indicator,
-      input[type="time"]::-webkit-calendar-picker-indicator {
-        margin-left: 0;
-        margin-right: 8px;
-        cursor: pointer;
-      }
-      
-      /* Hide scrollbar for clean horizontal scrolls */
-      .no-scrollbar::-webkit-scrollbar {
-        display: none;
-      }
-      .no-scrollbar {
-        -ms-overflow-style: none;
-        scrollbar-width: none;
-      }
-    </style>
   <script type="importmap">
 {
   "imports": {
