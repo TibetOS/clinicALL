@@ -170,10 +170,24 @@ export const ResetPasswordPage = () => {
 
   // Check for recovery session on mount
   useEffect(() => {
+    // First check for errors in the URL hash (e.g., #error=access_denied&error_code=otp_expired)
+    const hashParams = new URLSearchParams(window.location.hash.substring(1));
+    const urlError = hashParams.get('error');
+    const errorCode = hashParams.get('error_code');
+
+    if (urlError || errorCode) {
+      // There's an error in the URL - link is invalid/expired
+      setHasValidSession(false);
+      setSessionChecked(true);
+      return;
+    }
+
     const checkSession = async () => {
       const { data: { session } } = await supabase.auth.getSession();
-      setHasValidSession(!!session);
-      setSessionChecked(true);
+      if (session) {
+        setHasValidSession(true);
+        setSessionChecked(true);
+      }
     };
     checkSession();
 
@@ -181,10 +195,25 @@ export const ResetPasswordPage = () => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       if (event === 'PASSWORD_RECOVERY') {
         setHasValidSession(true);
+        setSessionChecked(true);
+      } else if (event === 'SIGNED_IN' && session) {
+        // Sometimes recovery comes as SIGNED_IN
+        setHasValidSession(true);
+        setSessionChecked(true);
       }
     });
 
-    return () => subscription.unsubscribe();
+    // Timeout to prevent infinite loading
+    const timeout = setTimeout(() => {
+      if (!sessionChecked) {
+        setSessionChecked(true);
+      }
+    }, 3000);
+
+    return () => {
+      subscription.unsubscribe();
+      clearTimeout(timeout);
+    };
   }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
