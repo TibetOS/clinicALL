@@ -129,6 +129,10 @@ export const PatientList = () => {
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [isSelectionMode, setIsSelectionMode] = useState(false);
 
+  // Delete confirmation dialog state
+  const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
+
   // Filter patients based on search and filters
   const filteredPatients = useMemo(() => {
     return patients.filter(p => {
@@ -183,13 +187,16 @@ export const PatientList = () => {
   };
 
   const handleBulkDelete = async () => {
-    if (!confirm(`האם למחוק ${selectedIds.size} מטופלים?`)) return;
+    setIsDeleting(true);
+    const count = selectedIds.size;
     for (const id of selectedIds) {
       await deletePatient(id);
     }
     setSelectedIds(new Set());
     setIsSelectionMode(false);
-    showSuccess(`${selectedIds.size} מטופלים נמחקו`);
+    setIsDeleteConfirmOpen(false);
+    setIsDeleting(false);
+    showSuccess(`${count} מטופלים נמחקו`);
   };
 
   const handleExportSelected = () => {
@@ -329,7 +336,7 @@ export const PatientList = () => {
             <Button variant="outline" size="sm">
               <MessageSquare size={16} className="ml-2" /> שלח SMS
             </Button>
-            <Button variant="destructive" size="sm" onClick={handleBulkDelete}>
+            <Button variant="destructive" size="sm" onClick={() => setIsDeleteConfirmOpen(true)}>
               <Trash2 size={16} className="ml-2" /> מחק
             </Button>
           </div>
@@ -892,6 +899,44 @@ export const PatientList = () => {
               </div>
             </>
           )}
+        </div>
+      </Dialog>
+
+      {/* Delete Confirmation Dialog */}
+      <Dialog
+        open={isDeleteConfirmOpen}
+        onClose={() => !isDeleting && setIsDeleteConfirmOpen(false)}
+        title="אישור מחיקה"
+      >
+        <div className="space-y-4">
+          <div className="bg-red-50 p-4 rounded-xl border border-red-100 text-center">
+            <div className="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-3">
+              <Trash2 size={24} className="text-red-600" />
+            </div>
+            <h3 className="font-bold text-red-800 mb-1">האם אתה בטוח?</h3>
+            <p className="text-sm text-red-700">
+              פעולה זו תמחק {selectedIds.size} מטופלים לצמיתות.
+              <br />
+              לא ניתן לבטל פעולה זו.
+            </p>
+          </div>
+
+          <div className="flex justify-end gap-3 pt-4 border-t mt-4">
+            <Button
+              variant="ghost"
+              onClick={() => setIsDeleteConfirmOpen(false)}
+              disabled={isDeleting}
+            >
+              ביטול
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={handleBulkDelete}
+              disabled={isDeleting}
+            >
+              {isDeleting ? 'מוחק...' : `מחק ${selectedIds.size} מטופלים`}
+            </Button>
+          </div>
         </div>
       </Dialog>
     </div>

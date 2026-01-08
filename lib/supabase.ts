@@ -1,10 +1,13 @@
 import { createClient } from '@supabase/supabase-js';
+import { createLogger } from './logger';
+
+const logger = createLogger('Supabase');
 
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
 if (!supabaseUrl || !supabaseAnonKey) {
-  console.warn('Missing Supabase environment variables. Using mock mode.');
+  logger.warn('Missing Supabase environment variables. Using mock mode.');
 }
 
 export const supabase = createClient(

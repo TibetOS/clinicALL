@@ -14,6 +14,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { supabase } from '../lib/supabase';
 import { useHealthTokens } from '../hooks/useHealthTokens';
 import { HealthDeclarationToken } from '../types';
+import { isValidEmail, isValidIsraeliPhone, isStrongPassword } from '../lib/validation';
 
 // -- LANDING PAGE --
 export const LandingPage = () => {
@@ -180,7 +181,6 @@ export const ResetPasswordPage = () => {
 
     if (urlError || errorCode) {
       // There's an error in the URL - link is invalid/expired
-      console.error('Password reset error in URL:', { urlError, errorCode });
       setHasValidSession(false);
       setSessionChecked(true);
       return;
@@ -188,7 +188,6 @@ export const ResetPasswordPage = () => {
 
     // Set up auth state listener FIRST to catch any events
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      console.log('Auth state change:', event, !!session);
       if (event === 'PASSWORD_RECOVERY') {
         setHasValidSession(true);
         setSessionChecked(true);
@@ -208,17 +207,14 @@ export const ResetPasswordPage = () => {
       try {
         const { data: { session }, error } = await supabase.auth.getSession();
         if (error) {
-          console.error('Error getting session:', error);
           setSessionChecked(true);
           return;
         }
         if (session) {
-          console.log('Found existing session');
           setHasValidSession(true);
           setSessionChecked(true);
         }
-      } catch (err) {
-        console.error('Session check exception:', err);
+      } catch {
         setSessionChecked(true);
       }
     };
@@ -227,7 +223,6 @@ export const ResetPasswordPage = () => {
     // Timeout to prevent infinite loading - show error page if no session found
     const timeout = setTimeout(() => {
       if (!sessionChecked) {
-        console.warn('Session check timed out');
         setSessionChecked(true);
       }
     }, 5000);
@@ -259,13 +254,11 @@ export const ResetPasswordPage = () => {
       const { error } = await updatePassword(password);
 
       if (error) {
-        console.error('Password update error:', error);
         setError('שגיאה בעדכון הסיסמה. אנא נסה שוב.');
       } else {
         setSuccess(true);
       }
-    } catch (err) {
-      console.error('Password update exception:', err);
+    } catch {
       setError('שגיאה בעדכון הסיסמה. אנא נסה שוב.');
     } finally {
       setLoading(false);
@@ -667,14 +660,15 @@ export const SignupPage = () => {
     }
   };
 
-  // Validation functions
-  const isValidEmail = (email: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+  // Validation functions using imported validators
 
   const validateStep1 = () => {
     const errors: Record<string, string> = {};
 
     if (!formData.fullName.trim()) {
       errors.fullName = 'נא להזין שם מלא';
+    } else if (formData.fullName.trim().length < 2) {
+      errors.fullName = 'שם חייב להכיל לפחות 2 תווים';
     }
 
     if (!formData.email.trim()) {
@@ -685,8 +679,11 @@ export const SignupPage = () => {
 
     if (!formData.password) {
       errors.password = 'נא להזין סיסמה';
-    } else if (formData.password.length < 8) {
-      errors.password = 'הסיסמה חייבת להכיל לפחות 8 תווים';
+    } else {
+      const passwordCheck = isStrongPassword(formData.password);
+      if (!passwordCheck.valid) {
+        errors.password = passwordCheck.message;
+      }
     }
 
     if (!formData.confirmPassword) {
@@ -704,14 +701,24 @@ export const SignupPage = () => {
 
     if (!formData.clinicName.trim()) {
       errors.clinicName = 'נא להזין שם קליניקה';
+    } else if (formData.clinicName.trim().length < 2) {
+      errors.clinicName = 'שם הקליניקה חייב להכיל לפחות 2 תווים';
     }
 
     if (!formData.businessId.trim()) {
       errors.businessId = 'נא להזין ת.ז. או ח.פ.';
+    } else if (!/^\d{9}$/.test(formData.businessId.replace(/\D/g, ''))) {
+      errors.businessId = 'ת.ז. או ח.פ. חייב להכיל 9 ספרות';
     }
 
     if (!formData.slug.trim()) {
       errors.slug = 'נא להזין כתובת URL';
+    } else if (!/^[a-z0-9-]+$/.test(formData.slug)) {
+      errors.slug = 'כתובת URL יכולה להכיל רק אותיות קטנות באנגלית, מספרים ומקפים';
+    }
+
+    if (formData.phone && !isValidIsraeliPhone(formData.phone)) {
+      errors.phone = 'מספר טלפון אינו תקין';
     }
 
     setFieldErrors(errors);

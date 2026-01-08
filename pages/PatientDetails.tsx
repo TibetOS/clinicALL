@@ -11,6 +11,7 @@ import { Button, Card, Badge, Input, Dialog, Tabs, TabsList, TabsTrigger, Breadc
 import { FaceMap } from '../components/FaceMap';
 import { ImageSlider } from '../components/ImageSlider';
 import { usePatients, useAppointments, useClinicalNotes, useDeclarations } from '../hooks';
+import { useAuth } from '../contexts/AuthContext';
 import { ClinicalNote, InjectionPoint, Declaration } from '../types';
 
 export const PatientDetails = () => {
@@ -23,6 +24,9 @@ export const PatientDetails = () => {
   const { appointments } = useAppointments({ patientId: id });
   const { declarations } = useDeclarations({ patientId: id });
   const { clinicalNotes, addClinicalNote } = useClinicalNotes({ patientId: id });
+
+  // Get current user for provider name
+  const { profile } = useAuth();
 
   const [patient, setPatient] = useState<any>(null);
   const [patientLoading, setPatientLoading] = useState(true);
@@ -56,16 +60,8 @@ export const PatientDetails = () => {
      { id: 'mf-2', name: 'מעקב טיפול בפיגמנטציה', category: 'מעקב', date: '2023-09-01', status: 'completed' }
   ]);
 
-  // Simulate secure fetching of medical forms
-  useEffect(() => {
-    if (activeTab === 'forms') {
-       // In a real implementation:
-       // const response = await fetch(`/api/v1/patients/${id}/medical-forms`, {
-       //   headers: { 'X-Tenant-ID': currentTenant.id }
-       // });
-       console.log('Fetching medical forms via secured API endpoint verifying tenant_id...');
-    }
-  }, [activeTab, id]);
+  // Medical forms would be fetched via a secured API endpoint in production
+  // verifying tenant_id for multi-tenant security
 
   if (patientLoading) return <div className="p-8">טוען...</div>;
   if (!patient) return <div className="p-8">מטופל לא נמצא</div>;
@@ -85,7 +81,7 @@ export const PatientDetails = () => {
     await addClinicalNote({
       patientId: patient.id,
       date: new Date().toISOString().split('T')[0],
-      providerName: 'ד״ר שרה', // TODO: Use current user from auth
+      providerName: profile?.full_name || 'מטפל/ת',
       treatmentType: 'טיפול אסתטי',
       notes: noteText,
       injectionPoints: newPoints,
@@ -115,7 +111,7 @@ export const PatientDetails = () => {
       <div className="bg-white rounded-xl p-6 border border-gray-200 shadow-sm flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
         <div className="flex items-center gap-4">
           <div className="relative">
-             <img src={patient.avatar} alt={patient.name} className="h-20 w-20 rounded-full object-cover border-4 border-gray-50 shadow-sm" />
+             <img src={patient.avatar} alt={`תמונת פרופיל של ${patient.name}`} loading="lazy" className="h-20 w-20 rounded-full object-cover border-4 border-gray-50 shadow-sm" />
              <div className={`absolute bottom-0 right-0 h-5 w-5 rounded-full border-2 border-white ${patient.riskLevel === 'high' ? 'bg-red-500' : 'bg-green-500'}`}></div>
           </div>
           <div>
@@ -330,7 +326,7 @@ export const PatientDetails = () => {
                               <div className="flex gap-2 mt-3 overflow-x-auto pb-1">
                                  {note.images.map((img, i) => (
                                     <div key={i} className="relative group cursor-pointer" onClick={() => setLightboxImage(img)}>
-                                        <img src={img} className="h-16 w-16 rounded-md object-cover border hover:opacity-90 transition-opacity" />
+                                        <img src={img} alt={`תמונה קלינית ${i + 1}`} loading="lazy" className="h-16 w-16 rounded-md object-cover border hover:opacity-90 transition-opacity" />
                                         <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 bg-black/30 rounded-md transition-opacity">
                                            <ZoomIn className="text-white w-5 h-5" />
                                         </div>

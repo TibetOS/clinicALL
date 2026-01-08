@@ -14,7 +14,9 @@ import { Button, Badge, Dialog } from './components/ui';
 import { useNotifications, useHealthTokens } from './hooks';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { ProtectedRoute } from './components/ProtectedRoute';
+import { ErrorBoundary } from './components/ErrorBoundary';
 import { Notification } from './types';
+import { isValidRedirectUrl } from './lib/validation';
 
 // Lazy load admin pages for code splitting
 const Dashboard = lazy(() => import('./pages/admin/Dashboard').then(m => ({ default: m.Dashboard })));
@@ -95,7 +97,10 @@ const AdminLayout = ({ children }: { children?: React.ReactNode }) => {
       patientName || '',
       patientEmail || ''
     );
-    window.location.href = emailLink;
+    // Validate mailto: URL before navigating
+    if (isValidRedirectUrl(emailLink)) {
+      window.location.href = emailLink;
+    }
   };
 
   // Close declaration dialog and mark notification as read
@@ -455,8 +460,9 @@ const AdminLayout = ({ children }: { children?: React.ReactNode }) => {
 
 function App() {
   return (
-    <BrowserRouter>
-      <AuthProvider>
+    <ErrorBoundary>
+      <BrowserRouter>
+        <AuthProvider>
         <Routes>
           <Route path="/" element={<LandingPage />} />
           <Route path="/pricing" element={<PricingPage />} />
@@ -496,8 +502,9 @@ function App() {
 
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
-      </AuthProvider>
-    </BrowserRouter>
+        </AuthProvider>
+      </BrowserRouter>
+    </ErrorBoundary>
   );
 }
 
