@@ -47,11 +47,13 @@ export const ClinicLanding = () => {
 
   // Show error state
   if (clinicError || !profile) {
+    // Log technical error for debugging
+    if (clinicError) console.error('Clinic load error:', clinicError);
     return (
       <div className="min-h-screen bg-stone-50 flex items-center justify-center">
         <div className="text-center">
           <h1 className="text-2xl font-bold text-stone-900 mb-2">הקליניקה לא נמצאה</h1>
-          <p className="text-stone-600 mb-4">{clinicError || 'הקליניקה שחיפשת אינה קיימת במערכת'}</p>
+          <p className="text-stone-600 mb-4">הקליניקה שחיפשת אינה קיימת במערכת</p>
           <Button onClick={() => window.location.href = '/'}>חזרה לדף הבית</Button>
         </div>
       </div>

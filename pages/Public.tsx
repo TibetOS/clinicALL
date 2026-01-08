@@ -3,7 +3,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Button, Input, Card, Badge, Label, Switch } from '../components/ui';
 import {
   Check, ChevronLeft, ChevronRight, AlertTriangle, Globe, Building2, User, MapPin,
-  FileBadge, Lock, ArrowRight, Star, Calendar, Smartphone, Zap, TrendingUp,
+  FileBadge, Lock, ArrowRight, ArrowLeft, Star, Calendar, Smartphone, Zap, TrendingUp,
   Sparkles, Image as ImageIcon, Palette, Heart, Shield, FileText, Clock,
   CheckCircle2, AlertCircle, Loader2, UserCheck, PenTool, Eraser, Eye, EyeOff, Mail, KeyRound
 } from 'lucide-react';
@@ -56,7 +56,7 @@ export const LandingPage = () => {
                <div className="flex flex-col sm:flex-row gap-4 justify-center">
                   <Link to="/signup">
                     <Button size="lg" className="h-14 px-8 text-lg shadow-xl shadow-primary/20">
-                       בנה את הקליניקה שלך בחינם <ArrowRight className="mr-2" />
+                       בנה את הקליניקה שלך בחינם <ArrowLeft className="mr-2" />
                     </Button>
                   </Link>
                   <Button variant="outline" size="lg" className="h-14 px-8 text-lg bg-white">
