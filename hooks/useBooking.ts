@@ -1,32 +1,12 @@
 import { useState, useCallback } from 'react';
 import { supabase, isSupabaseConfigured } from '../lib/supabase';
-import { TimeSlot, Service, StaffMember, Appointment } from '../types';
+import { TimeSlot } from '../types';
 
 // Default clinic operating hours (can be overridden by clinic settings)
 const DEFAULT_OPERATING_HOURS = {
   start: '09:00',
   end: '19:00',
   slotInterval: 30, // minutes
-};
-
-// Mock time slots for development
-const generateMockSlots = (serviceDuration: number): TimeSlot[] => {
-  const slots: TimeSlot[] = [];
-  const { start, end, slotInterval } = DEFAULT_OPERATING_HOURS;
-
-  const startMinutes = timeToMinutes(start);
-  const endMinutes = timeToMinutes(end);
-
-  for (let minutes = startMinutes; minutes + serviceDuration <= endMinutes; minutes += slotInterval) {
-    // Randomly mark some slots as unavailable for mock data
-    const available = Math.random() > 0.3;
-    slots.push({
-      time: minutesToTime(minutes),
-      available,
-    });
-  }
-
-  return slots;
 };
 
 interface BookingInput {
@@ -69,8 +49,9 @@ export function useBooking(): UseBooking {
     clinicId?: string
   ): Promise<TimeSlot[]> => {
     if (!isSupabaseConfigured()) {
-      // Return mock slots in dev mode
-      return generateMockSlots(serviceDuration);
+      // No mock data - Supabase must be configured for public pages
+      setError('Database not configured');
+      return [];
     }
 
     setLoading(true);
@@ -122,8 +103,7 @@ export function useBooking(): UseBooking {
     } catch (err: any) {
       setError(err.message || 'Failed to fetch available slots');
       console.error('Error fetching slots:', err);
-      // Return mock slots on error
-      return generateMockSlots(serviceDuration);
+      return [];
     } finally {
       setLoading(false);
     }
@@ -131,12 +111,10 @@ export function useBooking(): UseBooking {
 
   const createBooking = useCallback(async (booking: BookingInput): Promise<BookingResult> => {
     if (!isSupabaseConfigured()) {
-      // Mock booking creation in dev mode
-      console.log('Mock booking created:', booking);
+      // No mock data - Supabase must be configured for public pages
       return {
-        success: true,
-        appointmentId: `mock-appt-${Date.now()}`,
-        patientId: `mock-patient-${Date.now()}`,
+        success: false,
+        error: 'Database not configured',
       };
     }
 

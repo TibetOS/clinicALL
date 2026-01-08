@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, Navigate } from 'react-router-dom';
 import {
   MapPin, Phone, Instagram, Facebook, Clock, Star,
   ChevronDown, Calendar, ArrowRight, X, Menu, Share2, Loader2
@@ -10,6 +10,7 @@ import { BookingApp } from './Booking';
 import { useClinic, useServices } from '../hooks';
 import { ClinicProfile, Service } from '../types';
 import { ImageSlider } from '../components/ImageSlider';
+import { isSupabaseConfigured } from '../lib/supabase';
 
 export const ClinicLanding = () => {
   const { slug } = useParams();
@@ -32,6 +33,11 @@ export const ClinicLanding = () => {
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
+
+  // Redirect to landing page if Supabase is not configured
+  if (!isSupabaseConfigured()) {
+    return <Navigate to="/" replace />;
+  }
 
   // Show loading state
   if (clinicLoading || servicesLoading) {

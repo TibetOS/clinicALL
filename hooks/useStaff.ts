@@ -2,12 +2,6 @@ import { useState, useEffect, useCallback } from 'react';
 import { supabase, isSupabaseConfigured } from '../lib/supabase';
 import { StaffMember } from '../types';
 
-// Fallback mock staff for development
-const MOCK_STAFF: StaffMember[] = [
-  { id: '1', name: 'ד״ר שרה כהן', role: 'רופאה', avatar: 'https://ui-avatars.com/api/?name=Sarah+Cohen&background=0D9488&color=fff' },
-  { id: '2', name: 'רונית לוי', role: 'קוסמטיקאית', avatar: 'https://ui-avatars.com/api/?name=Ronit+Levi&background=0D9488&color=fff' },
-];
-
 interface UseStaff {
   staff: StaffMember[];
   loading: boolean;
@@ -23,9 +17,9 @@ export function useStaff(clinicId?: string): UseStaff {
 
   const fetchStaff = useCallback(async () => {
     if (!isSupabaseConfigured()) {
-      // Return mock data in dev mode
-      setStaff(MOCK_STAFF);
+      // No mock data - Supabase must be configured for public pages
       setLoading(false);
+      setError('Database not configured');
       return;
     }
 
@@ -55,17 +49,10 @@ export function useStaff(clinicId?: string): UseStaff {
         avatar: user.avatar_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(user.full_name || 'Staff')}&background=0D9488&color=fff`,
       }));
 
-      // If no staff found, return mock data
-      if (transformedStaff.length === 0) {
-        setStaff(MOCK_STAFF);
-      } else {
-        setStaff(transformedStaff);
-      }
+      setStaff(transformedStaff);
     } catch (err: any) {
       setError(err.message || 'Failed to fetch staff');
       console.error('Error fetching staff:', err);
-      // Fallback to mock data on error
-      setStaff(MOCK_STAFF);
     } finally {
       setLoading(false);
     }
