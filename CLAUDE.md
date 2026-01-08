@@ -39,7 +39,6 @@ VITE_GEMINI_API_KEY=your_api_key
 - `data.ts` - Mock data (MOCK_PATIENTS, MOCK_APPOINTMENTS, etc.)
 
 ### Special Components
-- `ClinicAI` - Floating AI chat widget using Gemini API (`@google/genai`)
 - `FaceMap` - SVG-based injectable face diagram for clinical notes
 - `AdminLayout` - Dashboard shell with RTL sidebar navigation
 

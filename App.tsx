@@ -11,7 +11,6 @@ import { ClinicLanding } from './pages/ClinicLanding';
 import { PricingPage } from './pages/Pricing';
 import { BookingApp } from './pages/Booking';
 import { Button, Badge } from './components/ui';
-import { ClinicAI } from './components/ClinicAI';
 import { useNotifications } from './hooks';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { ProtectedRoute } from './components/ProtectedRoute';
@@ -241,9 +240,6 @@ const AdminLayout = ({ children }: { children?: React.ReactNode }) => {
           {children}
         </main>
       </div>
-      
-      {/* AI Assistant Widget */}
-      <ClinicAI />
       
       {/* Mobile Overlay */}
       {sidebarOpen && (
