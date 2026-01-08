@@ -262,6 +262,7 @@ function App() {
           <Route path="/login" element={<LoginPage />} />
           <Route path="/signup" element={<SignupPage />} />
           <Route path="/reset-password" element={<ResetPasswordPage />} />
+          <Route path="/health/:token" element={<HealthDeclaration />} />
           <Route path="/health" element={<HealthDeclaration />} />
           <Route path="/locked" element={<LockScreen />} />
 

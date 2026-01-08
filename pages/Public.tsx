@@ -5,12 +5,15 @@ import {
   Check, ChevronLeft, ChevronRight, AlertTriangle, Globe, Building2, User, MapPin,
   FileBadge, Lock, ArrowLeft, Star, Calendar, Smartphone, Zap, TrendingUp,
   Sparkles, Image as ImageIcon, Palette, Heart, Shield, FileText, Clock,
-  CheckCircle2, AlertCircle, Loader2, UserCheck, PenTool, Eraser, Eye, EyeOff, Mail, KeyRound
+  CheckCircle2, AlertCircle, Loader2, UserCheck, PenTool, Eraser, Eye, EyeOff, Mail, KeyRound,
+  XCircle, RefreshCw
 } from 'lucide-react';
-import { Link, useNavigate, useSearchParams } from 'react-router-dom';
+import { Link, useNavigate, useSearchParams, useParams } from 'react-router-dom';
 import { MOCK_PATIENTS } from '../data';
 import { useAuth } from '../contexts/AuthContext';
 import { supabase } from '../lib/supabase';
+import { useHealthTokens } from '../hooks/useHealthTokens';
+import { HealthDeclarationToken } from '../types';
 
 // -- LANDING PAGE --
 export const LandingPage = () => {
@@ -1234,16 +1237,48 @@ export const HealthDeclaration = () => {
   const [step, setStep] = useState(1);
   const [lang, setLang] = useState<'he' | 'en'>('he');
   const navigate = useNavigate();
-  const [searchParams] = useSearchParams();
-  const patientId = searchParams.get('patientId');
-  const patient = MOCK_PATIENTS.find(p => p.id === patientId);
+  const { token: tokenParam } = useParams<{ token?: string }>();
+  const { validateToken, markTokenAsUsed } = useHealthTokens();
 
-  // Form State
+  // Token validation state
+  const [tokenValidation, setTokenValidation] = useState<{
+    loading: boolean;
+    valid: boolean;
+    token?: HealthDeclarationToken;
+    reason?: string;
+  }>({ loading: !!tokenParam, valid: false });
+
+  // Validate token on mount
+  useEffect(() => {
+    const checkToken = async () => {
+      if (!tokenParam) {
+        // No token provided - show access denied
+        setTokenValidation({ loading: false, valid: false, reason: 'NO_TOKEN' });
+        return;
+      }
+
+      const result = await validateToken(tokenParam);
+      setTokenValidation({ loading: false, ...result });
+    };
+
+    checkToken();
+  }, [tokenParam, validateToken]);
+
+  // Get patient data from token or mock
+  const patient = tokenValidation.token?.patientId
+    ? MOCK_PATIENTS.find(p => p.id === tokenValidation.token?.patientId)
+    : undefined;
+
+  // Form State - initialized with token data or patient data
+  const initialName = tokenValidation.token?.patientName || patient?.name || '';
+  const initialPhone = tokenValidation.token?.patientPhone || patient?.phone || '';
+  const initialEmail = tokenValidation.token?.patientEmail || patient?.email || '';
+
   const [formData, setFormData] = useState({
-     fullName: patient?.name || '',
+     fullName: '',
      dob: '',
-     phone: patient?.phone || '',
-     email: patient?.email || '',
+     phone: '',
+     email: '',
      healthQuestions: {} as Record<string, boolean>,
      healthDetails: {} as Record<string, string>,
      lifestyle: { smoke: false, alcohol: false, sun: false, sunReaction: 'burns' },
@@ -1251,6 +1286,18 @@ export const HealthDeclaration = () => {
      consent: false,
      signature: null as string | null
   });
+
+  // Update form data when token validation completes
+  useEffect(() => {
+    if (tokenValidation.valid && tokenValidation.token) {
+      setFormData(prev => ({
+        ...prev,
+        fullName: tokenValidation.token?.patientName || patient?.name || prev.fullName,
+        phone: tokenValidation.token?.patientPhone || patient?.phone || prev.phone,
+        email: tokenValidation.token?.patientEmail || patient?.email || prev.email,
+      }));
+    }
+  }, [tokenValidation.valid, tokenValidation.token, patient]);
 
   const updateForm = (key: string, value: any) => {
      setFormData(prev => ({ ...prev, [key]: value }));
@@ -1270,7 +1317,7 @@ export const HealthDeclaration = () => {
     document.documentElement.lang = newLang;
   };
 
-  const nextStep = () => {
+  const nextStep = async () => {
      if (step === 1 && (!formData.fullName || !formData.phone)) {
         alert(lang === 'he' ? 'אנא מלאי שדות חובה' : 'Please fill mandatory fields');
         return;
@@ -1278,6 +1325,10 @@ export const HealthDeclaration = () => {
      if (step === 3 && (!formData.consent || !formData.signature)) {
         alert(lang === 'he' ? 'יש לאשר את התנאים ולחתום' : 'Please sign and agree to terms');
         return;
+     }
+     // On final submission, mark token as used
+     if (step === 3 && tokenValidation.token) {
+        await markTokenAsUsed(tokenValidation.token.id);
      }
      setStep(prev => prev + 1);
      window.scrollTo(0, 0);
@@ -1287,6 +1338,89 @@ export const HealthDeclaration = () => {
 
   // Translations helper
   const t = (he: string, en: string) => lang === 'he' ? he : en;
+
+  // Loading state while validating token
+  if (tokenValidation.loading) {
+    return (
+      <div className="min-h-screen bg-stone-50 flex items-center justify-center p-4">
+        <Card className="max-w-md w-full p-8 text-center">
+          <div className="w-16 h-16 mx-auto mb-6">
+            <Loader2 className="w-16 h-16 text-primary animate-spin" />
+          </div>
+          <h2 className="text-xl font-bold text-gray-900 mb-2">מאמת גישה...</h2>
+          <p className="text-gray-500">אנא המתן/י בזמן שאנו מאמתים את הקישור</p>
+        </Card>
+      </div>
+    );
+  }
+
+  // Invalid/expired token states
+  if (!tokenValidation.valid) {
+    const getErrorContent = () => {
+      switch (tokenValidation.reason) {
+        case 'TOKEN_NOT_FOUND':
+        case 'NO_TOKEN':
+          return {
+            icon: <XCircle size={48} strokeWidth={2} />,
+            title: t('קישור לא תקין', 'Invalid Link'),
+            description: t(
+              'הקישור אינו תקין או שפג תוקפו. אנא פנה למרפאה לקבלת קישור חדש.',
+              'This link is invalid or has expired. Please contact the clinic for a new link.'
+            ),
+            color: 'red'
+          };
+        case 'TOKEN_ALREADY_USED':
+          return {
+            icon: <CheckCircle2 size={48} strokeWidth={2} />,
+            title: t('הטופס כבר הוגש', 'Form Already Submitted'),
+            description: t(
+              'הצהרת הבריאות כבר הוגשה באמצעות קישור זה. אם יש צורך בהצהרה נוספת, אנא פנה למרפאה.',
+              'The health declaration has already been submitted using this link. For a new declaration, please contact the clinic.'
+            ),
+            color: 'yellow'
+          };
+        case 'TOKEN_EXPIRED':
+          return {
+            icon: <Clock size={48} strokeWidth={2} />,
+            title: t('פג תוקף הקישור', 'Link Expired'),
+            description: t(
+              'תוקף הקישור פג. אנא פנה למרפאה לקבלת קישור חדש.',
+              'This link has expired. Please contact the clinic for a new link.'
+            ),
+            color: 'orange'
+          };
+        default:
+          return {
+            icon: <AlertCircle size={48} strokeWidth={2} />,
+            title: t('שגיאה', 'Error'),
+            description: t('אירעה שגיאה. אנא נסה שוב מאוחר יותר.', 'An error occurred. Please try again later.'),
+            color: 'red'
+          };
+      }
+    };
+
+    const error = getErrorContent();
+    const colorClasses = {
+      red: 'bg-red-50 text-red-600',
+      yellow: 'bg-yellow-50 text-yellow-600',
+      orange: 'bg-orange-50 text-orange-600',
+    }[error.color] || 'bg-red-50 text-red-600';
+
+    return (
+      <div className="min-h-screen bg-stone-50 flex items-center justify-center p-4">
+        <Card className="max-w-md w-full p-8 text-center animate-in zoom-in-95 duration-500">
+          <div className={`w-20 h-20 ${colorClasses} rounded-full flex items-center justify-center mx-auto mb-6`}>
+            {error.icon}
+          </div>
+          <h2 className="text-2xl font-bold text-gray-900 mb-2">{error.title}</h2>
+          <p className="text-gray-500 mb-8 leading-relaxed">{error.description}</p>
+          <Button onClick={() => navigate('/')} variant="outline" className="w-full h-12">
+            {t('חזרה לעמוד הבית', 'Back to Home')}
+          </Button>
+        </Card>
+      </div>
+    );
+  }
 
   if (step === 4) {
      return (
@@ -1346,10 +1480,10 @@ export const HealthDeclaration = () => {
                        <div className="p-2 bg-white rounded-lg text-primary shadow-sm"><User size={20}/></div>
                        <h2 className="text-xl font-bold text-gray-900">{t('פרטים אישיים', 'Personal Information')}</h2>
                     </div>
-                    {patient && (
+                    {(patient || tokenValidation.token?.patientName) && (
                        <div className="bg-white/60 backdrop-blur-sm p-3 rounded-lg border border-primary/10 flex items-center gap-3 text-sm text-primary mt-2">
                           <UserCheck size={16} />
-                          <span className="font-medium">{t(`שמחים לראות אותך שוב, ${patient.name}`, `Welcome back, ${patient.name}`)}</span>
+                          <span className="font-medium">{t(`שלום, ${tokenValidation.token?.patientName || patient?.name}`, `Hello, ${tokenValidation.token?.patientName || patient?.name}`)}</span>
                        </div>
                     )}
                  </div>

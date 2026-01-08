@@ -1,6 +1,6 @@
 
 
-import { Patient, Appointment, Service, Declaration, ClinicalNote, InventoryItem, Notification, Lead, Invoice, Campaign } from './types';
+import { Patient, Appointment, Service, Declaration, ClinicalNote, InventoryItem, Notification, Lead, Invoice, Campaign, HealthDeclarationToken } from './types';
 
 // Helper to create dates relative to today for mock data
 const getRelativeDate = (daysOffset: number): string => {
@@ -211,4 +211,49 @@ export const MOCK_CAMPAIGNS: Campaign[] = [
   { id: 'c2', name: 'הטבת יום הולדת נובמבר', type: 'whatsapp', status: 'scheduled', audience: 'ילידי נובמבר', sentCount: 45, scheduledDate: '2023-11-01' },
   { id: 'c3', name: 'ניוזלטר חגיגי', type: 'email', status: 'completed', audience: 'כל הלקוחות', sentCount: 1200, openRate: 42 },
   { id: 'c4', name: 'השקת טיפול חדש', type: 'whatsapp', status: 'draft', audience: 'לקוחות VIP', sentCount: 0 }
+];
+
+// Helper to generate a future date for token expiry
+const getExpiryDate = (daysFromNow: number): string => {
+  const date = new Date();
+  date.setDate(date.getDate() + daysFromNow);
+  return date.toISOString();
+};
+
+export const MOCK_HEALTH_TOKENS: HealthDeclarationToken[] = [
+  {
+    id: 'hdt-1',
+    token: 'abc123def456',
+    clinicId: 'clinic-1',
+    patientId: '1',
+    patientName: 'שרה כהן',
+    patientPhone: '050-123-4567',
+    patientEmail: 'sarah.c@example.com',
+    createdAt: getRelativeDate(-7) + 'T10:00:00.000Z',
+    expiresAt: getExpiryDate(-1), // Expired
+    status: 'used',
+    usedAt: getRelativeDate(-6) + 'T14:30:00.000Z'
+  },
+  {
+    id: 'hdt-2',
+    token: 'xyz789ghi012',
+    clinicId: 'clinic-1',
+    patientName: 'לקוח חדש',
+    patientPhone: '052-111-2222',
+    createdAt: new Date().toISOString(),
+    expiresAt: getExpiryDate(7), // Valid for 7 days
+    status: 'active'
+  },
+  {
+    id: 'hdt-3',
+    token: 'demo12345678',
+    clinicId: 'clinic-1',
+    patientId: '2',
+    patientName: 'מיכל לוי',
+    patientPhone: '052-987-6543',
+    patientEmail: 'michal.l@example.com',
+    createdAt: new Date().toISOString(),
+    expiresAt: getExpiryDate(7),
+    status: 'active'
+  }
 ];

@@ -210,3 +210,18 @@ export interface Campaign {
   openRate?: number;
   scheduledDate?: string;
 }
+
+// Health Declaration Token for secure form access
+export interface HealthDeclarationToken {
+  id: string;
+  token: string; // Unique URL-safe token
+  clinicId: string;
+  patientId?: string; // Optional - for existing patients
+  patientName?: string;
+  patientPhone?: string;
+  patientEmail?: string;
+  createdAt: string; // ISO Date
+  expiresAt: string; // ISO Date
+  status: 'active' | 'used' | 'expired';
+  usedAt?: string; // ISO Date - when the form was submitted
+}
