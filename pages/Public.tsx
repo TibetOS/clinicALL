@@ -5,11 +5,12 @@ import {
   Check, ChevronLeft, ChevronRight, AlertTriangle, Globe, Building2, User, MapPin,
   FileBadge, Lock, ArrowRight, Star, Calendar, Smartphone, Zap, TrendingUp,
   Sparkles, Image as ImageIcon, Palette, Heart, Shield, FileText, Clock,
-  CheckCircle2, AlertCircle, Loader2, UserCheck, PenTool, Eraser, Eye, EyeOff, Mail
+  CheckCircle2, AlertCircle, Loader2, UserCheck, PenTool, Eraser, Eye, EyeOff, Mail, KeyRound
 } from 'lucide-react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { MOCK_PATIENTS } from '../data';
 import { useAuth } from '../contexts/AuthContext';
+import { supabase } from '../lib/supabase';
 
 // -- LANDING PAGE --
 export const LandingPage = () => {
@@ -149,6 +150,205 @@ export const LockScreen = () => {
           </Button>
         </div>
       </div>
+    </div>
+  );
+};
+
+// -- RESET PASSWORD PAGE --
+export const ResetPasswordPage = () => {
+  const navigate = useNavigate();
+  const { updatePassword } = useAuth();
+  const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState(false);
+  const [sessionChecked, setSessionChecked] = useState(false);
+  const [hasValidSession, setHasValidSession] = useState(false);
+
+  // Check for recovery session on mount
+  useEffect(() => {
+    const checkSession = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      setHasValidSession(!!session);
+      setSessionChecked(true);
+    };
+    checkSession();
+
+    // Listen for auth state changes (recovery token verification)
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      if (event === 'PASSWORD_RECOVERY') {
+        setHasValidSession(true);
+      }
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError(null);
+
+    // Validation
+    if (password.length < 8) {
+      setError('הסיסמה חייבת להכיל לפחות 8 תווים');
+      return;
+    }
+
+    if (password !== confirmPassword) {
+      setError('הסיסמאות אינן תואמות');
+      return;
+    }
+
+    setLoading(true);
+
+    const { error } = await updatePassword(password);
+
+    if (error) {
+      setError('שגיאה בעדכון הסיסמה. אנא נסה שוב.');
+      setLoading(false);
+    } else {
+      setSuccess(true);
+      setLoading(false);
+    }
+  };
+
+  // Loading state while checking session
+  if (!sessionChecked) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
+
+  // No valid session - show error
+  if (!hasValidSession) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50 p-4">
+        <Card className="w-full max-w-md p-8 shadow-lg border-0 text-center">
+          <div className="flex justify-center mb-6">
+            <div className="h-16 w-16 bg-red-100 rounded-full flex items-center justify-center">
+              <AlertCircle className="h-8 w-8 text-red-600" />
+            </div>
+          </div>
+          <h1 className="text-xl font-bold text-gray-900 mb-2">הקישור אינו תקף</h1>
+          <p className="text-muted-foreground mb-6 text-sm">
+            הקישור לאיפוס הסיסמה פג תוקף או אינו תקין.
+            <br />
+            אנא בקש קישור חדש.
+          </p>
+          <Link to="/login">
+            <Button className="w-full">חזרה להתחברות</Button>
+          </Link>
+        </Card>
+      </div>
+    );
+  }
+
+  // Success state
+  if (success) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50 p-4">
+        <Card className="w-full max-w-md p-8 shadow-lg border-0 text-center">
+          <div className="flex justify-center mb-6">
+            <div className="h-16 w-16 bg-green-100 rounded-full flex items-center justify-center">
+              <CheckCircle2 className="h-8 w-8 text-green-600" />
+            </div>
+          </div>
+          <h1 className="text-xl font-bold text-gray-900 mb-2">הסיסמה עודכנה בהצלחה!</h1>
+          <p className="text-muted-foreground mb-6 text-sm">
+            כעת תוכל להתחבר עם הסיסמה החדשה שלך.
+          </p>
+          <Button className="w-full" onClick={() => navigate('/login')}>
+            התחבר למערכת
+          </Button>
+        </Card>
+      </div>
+    );
+  }
+
+  // Reset password form
+  return (
+    <div className="min-h-screen flex items-center justify-center bg-gray-50 p-4">
+      <Card className="w-full max-w-md p-8 shadow-lg border-0">
+        <div className="flex justify-center mb-6">
+          <div className="h-12 w-12 bg-primary rounded-xl flex items-center justify-center shadow-md">
+            <KeyRound className="text-white" size={24} />
+          </div>
+        </div>
+        <h1 className="text-2xl font-bold text-center mb-2 text-gray-900">יצירת סיסמה חדשה</h1>
+        <p className="text-center text-muted-foreground mb-8 text-sm">
+          הזן סיסמה חדשה לחשבון שלך
+        </p>
+
+        {error && (
+          <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg text-red-600 text-sm text-center">
+            {error}
+          </div>
+        )}
+
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div>
+            <label className="text-sm font-medium mb-1 block text-gray-700">סיסמה חדשה</label>
+            <div className="relative">
+              <Input
+                type={showPassword ? "text" : "password"}
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="לפחות 8 תווים"
+                required
+                className="text-left pl-10"
+                dir="ltr"
+                autoFocus
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+              >
+                {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+              </button>
+            </div>
+          </div>
+          <div>
+            <label className="text-sm font-medium mb-1 block text-gray-700">אישור סיסמה</label>
+            <div className="relative">
+              <Input
+                type={showConfirmPassword ? "text" : "password"}
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                placeholder="הזן סיסמה שוב"
+                required
+                className="text-left pl-10"
+                dir="ltr"
+              />
+              <button
+                type="button"
+                onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+              >
+                {showConfirmPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+              </button>
+            </div>
+          </div>
+          <Button type="submit" className="w-full shadow-md" disabled={loading}>
+            {loading ? (
+              <span className="flex items-center justify-center gap-2">
+                <Loader2 className="h-4 w-4 animate-spin" /> מעדכן...
+              </span>
+            ) : 'עדכן סיסמה'}
+          </Button>
+        </form>
+
+        <div className="mt-6 pt-6 border-t text-center text-sm">
+          <Link to="/login" className="text-primary hover:underline">
+            חזרה להתחברות
+          </Link>
+        </div>
+      </Card>
     </div>
   );
 };

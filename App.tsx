@@ -6,7 +6,7 @@ import {
   Menu, Bell, LogOut, ChevronLeft, Package,
   Crown, Sparkles, X, Syringe
 } from 'lucide-react';
-import { LoginPage, HealthDeclaration, SignupPage, LandingPage, LockScreen } from './pages/Public';
+import { LoginPage, HealthDeclaration, SignupPage, LandingPage, LockScreen, ResetPasswordPage } from './pages/Public';
 import { ClinicLanding } from './pages/ClinicLanding';
 import { PricingPage } from './pages/Pricing';
 import { BookingApp } from './pages/Booking';
@@ -265,6 +265,7 @@ function App() {
           <Route path="/pricing" element={<PricingPage />} />
           <Route path="/login" element={<LoginPage />} />
           <Route path="/signup" element={<SignupPage />} />
+          <Route path="/reset-password" element={<ResetPasswordPage />} />
           <Route path="/health" element={<HealthDeclaration />} />
           <Route path="/locked" element={<LockScreen />} />
 
