@@ -153,6 +153,8 @@ export const ServicesPage = () => {
           <Input
             placeholder="חיפוש טיפול..."
             className="pr-9"
+            name="search"
+            autoComplete="off"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
           />
@@ -298,6 +300,8 @@ export const ServicesPage = () => {
           <div>
             <Label>שם הטיפול</Label>
             <Input
+              name="service-name"
+              autoComplete="off"
               placeholder="לדוגמה: בוטוקס - אזור מצח"
               value={formData.name}
               onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
@@ -333,6 +337,8 @@ export const ServicesPage = () => {
               <Label>משך (דקות)</Label>
               <Input
                 type="number"
+                name="service-duration"
+                autoComplete="off"
                 min="5"
                 step="5"
                 value={formData.duration}
@@ -343,6 +349,8 @@ export const ServicesPage = () => {
               <Label>מחיר (₪)</Label>
               <Input
                 type="number"
+                name="service-price"
+                autoComplete="off"
                 min="0"
                 value={formData.price}
                 onChange={(e) => setFormData(prev => ({ ...prev, price: parseInt(e.target.value) || 0 }))}

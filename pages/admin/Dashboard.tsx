@@ -676,6 +676,8 @@ export const Dashboard = () => {
           <div>
             <Label>שם המטופל</Label>
             <Input
+              name="patient-name"
+              autoComplete="name"
               placeholder="הכנס שם מטופל..."
               value={apptForm.patientName}
               onChange={(e) => setApptForm(prev => ({ ...prev, patientName: e.target.value }))}
@@ -699,6 +701,8 @@ export const Dashboard = () => {
               <Label>תאריך</Label>
               <Input
                 type="date"
+                name="appointment-date"
+                autoComplete="off"
                 value={apptForm.date}
                 onChange={(e) => setApptForm(prev => ({ ...prev, date: e.target.value }))}
               />
@@ -707,6 +711,8 @@ export const Dashboard = () => {
               <Label>שעה</Label>
               <Input
                 type="time"
+                name="appointment-time"
+                autoComplete="off"
                 value={apptForm.time}
                 onChange={(e) => setApptForm(prev => ({ ...prev, time: e.target.value }))}
               />
@@ -733,6 +739,8 @@ export const Dashboard = () => {
             <div>
               <Label>שם פרטי</Label>
               <Input
+                name="given-name"
+                autoComplete="given-name"
                 placeholder="ישראל"
                 value={walkInForm.firstName}
                 onChange={(e) => setWalkInForm(prev => ({ ...prev, firstName: e.target.value }))}
@@ -741,6 +749,8 @@ export const Dashboard = () => {
             <div>
               <Label>שם משפחה</Label>
               <Input
+                name="family-name"
+                autoComplete="family-name"
                 placeholder="ישראלי"
                 value={walkInForm.lastName}
                 onChange={(e) => setWalkInForm(prev => ({ ...prev, lastName: e.target.value }))}
@@ -750,6 +760,9 @@ export const Dashboard = () => {
           <div>
             <Label>טלפון נייד</Label>
             <Input
+              type="tel"
+              name="tel"
+              autoComplete="tel"
               placeholder="050-0000000"
               className="direction-ltr text-right"
               value={walkInForm.phone}

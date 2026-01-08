@@ -272,10 +272,13 @@ export const BookingApp: React.FC<BookingAppProps> = ({
                    <div className="space-y-4">
                       <div className="space-y-2">
                          <label className="text-sm font-medium">מספר נייד</label>
-                         <Input 
-                            value={authPhone} 
+                         <Input
+                            type="tel"
+                            name="phone"
+                            autoComplete="tel"
+                            value={authPhone}
                             onChange={(e) => setAuthPhone(e.target.value)}
-                            className="text-center text-lg tracking-widest h-12 direction-ltr" 
+                            className="text-center text-lg tracking-widest h-12 direction-ltr"
                             placeholder="050-000-0000"
                             autoFocus
                          />
@@ -288,10 +291,14 @@ export const BookingApp: React.FC<BookingAppProps> = ({
                    <div className="space-y-4 animate-in fade-in">
                       <div className="space-y-2">
                          <label className="text-sm font-medium">קוד אימות</label>
-                         <Input 
-                            value={authCode} 
+                         <Input
+                            type="text"
+                            inputMode="numeric"
+                            name="one-time-code"
+                            autoComplete="one-time-code"
+                            value={authCode}
                             onChange={(e) => setAuthCode(e.target.value)}
-                            className="text-center text-2xl tracking-[1em] h-14" 
+                            className="text-center text-2xl tracking-[1em] h-14"
                             placeholder="____"
                             maxLength={4}
                             autoFocus
@@ -348,10 +355,31 @@ export const BookingApp: React.FC<BookingAppProps> = ({
                          <Lock size={12} />
                          תשלום מאובטח בתקן PCI DSS. לא יבוצע חיוב כעת.
                       </div>
-                      <Input placeholder="מספר כרטיס" className="h-12 text-left direction-ltr" />
+                      <Input
+                         type="text"
+                         inputMode="numeric"
+                         name="cc-number"
+                         autoComplete="cc-number"
+                         placeholder="מספר כרטיס"
+                         className="h-12 text-left direction-ltr"
+                      />
                       <div className="grid grid-cols-2 gap-4">
-                         <Input placeholder="MM/YY" className="h-12 text-center direction-ltr" />
-                         <Input placeholder="CVC" className="h-12 text-center direction-ltr" />
+                         <Input
+                            type="text"
+                            inputMode="numeric"
+                            name="cc-exp"
+                            autoComplete="cc-exp"
+                            placeholder="MM/YY"
+                            className="h-12 text-center direction-ltr"
+                         />
+                         <Input
+                            type="text"
+                            inputMode="numeric"
+                            name="cc-csc"
+                            autoComplete="cc-csc"
+                            placeholder="CVC"
+                            className="h-12 text-center direction-ltr"
+                         />
                       </div>
                    </div>
                 </div>

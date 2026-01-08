@@ -261,6 +261,8 @@ export const Calendar = () => {
           <div>
             <Label>שם המטופל</Label>
             <Input
+              name="patient-name"
+              autoComplete="name"
               placeholder="הכנס שם מטופל..."
               value={apptForm.patientName}
               onChange={(e) => setApptForm(prev => ({ ...prev, patientName: e.target.value }))}
@@ -282,6 +284,8 @@ export const Calendar = () => {
               <Label>תאריך</Label>
               <Input
                 type="date"
+                name="appointment-date"
+                autoComplete="off"
                 value={apptForm.date}
                 onChange={(e) => setApptForm(prev => ({ ...prev, date: e.target.value }))}
               />
@@ -290,6 +294,8 @@ export const Calendar = () => {
               <Label>שעה</Label>
               <Input
                 type="time"
+                name="appointment-time"
+                autoComplete="off"
                 value={apptForm.time}
                 onChange={(e) => setApptForm(prev => ({ ...prev, time: e.target.value }))}
               />

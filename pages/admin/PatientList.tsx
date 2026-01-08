@@ -245,6 +245,8 @@ export const PatientList = () => {
           <Input
             placeholder="חיפוש לפי שם או טלפון..."
             className="pr-9"
+            name="search"
+            autoComplete="off"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
           />
@@ -478,6 +480,8 @@ export const PatientList = () => {
             <div>
               <Label>שם פרטי</Label>
               <Input
+                name="given-name"
+                autoComplete="given-name"
                 placeholder="ישראל"
                 value={formData.firstName}
                 onChange={(e) => setFormData(prev => ({ ...prev, firstName: e.target.value }))}
@@ -486,6 +490,8 @@ export const PatientList = () => {
             <div>
               <Label>שם משפחה</Label>
               <Input
+                name="family-name"
+                autoComplete="family-name"
                 placeholder="ישראלי"
                 value={formData.lastName}
                 onChange={(e) => setFormData(prev => ({ ...prev, lastName: e.target.value }))}
@@ -495,6 +501,9 @@ export const PatientList = () => {
           <div>
             <Label>טלפון נייד</Label>
             <Input
+              type="tel"
+              name="tel"
+              autoComplete="tel"
               placeholder="050-0000000"
               className="direction-ltr"
               value={formData.phone}
@@ -504,6 +513,9 @@ export const PatientList = () => {
           <div>
             <Label>אימייל</Label>
             <Input
+              type="email"
+              name="email"
+              autoComplete="email"
               placeholder="email@example.com"
               className="direction-ltr"
               value={formData.email}
@@ -515,6 +527,8 @@ export const PatientList = () => {
               <Label>תאריך לידה</Label>
               <Input
                 type="date"
+                name="bday"
+                autoComplete="bday"
                 value={formData.birthDate}
                 onChange={(e) => setFormData(prev => ({ ...prev, birthDate: e.target.value }))}
               />

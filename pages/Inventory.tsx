@@ -196,9 +196,11 @@ export const InventoryPage = () => {
       <div className="flex flex-col sm:flex-row gap-4 items-center bg-white p-4 rounded-xl shadow-sm border border-gray-200">
         <div className="relative w-full sm:w-96">
           <Search className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-          <Input 
-            placeholder="חיפוש לפי שם פריט או מק״ט..." 
+          <Input
+            placeholder="חיפוש לפי שם פריט או מק״ט..."
             className="pr-9"
+            name="search"
+            autoComplete="off"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
           />
@@ -305,6 +307,8 @@ export const InventoryPage = () => {
               <Label>כמות {adjustment.adjustmentType === 'add' ? 'להוספה' : 'להפחתה'}</Label>
               <Input
                 type="number"
+                name="adjustment-amount"
+                autoComplete="off"
                 min="1"
                 max={adjustment.adjustmentType === 'remove' ? adjustment.currentQuantity : undefined}
                 value={adjustment.amount}
@@ -314,6 +318,8 @@ export const InventoryPage = () => {
             <div>
               <Label>סיבה (אופציונלי)</Label>
               <Input
+                name="adjustment-reason"
+                autoComplete="off"
                 placeholder={adjustment.adjustmentType === 'add' ? 'לדוג׳: קליטת הזמנה' : 'לדוג׳: שימוש בטיפול'}
                 value={adjustment.reason}
                 onChange={(e) => setAdjustment(prev => prev ? { ...prev, reason: e.target.value } : null)}
@@ -352,6 +358,8 @@ export const InventoryPage = () => {
                <div className="col-span-2">
                   <Label>שם הפריט</Label>
                   <Input
+                    name="item-name"
+                    autoComplete="off"
                     placeholder="לדוג׳: Botox Allergan 100u"
                     value={newItem.name}
                     onChange={(e) => setNewItem(prev => ({ ...prev, name: e.target.value }))}
@@ -360,6 +368,8 @@ export const InventoryPage = () => {
                <div>
                   <Label>מק״ט</Label>
                   <Input
+                    name="sku"
+                    autoComplete="off"
                     placeholder="BTX-001"
                     value={newItem.sku}
                     onChange={(e) => setNewItem(prev => ({ ...prev, sku: e.target.value }))}
@@ -381,6 +391,8 @@ export const InventoryPage = () => {
                   <Label>כמות התחלתית</Label>
                   <Input
                     type="number"
+                    name="quantity"
+                    autoComplete="off"
                     placeholder="0"
                     value={newItem.quantity}
                     onChange={(e) => setNewItem(prev => ({ ...prev, quantity: parseInt(e.target.value) || 0 }))}
@@ -390,6 +402,8 @@ export const InventoryPage = () => {
                   <Label>סף התראה</Label>
                   <Input
                     type="number"
+                    name="min-quantity"
+                    autoComplete="off"
                     placeholder="5"
                     value={newItem.minQuantity}
                     onChange={(e) => setNewItem(prev => ({ ...prev, minQuantity: parseInt(e.target.value) || 0 }))}
@@ -399,6 +413,8 @@ export const InventoryPage = () => {
                   <Label>תאריך תפוגה</Label>
                   <Input
                     type="date"
+                    name="expiry-date"
+                    autoComplete="off"
                     value={newItem.expiryDate}
                     onChange={(e) => setNewItem(prev => ({ ...prev, expiryDate: e.target.value }))}
                   />
@@ -406,6 +422,8 @@ export const InventoryPage = () => {
                <div>
                   <Label>ספק</Label>
                   <Input
+                    name="supplier"
+                    autoComplete="off"
                     placeholder="שם הספק"
                     value={newItem.supplier}
                     onChange={(e) => setNewItem(prev => ({ ...prev, supplier: e.target.value }))}

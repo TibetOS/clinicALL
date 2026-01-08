@@ -147,10 +147,12 @@ export const ClinicAI = () => {
                onSubmit={(e) => { e.preventDefault(); handleSend(); }}
                className="flex gap-2"
              >
-                <Input 
+                <Input
+                   name="chat-message"
+                   autoComplete="off"
                    value={inputValue}
                    onChange={(e) => setInputValue(e.target.value)}
-                   placeholder="שאל אותי משהו על הקליניקה..." 
+                   placeholder="שאל אותי משהו על הקליניקה..."
                    className="flex-1 bg-gray-50 border-0 focus:ring-1 focus:ring-primary/50 text-sm"
                    disabled={isLoading}
                 />

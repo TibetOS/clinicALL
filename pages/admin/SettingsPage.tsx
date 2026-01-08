@@ -206,6 +206,8 @@ export const SettingsPage = () => {
                     <div>
                       <Label>שם העסק (חשבוניות)</Label>
                       <Input
+                        name="organization"
+                        autoComplete="organization"
                         value={businessForm.businessName}
                         onChange={(e) => setBusinessForm(prev => ({ ...prev, businessName: e.target.value }))}
                       />
@@ -213,6 +215,8 @@ export const SettingsPage = () => {
                     <div>
                       <Label>מספר עוסק / ח.פ.</Label>
                       <Input
+                        name="tax-id"
+                        autoComplete="off"
                         value={businessForm.taxId}
                         onChange={(e) => setBusinessForm(prev => ({ ...prev, taxId: e.target.value }))}
                       />
@@ -221,6 +225,8 @@ export const SettingsPage = () => {
                   <div>
                     <Label>כתובת למשלוח דואר</Label>
                     <Input
+                      name="street-address"
+                      autoComplete="street-address"
                       value={businessForm.address}
                       onChange={(e) => setBusinessForm(prev => ({ ...prev, address: e.target.value }))}
                     />
@@ -229,6 +235,9 @@ export const SettingsPage = () => {
                     <div>
                       <Label>טלפון ראשי</Label>
                       <Input
+                        type="tel"
+                        name="tel"
+                        autoComplete="tel"
                         value={businessForm.phone}
                         onChange={(e) => setBusinessForm(prev => ({ ...prev, phone: e.target.value }))}
                       />
@@ -236,6 +245,9 @@ export const SettingsPage = () => {
                     <div>
                       <Label>אימייל לחיובים</Label>
                       <Input
+                        type="email"
+                        name="email"
+                        autoComplete="email"
                         value={businessForm.email}
                         onChange={(e) => setBusinessForm(prev => ({ ...prev, email: e.target.value }))}
                       />
@@ -483,6 +495,8 @@ export const SettingsPage = () => {
                   <div>
                     <Label>שם לחשבונית</Label>
                     <Input
+                      name="billing-organization"
+                      autoComplete="organization"
                       value={billingForm.billingName}
                       onChange={(e) => setBillingForm(prev => ({ ...prev, billingName: e.target.value }))}
                     />
@@ -490,6 +504,8 @@ export const SettingsPage = () => {
                   <div>
                     <Label>ח.פ. / ע.מ.</Label>
                     <Input
+                      name="billing-tax-id"
+                      autoComplete="off"
                       value={billingForm.billingTaxId}
                       onChange={(e) => setBillingForm(prev => ({ ...prev, billingTaxId: e.target.value }))}
                     />
@@ -497,6 +513,8 @@ export const SettingsPage = () => {
                   <div className="md:col-span-2">
                     <Label>כתובת לחשבונית</Label>
                     <Input
+                      name="billing-street-address"
+                      autoComplete="street-address"
                       value={billingForm.billingAddress}
                       onChange={(e) => setBillingForm(prev => ({ ...prev, billingAddress: e.target.value }))}
                     />
@@ -504,6 +522,9 @@ export const SettingsPage = () => {
                   <div>
                     <Label>אימייל לקבלת חשבוניות</Label>
                     <Input
+                      type="email"
+                      name="billing-email"
+                      autoComplete="email"
                       value={billingForm.billingEmail}
                       onChange={(e) => setBillingForm(prev => ({ ...prev, billingEmail: e.target.value }))}
                     />
