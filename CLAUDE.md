@@ -19,12 +19,12 @@ pnpm preview          # Preview production build
 
 Create `.env.local` with:
 ```
-GEMINI_API_KEY=your_api_key
+VITE_GEMINI_API_KEY=your_api_key
 ```
 
 ## Architecture
 
-### Routing (HashRouter)
+### Routing (BrowserRouter)
 - `/` - Landing page (public)
 - `/pricing` - Pricing page
 - `/login`, `/signup` - Auth pages
@@ -57,4 +57,4 @@ Currently uses mock data from `data.ts`. Types are defined in `types.ts` for: Pa
 - App is Hebrew-first with `dir="rtl"` on root
 - Font: Heebo (Hebrew) with Inter fallback
 - Sidebar is on the right side
-- Translation helpers like `getStatusLabel()` in Admin.tsx
+- Translation helpers like `getStatusLabel()` in `pages/admin/` components

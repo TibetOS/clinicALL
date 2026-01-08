@@ -43,8 +43,7 @@ export const ClinicAI = () => {
 
     try {
       // Initialize Gemini
-      // Assuming process.env.API_KEY is available as per standard env config
-      const ai = new GoogleGenAI({ apiKey: process.env.API_KEY || '' });
+      const ai = new GoogleGenAI({ apiKey: import.meta.env.VITE_GEMINI_API_KEY || '' });
       
       // Prepare Context
       const context = `
