@@ -1,44 +1,44 @@
 import { useState, useMemo } from 'react';
 import {
   Calendar as CalendarIcon, FileText, AlertTriangle,
-  Plus, ChevronLeft, TrendingUp, Clock, CheckCircle,
-  UserPlus, Zap, User, MessageSquare, Phone, Gift,
-  ShoppingCart, CreditCard, ArrowUpRight, CheckCircle2,
-  Sun, Moon, Coffee
+  Plus, ChevronLeft, Clock, CheckCircle,
+  User, Phone, Gift, Send, Heart, Sparkles,
+  Sun, Moon, Coffee, UserCheck, MessageCircle
 } from 'lucide-react';
-import { AreaChart, Area, XAxis, Tooltip, ResponsiveContainer } from 'recharts';
 import { Card, Button, Input, Badge, Dialog, Label, Skeleton } from '../../components/ui';
-import { usePatients, useAppointments, useServices, useInventory, useLeads, useInvoices, useDeclarations } from '../../hooks';
+import { usePatients, useAppointments, useServices, useInvoices, useDeclarations, useHealthTokens } from '../../hooks';
 import { useNavigate } from 'react-router-dom';
+
+// Modern Beauty theme colors - Rose + Slate
+const COLORS = {
+  primary: '#F43F5E',
+  primaryDark: '#E11D48',
+  primaryLight: '#FB7185',
+  accent: '#FFE4E6',
+  slate50: '#F8FAFC',
+  slate100: '#F1F5F9',
+  slate200: '#E2E8F0',
+  slate400: '#94A3B8',
+  slate600: '#475569',
+  slate800: '#1E293B',
+};
 
 export const Dashboard = () => {
   const navigate = useNavigate();
 
   // ========== DATA HOOKS ==========
-  const { appointments, loading: appointmentsLoading, error: appointmentsError, addAppointment } = useAppointments();
-  const { patients, loading: patientsLoading, error: patientsError, addPatient } = usePatients();
-  const { inventory, loading: inventoryLoading, error: inventoryError } = useInventory();
-  const { leads, loading: leadsLoading, error: leadsError } = useLeads();
-  const { invoices, loading: invoicesLoading, error: invoicesError } = useInvoices();
-  const { declarations, loading: declarationsLoading, error: declarationsError } = useDeclarations();
+  const { appointments, loading: appointmentsLoading, addAppointment } = useAppointments();
+  const { patients, loading: patientsLoading, addPatient } = usePatients();
+  const { invoices, loading: invoicesLoading } = useInvoices();
+  const { declarations, loading: declarationsLoading } = useDeclarations();
   const { services } = useServices();
-
-  // Aggregate data fetch errors for display
-  const dataErrors = [
-    appointmentsError && 'תורים',
-    patientsError && 'מטופלים',
-    inventoryError && 'מלאי',
-    leadsError && 'לידים',
-    invoicesError && 'חשבוניות',
-    declarationsError && 'הצהרות'
-  ].filter(Boolean);
-  const hasDataErrors = dataErrors.length > 0;
+  const { createToken, generateShareLink, generateWhatsAppLink } = useHealthTokens();
 
   // ========== DIALOG STATES ==========
-  const [isPosOpen, setIsPosOpen] = useState(false);
   const [isNewApptOpen, setIsNewApptOpen] = useState(false);
   const [isWalkInOpen, setIsWalkInOpen] = useState(false);
   const [isFabOpen, setIsFabOpen] = useState(false);
+  const [sendingDeclaration, setSendingDeclaration] = useState<string | null>(null);
 
   // ========== FORM STATES ==========
   const [apptForm, setApptForm] = useState({
@@ -60,7 +60,7 @@ export const Dashboard = () => {
   const today = useMemo(() => new Date(), []);
   const todayStr = useMemo(() => today.toISOString().split('T')[0] ?? '', [today]);
 
-  // Today's appointments with avatar fallback
+  // Today's appointments
   const todaysAppointments = useMemo(() => appointments
     .filter(a => {
       const apptDate = new Date(a.date);
@@ -69,68 +69,52 @@ export const Dashboard = () => {
     .sort((a, b) => a.time.localeCompare(b.time))
     .map(a => ({
       ...a,
-      avatar: `https://ui-avatars.com/api/?name=${encodeURIComponent(a.patientName)}&background=random`
+      avatar: `https://ui-avatars.com/api/?name=${encodeURIComponent(a.patientName)}&background=FFE4E6&color=E11D48`
     })), [appointments, today]);
 
   // Next appointment (first pending or confirmed)
-  const nextAppointment = useMemo(() => todaysAppointments.find(a =>
-    a.status === 'confirmed' || a.status === 'pending'
-  ), [todaysAppointments]);
+  const nextAppointment = useMemo(() => {
+    const now = new Date();
+    const currentTime = `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`;
+    return todaysAppointments.find(a =>
+      (a.status === 'confirmed' || a.status === 'pending') && a.time >= currentTime
+    );
+  }, [todaysAppointments]);
 
-  // Alerts calculations (memoized)
+  // Pending declarations
   const pendingDeclarations = useMemo(() =>
     declarations.filter(d => d.status === 'pending'), [declarations]);
 
-  const expiringProducts = useMemo(() => inventory.filter(i => {
-    if (!i.expiryDate) return false;
-    const expiry = new Date(i.expiryDate);
-    const thirtyDaysFromNow = new Date();
-    thirtyDaysFromNow.setDate(thirtyDaysFromNow.getDate() + 30);
-    return expiry <= thirtyDaysFromNow && expiry >= today;
-  }), [inventory, today]);
+  // Patients needing health declarations (those with upcoming appointments but no recent declaration)
+  const patientsNeedingDeclaration = useMemo(() => {
+    const upcomingAppts = appointments.filter(a => {
+      const apptDate = new Date(a.date);
+      const threeDaysFromNow = new Date();
+      threeDaysFromNow.setDate(threeDaysFromNow.getDate() + 3);
+      return apptDate >= today && apptDate <= threeDaysFromNow &&
+        (a.status === 'confirmed' || a.status === 'pending');
+    });
 
-  const lowStockItems = useMemo(() =>
-    inventory.filter(i => i.status === 'low' || i.status === 'critical'), [inventory]);
-  const overdueInvoices = useMemo(() =>
-    invoices.filter(i => i.status === 'overdue'), [invoices]);
-  const newLeads = useMemo(() =>
-    leads.filter(l => l.stage === 'new'), [leads]);
+    return upcomingAppts.map(appt => {
+      const patient = patients.find(p => p.id === appt.patientId);
+      return {
+        ...appt,
+        patient,
+        hasRecentDeclaration: patient?.declarationStatus === 'valid'
+      };
+    }).filter(a => !a.hasRecentDeclaration).slice(0, 5);
+  }, [appointments, patients, today]);
 
-  // Revenue calculations (memoized)
+  // Revenue calculations
   const todaysRevenue = useMemo(() => invoices
     .filter(i => i.date === todayStr && i.status === 'paid')
     .reduce((sum, i) => sum + i.total, 0), [invoices, todayStr]);
 
-  const outstandingBalance = useMemo(() => invoices
-    .filter(i => i.status === 'pending' || i.status === 'overdue')
-    .reduce((sum, i) => sum + i.total, 0), [invoices]);
+  const completedToday = useMemo(() =>
+    todaysAppointments.filter(a => a.status === 'completed').length,
+    [todaysAppointments]);
 
-  // Weekly revenue for trend chart (memoized)
-  const revenueData = useMemo(() => Array.from({ length: 7 }, (_, i) => {
-    const date = new Date();
-    date.setDate(date.getDate() - (6 - i));
-    const dateStr = date.toISOString().split('T')[0];
-    const dayNames = ['א׳', 'ב׳', 'ג׳', 'ד׳', 'ה׳', 'ו׳', 'שבת'];
-    const dayRevenue = invoices
-      .filter(inv => inv.date === dateStr && inv.status === 'paid')
-      .reduce((sum, inv) => sum + inv.total, 0);
-    return {
-      name: dayNames[date.getDay()],
-      value: dayRevenue || Math.floor(Math.random() * 3000) + 1000 // Fallback for demo
-    };
-  }), [invoices]);
-
-  // Calculate trend (memoized)
-  const { revenueTrend } = useMemo(() => {
-    const thisWeekRevenue = revenueData.reduce((sum, d) => sum + d.value, 0);
-    const lastWeekRevenue = thisWeekRevenue * 0.85;
-    const trend = lastWeekRevenue > 0
-      ? Math.round(((thisWeekRevenue - lastWeekRevenue) / lastWeekRevenue) * 100)
-      : 0;
-    return { revenueTrend: trend };
-  }, [revenueData]);
-
-  // Retention: Lapsed clients (no visit > 60 days) - memoized
+  // Retention: Lapsed clients (no visit > 60 days)
   const lapsedClients = useMemo(() => {
     const sixtyDaysAgo = new Date();
     sixtyDaysAgo.setDate(sixtyDaysAgo.getDate() - 60);
@@ -139,7 +123,7 @@ export const Dashboard = () => {
     );
   }, [patients]);
 
-  // Due for Follow-up: Patients with completed botox appointments ~2 weeks ago (memoized)
+  // Due for Follow-up: Patients with completed botox appointments ~2 weeks ago
   const dueForFollowUp = useMemo(() => {
     const botoxFollowUpDays = { min: 10, max: 17 };
     const botoxKeywords = ['בוטוקס', 'botox', 'dysport', 'דיספורט'];
@@ -153,15 +137,16 @@ export const Dashboard = () => {
       const apptDate = new Date(appt.date);
       const daysSince = Math.floor((today.getTime() - apptDate.getTime()) / (1000 * 60 * 60 * 24));
       return daysSince >= botoxFollowUpDays.min && daysSince <= botoxFollowUpDays.max;
-    });
-  }, [appointments, today]);
+    }).map(appt => {
+      const patient = patients.find(p => p.id === appt.patientId);
+      return { ...appt, patient };
+    }).slice(0, 5);
+  }, [appointments, patients, today]);
 
-  // Upcoming Birthdays: Patients with birthdays in the next 7 days (memoized)
+  // Upcoming Birthdays
   const upcomingBirthdays = useMemo(() => patients.filter(p => {
     if (!p.birthDate) return false;
     const birthDate = new Date(p.birthDate);
-
-    // Check next 7 days
     for (let i = 0; i <= 7; i++) {
       const checkDate = new Date(today);
       checkDate.setDate(checkDate.getDate() + i);
@@ -173,14 +158,8 @@ export const Dashboard = () => {
     return false;
   }), [patients, today]);
 
-  // Total alerts count (memoized)
-  const totalAlerts = useMemo(() => pendingDeclarations.length + expiringProducts.length +
-    lowStockItems.length + overdueInvoices.length + newLeads.length,
-    [pendingDeclarations, expiringProducts, lowStockItems, overdueInvoices, newLeads]);
-
   // Loading state
-  const isLoading = appointmentsLoading || patientsLoading || inventoryLoading ||
-    leadsLoading || invoicesLoading || declarationsLoading;
+  const isLoading = appointmentsLoading || patientsLoading || invoicesLoading || declarationsLoading;
 
   // ========== HELPERS ==========
   const getCurrentGreeting = () => {
@@ -193,31 +172,29 @@ export const Dashboard = () => {
   const greeting = getCurrentGreeting();
   const GreetingIcon = greeting.icon;
 
-  const getAppointmentStatusStyle = (status: string) => {
-    switch (status) {
-      case 'completed': return 'bg-green-100 text-green-700 border-green-200';
-      case 'confirmed': return 'bg-blue-100 text-blue-700 border-blue-200';
-      case 'pending': return 'bg-amber-100 text-amber-700 border-amber-200';
-      case 'cancelled': return 'bg-gray-100 text-gray-500 border-gray-200';
-      case 'no-show': return 'bg-red-100 text-red-700 border-red-200';
-      default: return 'bg-gray-100 text-gray-700 border-gray-200';
-    }
-  };
-
-  const getAppointmentStatusLabel = (status: string) => {
-    const labels: Record<string, string> = {
-      'completed': 'הסתיים',
-      'confirmed': 'בטיפול',
-      'pending': 'ממתין',
-      'cancelled': 'בוטל',
-      'no-show': 'לא הגיע'
-    };
-    return labels[status] || status;
-  };
-
   const showSuccess = (message: string) => {
     setSuccessMessage(message);
     setTimeout(() => setSuccessMessage(null), 3000);
+  };
+
+  // Send health declaration
+  const handleSendDeclaration = async (patientId: string, patientName: string, patientPhone?: string) => {
+    setSendingDeclaration(patientId);
+    try {
+      const token = await createToken({
+        patientId,
+        patientName,
+        patientPhone,
+      });
+      if (token && patientPhone) {
+        const link = generateShareLink(token.token);
+        const whatsappLink = generateWhatsAppLink(token.token, patientPhone);
+        window.open(whatsappLink, '_blank', 'noopener,noreferrer');
+        showSuccess('הקישור נשלח בהצלחה');
+      }
+    } finally {
+      setSendingDeclaration(null);
+    }
   };
 
   // ========== FORM HANDLERS ==========
@@ -269,384 +246,373 @@ export const Dashboard = () => {
     if (result) {
       setIsWalkInOpen(false);
       setWalkInForm({ firstName: '', lastName: '', phone: '' });
-      showSuccess('הלקוח נקלט בהצלחה');
+      showSuccess('הלקוחה נקלטה בהצלחה');
       navigate(`/admin/patients/${result.id}`);
     }
   };
 
   return (
-    <div className="space-y-6 pb-20 md:pb-12 animate-in fade-in duration-700">
+    <div className="space-y-6 pb-24 md:pb-12 animate-in fade-in duration-700">
       {/* Success Toast */}
       {successMessage && (
-        <div className="fixed top-6 left-1/2 -translate-x-1/2 z-50 bg-green-600 text-white px-6 py-3 rounded-xl shadow-lg animate-in slide-in-from-top-2 duration-300">
-          {successMessage}
-        </div>
-      )}
-
-      {/* Data Fetch Error Banner */}
-      {hasDataErrors && (
-        <div className="bg-red-50 border border-red-200 rounded-xl p-4 flex items-start gap-3">
-          <AlertTriangle className="h-5 w-5 text-red-500 mt-0.5 shrink-0" />
-          <div>
-            <h4 className="font-medium text-red-800">שגיאה בטעינת נתונים</h4>
-            <p className="text-sm text-red-600 mt-1">
-              לא ניתן לטעון: {dataErrors.join(', ')}. נסה לרענן את הדף.
-            </p>
+        <div className="fixed top-6 left-1/2 -translate-x-1/2 z-50 px-6 py-3 rounded-2xl shadow-lg animate-in slide-in-from-top-2 duration-300 text-white font-medium bg-rose-500">
+          <div className="flex items-center gap-2">
+            <CheckCircle size={18} />
+            {successMessage}
           </div>
         </div>
       )}
 
-      {/* ========== HEADER: GREETING + QUICK ACTIONS ========== */}
+      {/* ========== HEADER: GREETING ========== */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div className="flex items-center gap-3">
-          <div className="flex items-center gap-2 text-primary/80 font-medium">
+          <div className="flex items-center gap-2 font-medium text-rose-500">
             <GreetingIcon size={20} />
             <span>{greeting.text},</span>
           </div>
-          <h1 className="text-2xl md:text-3xl font-bold text-gray-900">ד״ר שרה</h1>
+          <h1 className="text-2xl md:text-3xl font-bold text-slate-800">ד״ר שרה</h1>
         </div>
 
-        {/* Desktop Quick Actions */}
-        <div className="hidden md:flex gap-2">
-          <Button variant="outline" size="sm" onClick={() => setIsNewApptOpen(true)}>
-            <Plus size={16} className="ml-1" /> תור חדש
-          </Button>
-          <Button variant="outline" size="sm" onClick={() => setIsPosOpen(true)}>
-            <Zap size={16} className="ml-1" /> מכירה מהירה
-          </Button>
-          <Button variant="outline" size="sm" onClick={() => setIsWalkInOpen(true)}>
-            <User size={16} className="ml-1" /> קבלת לקוח
-          </Button>
-          <Button variant="outline" size="sm">
-            <MessageSquare size={16} className="ml-1" /> שלח תזכורת
+        {/* Desktop Quick Actions - Now just the main CTA */}
+        <div className="hidden md:flex">
+          <Button
+            onClick={() => setIsNewApptOpen(true)}
+            className="gap-2 shadow-lg hover:shadow-xl transition-all bg-rose-500 hover:bg-rose-600 text-white"
+          >
+            <Plus size={18} /> תור חדש
           </Button>
         </div>
       </div>
 
-      {/* ========== BENTO GRID LAYOUT ========== */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-
-        {/* ========== TODAY'S SCHEDULE ========== */}
-        <Card className="p-6 rounded-3xl border-stone-100 shadow-soft">
-          <div className="flex items-center justify-between mb-4">
-            <div className="flex items-center gap-2">
-              <CalendarIcon size={20} className="text-primary" />
-              <h2 className="text-lg font-bold text-gray-900">לוח הזמנים להיום</h2>
-            </div>
-            <Badge variant="secondary">{todaysAppointments.length} תורים</Badge>
+      {/* ========== DAILY SUMMARY STRIP ========== */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+        <div className="bg-white rounded-2xl p-4 shadow-sm border border-slate-100">
+          <div className="flex items-center gap-2 mb-1">
+            <CalendarIcon size={16} className="text-slate-400" />
+            <span className="text-xs font-medium text-slate-500">תורים היום</span>
           </div>
+          <p className="text-2xl font-bold text-slate-800">{todaysAppointments.length}</p>
+        </div>
 
-          {isLoading ? (
-            <div className="space-y-3">
-              {[1, 2, 3, 4].map(i => (
-                <div key={i} className="flex items-center gap-3 p-3">
-                  <Skeleton className="w-12 h-12 rounded-full" />
-                  <div className="flex-1 space-y-2">
-                    <Skeleton className="h-4 w-32" />
-                    <Skeleton className="h-3 w-24" />
-                  </div>
-                  <Skeleton className="h-6 w-16 rounded-full" />
+        <div className="bg-white rounded-2xl p-4 shadow-sm border border-slate-100">
+          <div className="flex items-center gap-2 mb-1">
+            <CheckCircle size={16} className="text-slate-400" />
+            <span className="text-xs font-medium text-slate-500">הושלמו</span>
+          </div>
+          <p className="text-2xl font-bold text-slate-800">{completedToday}</p>
+        </div>
+
+        <div className="bg-white rounded-2xl p-4 shadow-sm border border-slate-100">
+          <div className="flex items-center gap-2 mb-1">
+            <Heart size={16} className="text-rose-500" />
+            <span className="text-xs font-medium text-slate-500">הכנסות היום</span>
+          </div>
+          <p className="text-2xl font-bold text-slate-800">₪{todaysRevenue.toLocaleString()}</p>
+        </div>
+
+        <div className="bg-white rounded-2xl p-4 shadow-sm border border-slate-100">
+          <div className="flex items-center gap-2 mb-1">
+            <FileText size={16} className="text-slate-400" />
+            <span className="text-xs font-medium text-slate-500">הצהרות ממתינות</span>
+          </div>
+          <p className="text-2xl font-bold text-slate-800">{pendingDeclarations.length}</p>
+        </div>
+      </div>
+
+      {/* ========== MAIN GRID ========== */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+
+        {/* ========== LEFT COLUMN - Main Content ========== */}
+        <div className="lg:col-span-2 space-y-6">
+
+          {/* ========== NEXT APPOINTMENT (הטיפול הבא) ========== */}
+          <Card className="p-6 rounded-3xl border border-slate-100 shadow-sm overflow-hidden relative">
+            <div className="flex items-center gap-2 mb-4">
+              <Sparkles size={20} className="text-rose-500" />
+              <h2 className="text-lg font-bold text-slate-800">הטיפול הבא</h2>
+            </div>
+
+            {isLoading ? (
+              <div className="flex items-center gap-4 p-4">
+                <Skeleton className="w-16 h-16 rounded-full bg-slate-200" />
+                <div className="flex-1 space-y-2">
+                  <Skeleton className="h-5 w-32 bg-slate-200" />
+                  <Skeleton className="h-4 w-48 bg-slate-200" />
                 </div>
-              ))}
-            </div>
-          ) : todaysAppointments.length === 0 ? (
-            <div className="flex flex-col items-center justify-center py-12 text-center">
-              <div className="w-16 h-16 bg-green-50 rounded-full flex items-center justify-center mb-4">
-                <Coffee size={32} className="text-green-600" />
               </div>
-              <p className="text-gray-600 font-medium">אין תורים היום</p>
-              <p className="text-sm text-gray-500">זמן מושלם להפסקת קפה!</p>
-            </div>
-          ) : (
-            <div className="space-y-2 max-h-[400px] overflow-y-auto">
-              {todaysAppointments.map((appt) => (
-                <div
-                  key={appt.id}
-                  className={`flex items-center gap-3 p-3 rounded-xl cursor-pointer transition-all hover:bg-stone-50 group ${
-                    nextAppointment?.id === appt.id ? 'bg-primary/5 ring-1 ring-primary/20' : ''
-                  }`}
-                  onClick={() => navigate(`/admin/patients/${appt.patientId}`)}
-                >
-                  {/* Time */}
-                  <div className="w-14 text-center shrink-0">
-                    <span className="text-lg font-bold text-gray-900">{appt.time}</span>
-                    <span className="block text-xs text-gray-500">{appt.duration} דק׳</span>
-                  </div>
-
-                  {/* Divider */}
-                  <div className={`w-1 h-12 rounded-full ${
-                    appt.status === 'completed' ? 'bg-green-400' :
-                    appt.status === 'confirmed' ? 'bg-blue-400' :
-                    appt.status === 'pending' ? 'bg-amber-400' :
-                    appt.status === 'no-show' ? 'bg-red-400' : 'bg-gray-300'
-                  }`} />
-
-                  {/* Patient Info */}
+            ) : nextAppointment ? (
+              <div
+                className="flex items-center gap-4 p-4 rounded-2xl cursor-pointer transition-all hover:shadow-md bg-slate-50"
+                onClick={() => navigate(`/admin/patients/${nextAppointment.patientId}`)}
+              >
+                <div className="relative">
                   <img
-                    src={appt.avatar}
-                    alt={appt.patientName}
-                    className="w-10 h-10 rounded-full object-cover shrink-0"
+                    src={nextAppointment.avatar}
+                    alt={nextAppointment.patientName}
+                    className="w-16 h-16 rounded-full object-cover ring-4 ring-white shadow-md"
                   />
-                  <div className="flex-1 min-w-0">
-                    <p className="font-medium text-gray-900 truncate">{appt.patientName}</p>
-                    <p className="text-sm text-gray-500 truncate">{appt.serviceName}</p>
+                  <div className="absolute -bottom-1 -right-1 w-6 h-6 rounded-full flex items-center justify-center text-white text-xs font-bold shadow-lg bg-rose-500">
+                    {nextAppointment.time.split(':')[0]}
                   </div>
-
-                  {/* Status Badge */}
-                  <span className={`px-2.5 py-1 text-xs font-medium rounded-full border ${getAppointmentStatusStyle(appt.status)}`}>
-                    {getAppointmentStatusLabel(appt.status)}
-                  </span>
-
-                  {/* Arrow */}
-                  <ChevronLeft size={16} className="text-gray-400 group-hover:text-primary transition-colors" />
                 </div>
-              ))}
-            </div>
-          )}
-        </Card>
 
-        {/* ========== ALERTS PANEL ========== */}
-        <Card className="p-6 rounded-3xl border-stone-100 shadow-soft">
-          <div className="flex items-center justify-between mb-4">
-            <div className="flex items-center gap-2">
-              <AlertTriangle size={20} className="text-amber-500" />
-              <h2 className="text-lg font-bold text-gray-900">התראות דחופות</h2>
-            </div>
-            {totalAlerts > 0 && (
-              <Badge variant="destructive">{totalAlerts}</Badge>
+                <div className="flex-1 min-w-0">
+                  <p className="font-bold text-lg text-slate-800">{nextAppointment.patientName}</p>
+                  <p className="text-sm text-slate-600">{nextAppointment.serviceName}</p>
+                  <div className="flex items-center gap-3 mt-2">
+                    <Badge className="border-none bg-rose-100 text-rose-700">
+                      <Clock size={12} className="ml-1" /> {nextAppointment.time}
+                    </Badge>
+                    <Badge className="border-none bg-slate-100 text-slate-600">
+                      {nextAppointment.duration} דק׳
+                    </Badge>
+                  </div>
+                </div>
+
+                <ChevronLeft size={24} className="text-slate-400" />
+              </div>
+            ) : (
+              /* Empty State - Illustrated */
+              <div className="flex flex-col items-center justify-center py-10 text-center">
+                <div className="w-24 h-24 rounded-full flex items-center justify-center mb-4 relative bg-rose-50">
+                  <Coffee size={40} className="text-rose-500" />
+                  <div className="absolute -top-1 -right-1 w-8 h-8 rounded-full flex items-center justify-center bg-rose-500">
+                    <Sparkles size={16} className="text-white" />
+                  </div>
+                </div>
+                <p className="font-bold text-lg mb-1 text-slate-800">אין תורים כרגע</p>
+                <p className="text-sm mb-4 text-slate-600">יום מושלם לפנות ללקוחות ותיקות!</p>
+                <Button
+                  variant="outline"
+                  className="gap-2 border-2 border-rose-200 text-rose-600 hover:bg-rose-50"
+                  onClick={() => navigate('/admin/patients')}
+                >
+                  <Phone size={16} /> צפייה בלקוחות
+                </Button>
+              </div>
             )}
-          </div>
+          </Card>
 
-          {isLoading ? (
-            <div className="space-y-3">
-              {[1, 2, 3].map(i => (
-                <Skeleton key={i} className="h-16 w-full rounded-xl" />
-              ))}
-            </div>
-          ) : totalAlerts === 0 ? (
-            <div className="flex flex-col items-center justify-center py-12 text-center">
-              <div className="w-16 h-16 bg-green-50 rounded-full flex items-center justify-center mb-4">
-                <CheckCircle size={32} className="text-green-600" />
+          {/* ========== PENDING HEALTH DECLARATIONS (טפסים ממתינים לחתימה) ========== */}
+          <Card className="p-6 rounded-3xl border border-slate-100 shadow-sm">
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-2">
+                <FileText size={20} className="text-slate-400" />
+                <h2 className="text-lg font-bold text-slate-800">הצהרות בריאות ממתינות</h2>
               </div>
-              <p className="text-gray-600 font-medium">הכל תקין!</p>
-              <p className="text-sm text-gray-500">אין התראות דחופות כרגע</p>
-            </div>
-          ) : (
-            <div className="space-y-3 max-h-[400px] overflow-y-auto">
-              {/* Pending Declarations */}
-              {pendingDeclarations.length > 0 && (
-                <div
-                  className="flex items-center gap-3 p-4 bg-red-50 rounded-xl border border-red-100 cursor-pointer hover:bg-red-100/50 transition-colors"
-                  onClick={() => navigate('/admin/patients')}
-                >
-                  <div className="w-10 h-10 bg-red-100 rounded-xl flex items-center justify-center shrink-0">
-                    <FileText size={20} className="text-red-600" />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="font-medium text-red-900">הצהרות ממתינות לחתימה</p>
-                    <p className="text-sm text-red-700">{pendingDeclarations.length} מטופלים</p>
-                  </div>
-                  <ChevronLeft size={16} className="text-red-400" />
-                </div>
-              )}
-
-              {/* Expiring Products */}
-              {expiringProducts.length > 0 && (
-                <div
-                  className="flex items-center gap-3 p-4 bg-red-50 rounded-xl border border-red-100 cursor-pointer hover:bg-red-100/50 transition-colors"
-                  onClick={() => navigate('/admin/inventory')}
-                >
-                  <div className="w-10 h-10 bg-red-100 rounded-xl flex items-center justify-center shrink-0">
-                    <Clock size={20} className="text-red-600" />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="font-medium text-red-900">מוצרים עומדים לפוג</p>
-                    <p className="text-sm text-red-700">{expiringProducts.length} פריטים ב-30 יום הקרובים</p>
-                  </div>
-                  <ChevronLeft size={16} className="text-red-400" />
-                </div>
-              )}
-
-              {/* Low Stock */}
-              {lowStockItems.length > 0 && (
-                <div
-                  className="flex items-center gap-3 p-4 bg-amber-50 rounded-xl border border-amber-100 cursor-pointer hover:bg-amber-100/50 transition-colors"
-                  onClick={() => navigate('/admin/inventory')}
-                >
-                  <div className="w-10 h-10 bg-amber-100 rounded-xl flex items-center justify-center shrink-0">
-                    <ShoppingCart size={20} className="text-amber-600" />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="font-medium text-amber-900">מלאי נמוך</p>
-                    <p className="text-sm text-amber-700">{lowStockItems.length} פריטים מתחת לסף</p>
-                  </div>
-                  <ChevronLeft size={16} className="text-amber-400" />
-                </div>
-              )}
-
-              {/* Overdue Payments */}
-              {overdueInvoices.length > 0 && (
-                <div
-                  className="flex items-center gap-3 p-4 bg-amber-50 rounded-xl border border-amber-100 cursor-pointer hover:bg-amber-100/50 transition-colors"
-                  onClick={() => navigate('/admin/settings?tab=billing')}
-                >
-                  <div className="w-10 h-10 bg-amber-100 rounded-xl flex items-center justify-center shrink-0">
-                    <CreditCard size={20} className="text-amber-600" />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="font-medium text-amber-900">תשלומים בפיגור</p>
-                    <p className="text-sm text-amber-700">₪{overdueInvoices.reduce((s, i) => s + i.total, 0).toLocaleString()}</p>
-                  </div>
-                  <ChevronLeft size={16} className="text-amber-400" />
-                </div>
-              )}
-
-              {/* New Leads */}
-              {newLeads.length > 0 && (
-                <div
-                  className="flex items-center gap-3 p-4 bg-blue-50 rounded-xl border border-blue-100 cursor-pointer hover:bg-blue-100/50 transition-colors"
-                  onClick={() => navigate('/admin/patients')}
-                >
-                  <div className="w-10 h-10 bg-blue-100 rounded-xl flex items-center justify-center shrink-0">
-                    <UserPlus size={20} className="text-blue-600" />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="font-medium text-blue-900">לידים חדשים</p>
-                    <p className="text-sm text-blue-700">{newLeads.length} לידים להתקשרות</p>
-                  </div>
-                  <ChevronLeft size={16} className="text-blue-400" />
-                </div>
+              {patientsNeedingDeclaration.length > 0 && (
+                <Badge className="border-none bg-amber-100 text-amber-700">
+                  {patientsNeedingDeclaration.length}
+                </Badge>
               )}
             </div>
-          )}
-        </Card>
 
-        {/* ========== REVENUE OVERVIEW ========== */}
-        <Card className="p-6 rounded-3xl border-stone-100 shadow-soft bg-gradient-to-br from-gray-900 to-gray-800 text-white">
-          <div className="flex items-center justify-between mb-4">
-            <div className="flex items-center gap-2">
-              <TrendingUp size={20} className="text-green-400" />
-              <h2 className="text-lg font-bold">הכנסות היום</h2>
-            </div>
-            <div className={`flex items-center gap-1 px-2 py-1 rounded-lg text-sm font-medium ${
-              revenueTrend >= 0 ? 'bg-green-500/20 text-green-400' : 'bg-red-500/20 text-red-400'
-            }`}>
-              {revenueTrend >= 0 ? <ArrowUpRight size={14} /> : <ArrowUpRight size={14} className="rotate-90" />}
-              {Math.abs(revenueTrend)}%
-            </div>
-          </div>
-
-          <div className="mb-6">
-            <h3 className="text-4xl font-bold tracking-tight">
-              ₪{(todaysRevenue || 2450).toLocaleString()}
-            </h3>
-            <p className="text-gray-400 text-sm mt-1">
-              יתרה לגבייה: ₪{outstandingBalance.toLocaleString()}
-            </p>
-          </div>
-
-          {/* Mini Chart */}
-          <div className="h-20 -mx-2">
-            <ResponsiveContainer width="100%" height="100%">
-              <AreaChart data={revenueData} margin={{ top: 0, right: 0, left: 0, bottom: 0 }}>
-                <defs>
-                  <linearGradient id="colorRevenueDashboard" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#2DD4BF" stopOpacity={0.3}/>
-                    <stop offset="95%" stopColor="#2DD4BF" stopOpacity={0}/>
-                  </linearGradient>
-                </defs>
-                <XAxis
-                  dataKey="name"
-                  axisLine={false}
-                  tickLine={false}
-                  tick={{ fontSize: 10, fill: '#9CA3AF' }}
-                />
-                <Tooltip
-                  contentStyle={{
-                    background: '#1C1917',
-                    border: 'none',
-                    borderRadius: '8px',
-                    fontSize: '12px',
-                    color: '#fff'
-                  }}
-                  formatter={(value) => [`₪${(value ?? 0).toLocaleString()}`, 'הכנסות']}
-                />
-                <Area
-                  type="monotone"
-                  dataKey="value"
-                  stroke="#2DD4BF"
-                  strokeWidth={2}
-                  fillOpacity={1}
-                  fill="url(#colorRevenueDashboard)"
-                />
-              </AreaChart>
-            </ResponsiveContainer>
-          </div>
-        </Card>
-
-        {/* ========== RETENTION METRICS ========== */}
-        <Card className="p-6 rounded-3xl border-stone-100 shadow-soft">
-          <div className="flex items-center justify-between mb-4">
-            <div className="flex items-center gap-2">
-              <User size={20} className="text-purple-500" />
-              <h2 className="text-lg font-bold text-gray-900">שימור לקוחות</h2>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-2 gap-4">
-            {/* Lapsed Clients */}
-            <div
-              className="p-4 bg-purple-50 rounded-xl cursor-pointer hover:bg-purple-100/70 transition-colors"
-              onClick={() => navigate('/admin/patients')}
-            >
-              <div className="flex items-center gap-2 mb-2">
-                <Clock size={16} className="text-purple-600" />
-                <span className="text-sm font-medium text-purple-900">לקוחות רדומים</span>
+            {isLoading ? (
+              <div className="space-y-3">
+                {[1, 2, 3].map(i => (
+                  <Skeleton key={i} className="h-16 w-full rounded-xl bg-slate-200" />
+                ))}
               </div>
-              <p className="text-2xl font-bold text-purple-700">{lapsedClients.length}</p>
-              <p className="text-xs text-purple-600">לא ביקרו 60+ יום</p>
+            ) : patientsNeedingDeclaration.length === 0 ? (
+              <div className="flex flex-col items-center justify-center py-8 text-center">
+                <div className="w-20 h-20 rounded-full flex items-center justify-center mb-4 bg-green-50">
+                  <CheckCircle size={36} className="text-green-600" />
+                </div>
+                <p className="font-bold mb-1 text-slate-800">הכל מסודר!</p>
+                <p className="text-sm text-slate-600">כל הלקוחות חתמו על הצהרות</p>
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {patientsNeedingDeclaration.map((item) => (
+                  <div
+                    key={item.id}
+                    className="flex items-center gap-3 p-3 rounded-xl transition-all hover:shadow-sm bg-slate-50"
+                  >
+                    <img
+                      src={`https://ui-avatars.com/api/?name=${encodeURIComponent(item.patientName)}&background=FFE4E6&color=E11D48`}
+                      alt={item.patientName}
+                      className="w-10 h-10 rounded-full object-cover"
+                    />
+                    <div className="flex-1 min-w-0">
+                      <p className="font-medium truncate text-slate-800">{item.patientName}</p>
+                      <p className="text-xs text-slate-500">
+                        תור: {new Date(item.date).toLocaleDateString('he-IL')} {item.time}
+                      </p>
+                    </div>
+                    <Button
+                      size="sm"
+                      className="gap-1 shadow-sm bg-rose-500 hover:bg-rose-600 text-white"
+                      disabled={sendingDeclaration === item.patientId}
+                      onClick={() => handleSendDeclaration(item.patientId, item.patientName, item.patient?.phone)}
+                    >
+                      {sendingDeclaration === item.patientId ? (
+                        <span className="animate-spin">⏳</span>
+                      ) : (
+                        <>
+                          <Send size={14} /> שלח
+                        </>
+                      )}
+                    </Button>
+                  </div>
+                ))}
+              </div>
+            )}
+          </Card>
+
+          {/* ========== FOLLOW-UP LIST (לקוחות להתקשר אליהן) ========== */}
+          <Card className="p-6 rounded-3xl border border-slate-100 shadow-sm">
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-2">
+                <Phone size={20} className="text-slate-400" />
+                <h2 className="text-lg font-bold text-slate-800">לקוחות להתקשר אליהן</h2>
+              </div>
             </div>
 
-            {/* Due for Follow-up */}
-            <div
-              className="p-4 bg-teal-50 rounded-xl cursor-pointer hover:bg-teal-100/70 transition-colors"
-              onClick={() => navigate('/admin/patients')}
-            >
-              <div className="flex items-center gap-2 mb-2">
-                <Phone size={16} className="text-teal-600" />
-                <span className="text-sm font-medium text-teal-900">לביקורת מעקב</span>
+            {isLoading ? (
+              <div className="space-y-3">
+                {[1, 2].map(i => (
+                  <Skeleton key={i} className="h-16 w-full rounded-xl bg-slate-200" />
+                ))}
               </div>
-              <p className="text-2xl font-bold text-teal-700">{dueForFollowUp.length}</p>
-              <p className="text-xs text-teal-600">בוטוקס 2 שבועות</p>
-            </div>
+            ) : dueForFollowUp.length === 0 ? (
+              <div className="flex flex-col items-center justify-center py-8 text-center">
+                <div className="w-20 h-20 rounded-full flex items-center justify-center mb-4 bg-green-50">
+                  <UserCheck size={36} className="text-green-600" />
+                </div>
+                <p className="font-bold mb-1 text-slate-800">אין מעקבים ממתינים</p>
+                <p className="text-sm text-slate-600">כל הלקוחות מטופלות</p>
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {dueForFollowUp.map((item) => (
+                  <div
+                    key={item.id}
+                    className="flex items-center gap-3 p-3 rounded-xl cursor-pointer transition-all hover:shadow-sm bg-slate-50"
+                    onClick={() => navigate(`/admin/patients/${item.patientId}`)}
+                  >
+                    <img
+                      src={`https://ui-avatars.com/api/?name=${encodeURIComponent(item.patientName)}&background=FFE4E6&color=E11D48`}
+                      alt={item.patientName}
+                      className="w-10 h-10 rounded-full object-cover"
+                    />
+                    <div className="flex-1 min-w-0">
+                      <p className="font-medium truncate text-slate-800">{item.patientName}</p>
+                      <p className="text-xs text-slate-500">
+                        {item.serviceName} • לפני {Math.floor((today.getTime() - new Date(item.date).getTime()) / (1000 * 60 * 60 * 24))} ימים
+                      </p>
+                    </div>
+                    <Badge className="border-none text-xs bg-rose-100 text-rose-700">
+                      מעקב בוטוקס
+                    </Badge>
+                    <ChevronLeft size={16} className="text-slate-400" />
+                  </div>
+                ))}
+              </div>
+            )}
+          </Card>
+        </div>
 
-            {/* Upcoming Birthdays */}
-            <div
-              className="p-4 bg-pink-50 rounded-xl cursor-pointer hover:bg-pink-100/70 transition-colors"
-              onClick={() => navigate('/admin/patients')}
-            >
-              <div className="flex items-center gap-2 mb-2">
-                <Gift size={16} className="text-pink-600" />
-                <span className="text-sm font-medium text-pink-900">ימי הולדת</span>
-              </div>
-              <p className="text-2xl font-bold text-pink-700">{upcomingBirthdays.length}</p>
-              <p className="text-xs text-pink-600">השבוע</p>
-            </div>
+        {/* ========== RIGHT COLUMN - Retention Metrics ========== */}
+        <div className="space-y-4">
+          <h3 className="text-sm font-bold uppercase tracking-wider text-slate-400">שימור לקוחות</h3>
 
-            {/* Active Patients */}
-            <div
-              className="p-4 bg-green-50 rounded-xl cursor-pointer hover:bg-green-100/70 transition-colors"
-              onClick={() => navigate('/admin/patients')}
-            >
-              <div className="flex items-center gap-2 mb-2">
-                <CheckCircle2 size={16} className="text-green-600" />
-                <span className="text-sm font-medium text-green-900">לקוחות פעילים</span>
+          {/* Lapsed Clients */}
+          <Card
+            className="p-5 rounded-2xl border border-slate-100 cursor-pointer transition-all hover:shadow-md"
+            onClick={() => navigate('/admin/patients')}
+          >
+            <div className="flex items-center gap-3">
+              <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${lapsedClients.length > 0 ? 'bg-amber-50' : 'bg-slate-50'}`}>
+                <Clock size={24} className={lapsedClients.length > 0 ? 'text-amber-600' : 'text-slate-400'} />
               </div>
-              <p className="text-2xl font-bold text-green-700">{patients.length - lapsedClients.length}</p>
-              <p className="text-xs text-green-600">ביקרו ב-60 יום</p>
+              <div className="flex-1">
+                <p className="text-sm font-medium text-slate-500">לקוחות רדומות</p>
+                {lapsedClients.length > 0 ? (
+                  <>
+                    <p className="text-2xl font-bold text-slate-800">{lapsedClients.length}</p>
+                    <p className="text-xs text-slate-500">לא ביקרו 60+ יום</p>
+                  </>
+                ) : (
+                  <>
+                    <p className="text-lg font-bold text-green-600">מעולה! 🎉</p>
+                    <p className="text-xs text-slate-500">כל הלקוחות פעילות</p>
+                  </>
+                )}
+              </div>
             </div>
-          </div>
-        </Card>
+          </Card>
+
+          {/* Due for Follow-up */}
+          <Card
+            className="p-5 rounded-2xl border border-slate-100 cursor-pointer transition-all hover:shadow-md"
+            onClick={() => navigate('/admin/patients')}
+          >
+            <div className="flex items-center gap-3">
+              <div className="w-12 h-12 rounded-xl flex items-center justify-center bg-rose-50">
+                <Phone size={24} className="text-rose-500" />
+              </div>
+              <div className="flex-1">
+                <p className="text-sm font-medium text-slate-500">לביקורת מעקב</p>
+                {dueForFollowUp.length > 0 ? (
+                  <>
+                    <p className="text-2xl font-bold text-slate-800">{dueForFollowUp.length}</p>
+                    <p className="text-xs text-slate-500">בוטוקס 2 שבועות</p>
+                  </>
+                ) : (
+                  <>
+                    <p className="text-lg font-bold text-green-600">הכל מטופל ✓</p>
+                    <p className="text-xs text-slate-500">אין מעקבים ממתינים</p>
+                  </>
+                )}
+              </div>
+            </div>
+          </Card>
+
+          {/* Upcoming Birthdays */}
+          <Card
+            className="p-5 rounded-2xl border border-slate-100 cursor-pointer transition-all hover:shadow-md"
+            onClick={() => navigate('/admin/patients')}
+          >
+            <div className="flex items-center gap-3">
+              <div className="w-12 h-12 rounded-xl flex items-center justify-center bg-pink-50">
+                <Gift size={24} className="text-pink-500" />
+              </div>
+              <div className="flex-1">
+                <p className="text-sm font-medium text-slate-500">ימי הולדת</p>
+                {upcomingBirthdays.length > 0 ? (
+                  <>
+                    <p className="text-2xl font-bold text-slate-800">{upcomingBirthdays.length}</p>
+                    <p className="text-xs text-slate-500">השבוע</p>
+                  </>
+                ) : (
+                  <>
+                    <p className="text-lg font-bold text-slate-400">אין השבוע</p>
+                    <p className="text-xs text-slate-500">שבוע שקט</p>
+                  </>
+                )}
+              </div>
+            </div>
+          </Card>
+
+          {/* Active Patients */}
+          <Card
+            className="p-5 rounded-2xl border border-slate-100 cursor-pointer transition-all hover:shadow-md"
+            onClick={() => navigate('/admin/patients')}
+          >
+            <div className="flex items-center gap-3">
+              <div className="w-12 h-12 rounded-xl flex items-center justify-center bg-green-50">
+                <UserCheck size={24} className="text-green-600" />
+              </div>
+              <div className="flex-1">
+                <p className="text-sm font-medium text-slate-500">לקוחות פעילות</p>
+                <p className="text-2xl font-bold text-slate-800">
+                  {patients.length - lapsedClients.length}
+                </p>
+                <p className="text-xs text-slate-500">ביקרו ב-60 יום</p>
+              </div>
+            </div>
+          </Card>
+        </div>
       </div>
 
       {/* ========== MOBILE FAB ========== */}
@@ -655,31 +621,24 @@ export const Dashboard = () => {
         {isFabOpen && (
           <div className="absolute bottom-16 left-0 space-y-2 animate-in slide-in-from-bottom-2 duration-200">
             <button
-              className="flex items-center gap-2 bg-white shadow-lg rounded-full py-2 px-4 text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors min-h-[44px]"
+              className="flex items-center gap-2 bg-white shadow-lg rounded-full py-2 px-4 text-sm font-medium text-slate-700 hover:bg-slate-50 transition-colors min-h-[44px]"
               onClick={() => { setIsNewApptOpen(true); setIsFabOpen(false); }}
             >
-              <Plus size={18} className="text-primary" />
+              <Plus size={18} className="text-rose-500" />
               תור חדש
             </button>
             <button
-              className="flex items-center gap-2 bg-white shadow-lg rounded-full py-2 px-4 text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors min-h-[44px]"
-              onClick={() => { setIsPosOpen(true); setIsFabOpen(false); }}
-            >
-              <Zap size={18} className="text-orange-500" />
-              מכירה מהירה
-            </button>
-            <button
-              className="flex items-center gap-2 bg-white shadow-lg rounded-full py-2 px-4 text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors min-h-[44px]"
+              className="flex items-center gap-2 bg-white shadow-lg rounded-full py-2 px-4 text-sm font-medium text-slate-700 hover:bg-slate-50 transition-colors min-h-[44px]"
               onClick={() => { setIsWalkInOpen(true); setIsFabOpen(false); }}
             >
               <User size={18} className="text-blue-500" />
-              קבלת לקוח
+              קבלת לקוחה
             </button>
             <button
-              className="flex items-center gap-2 bg-white shadow-lg rounded-full py-2 px-4 text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors min-h-[44px]"
-              onClick={() => setIsFabOpen(false)}
+              className="flex items-center gap-2 bg-white shadow-lg rounded-full py-2 px-4 text-sm font-medium text-slate-700 hover:bg-slate-50 transition-colors min-h-[44px]"
+              onClick={() => { navigate('/admin/patients'); setIsFabOpen(false); }}
             >
-              <MessageSquare size={18} className="text-green-500" />
+              <MessageCircle size={18} className="text-green-500" />
               שלח תזכורת
             </button>
           </div>
@@ -688,9 +647,7 @@ export const Dashboard = () => {
         {/* FAB Button */}
         <button
           className={`w-14 h-14 rounded-full shadow-lg flex items-center justify-center transition-all duration-300 ${
-            isFabOpen
-              ? 'bg-gray-800 rotate-45'
-              : 'bg-primary hover:bg-primary/90'
+            isFabOpen ? 'bg-slate-800 rotate-45' : 'bg-rose-500 hover:bg-rose-600'
           }`}
           onClick={() => setIsFabOpen(!isFabOpen)}
         >
@@ -699,22 +656,15 @@ export const Dashboard = () => {
       </div>
 
       {/* ========== DIALOGS ========== */}
-      {/* Quick POS Modal */}
-      <Dialog open={isPosOpen} onClose={() => setIsPosOpen(false)} title="קופה מהירה">
-        <div className="flex flex-col h-[500px]">
-          <p className="text-center p-10 text-gray-500">תוכן הקופה המהירה יופיע כאן</p>
-        </div>
-      </Dialog>
-
       {/* New Appointment Dialog */}
       <Dialog open={isNewApptOpen} onClose={() => setIsNewApptOpen(false)} title="קביעת תור חדש">
         <div className="space-y-4">
           <div>
-            <Label>שם המטופל</Label>
+            <Label>שם המטופלת</Label>
             <Input
               name="patient-name"
               autoComplete="name"
-              placeholder="הכנס שם מטופל..."
+              placeholder="הכניסי שם מטופלת..."
               value={apptForm.patientName}
               onChange={(e) => setApptForm(prev => ({ ...prev, patientName: e.target.value }))}
             />
@@ -726,7 +676,7 @@ export const Dashboard = () => {
               value={apptForm.serviceId}
               onChange={(e) => setApptForm(prev => ({ ...prev, serviceId: e.target.value }))}
             >
-              <option value="">בחר טיפול...</option>
+              <option value="">בחרי טיפול...</option>
               {services.map(s => (
                 <option key={s.id} value={s.id}>{s.name} ({s.duration} דק׳)</option>
               ))}
@@ -761,6 +711,7 @@ export const Dashboard = () => {
             <Button
               onClick={handleAddAppointment}
               disabled={saving || !apptForm.patientName || !apptForm.serviceId}
+              className="bg-rose-500 hover:bg-rose-600 text-white"
             >
               {saving ? 'שומר...' : 'שמור ביומן'}
             </Button>
@@ -769,7 +720,7 @@ export const Dashboard = () => {
       </Dialog>
 
       {/* Walk-in Dialog */}
-      <Dialog open={isWalkInOpen} onClose={() => setIsWalkInOpen(false)} title="קבלת לקוח חדש">
+      <Dialog open={isWalkInOpen} onClose={() => setIsWalkInOpen(false)} title="קבלת לקוחה חדשה">
         <div className="space-y-4">
           <div className="grid grid-cols-2 gap-4">
             <div>
@@ -777,7 +728,7 @@ export const Dashboard = () => {
               <Input
                 name="given-name"
                 autoComplete="given-name"
-                placeholder="ישראל"
+                placeholder="שרה"
                 value={walkInForm.firstName}
                 onChange={(e) => setWalkInForm(prev => ({ ...prev, firstName: e.target.value }))}
               />
@@ -787,7 +738,7 @@ export const Dashboard = () => {
               <Input
                 name="family-name"
                 autoComplete="family-name"
-                placeholder="ישראלי"
+                placeholder="כהן"
                 value={walkInForm.lastName}
                 onChange={(e) => setWalkInForm(prev => ({ ...prev, lastName: e.target.value }))}
               />
@@ -812,8 +763,9 @@ export const Dashboard = () => {
             <Button
               onClick={handleWalkIn}
               disabled={saving || !walkInForm.firstName || !walkInForm.phone}
+              className="bg-rose-500 hover:bg-rose-600 text-white"
             >
-              {saving ? 'שומר...' : 'קלוט לקוח'}
+              {saving ? 'שומר...' : 'קלוט לקוחה'}
             </Button>
           </div>
         </div>
