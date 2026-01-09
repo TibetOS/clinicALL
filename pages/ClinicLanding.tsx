@@ -3,7 +3,7 @@ import { useParams, Navigate } from 'react-router-dom';
 import {
   MapPin, Phone, Clock, ChevronDown, X, Menu, Loader2
 } from 'lucide-react';
-import { Button, Card } from '../components/ui';
+import { Button, Card, Dialog } from '../components/ui';
 import { BookingApp } from './Booking';
 import { useClinic, useServices } from '../hooks';
 import { Service } from '../types';
@@ -271,22 +271,17 @@ export const ClinicLanding = () => {
       </footer>
 
       {/* Booking Modal */}
-      {isBookingOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50" onClick={closeBooking}>
-          <div
-            className="bg-white rounded-2xl overflow-hidden w-full max-w-lg max-h-[90vh] overflow-y-auto"
-            onClick={e => e.stopPropagation()}
-          >
-            <BookingApp
-              mode="modal"
-              onClose={closeBooking}
-              preSelectedService={selectedService}
-              clinicName={profile.name}
-              clinicId={profile.id}
-            />
-          </div>
+      <Dialog open={isBookingOpen} onClose={closeBooking}>
+        <div className="bg-white rounded-2xl overflow-hidden w-full max-w-lg max-h-[80vh] overflow-y-auto">
+          <BookingApp
+            mode="modal"
+            onClose={closeBooking}
+            preSelectedService={selectedService}
+            clinicName={profile.name}
+            clinicId={profile.id}
+          />
         </div>
-      )}
+      </Dialog>
     </div>
   );
 };
