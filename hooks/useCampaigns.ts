@@ -4,6 +4,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { Campaign } from '../types';
 import { MOCK_CAMPAIGNS } from '../data';
 import { createLogger } from '../lib/logger';
+import { CampaignRow, CampaignRowUpdate, getErrorMessage } from '../lib/database.types';
 
 const logger = createLogger('useCampaigns');
 
@@ -53,20 +54,20 @@ export function useCampaigns(): UseCampaigns {
 
       if (fetchError) throw fetchError;
 
-      const transformedCampaigns: Campaign[] = (data || []).map((camp: any) => ({
+      const transformedCampaigns: Campaign[] = (data as CampaignRow[] || []).map((camp) => ({
         id: camp.id,
         name: camp.name,
         type: camp.type,
         status: camp.status || 'draft',
         audience: camp.audience || '',
         sentCount: camp.sent_count || 0,
-        openRate: camp.open_rate ? parseFloat(camp.open_rate) : undefined,
-        scheduledDate: camp.scheduled_date,
+        openRate: camp.open_rate ?? undefined,
+        scheduledDate: camp.scheduled_date ?? undefined,
       }));
 
       setCampaigns(transformedCampaigns);
-    } catch (err: any) {
-      setError(err.message || 'Failed to fetch campaigns');
+    } catch (err) {
+      setError(getErrorMessage(err) || 'Failed to fetch campaigns');
       logger.error('Error fetching campaigns:', err);
     } finally {
       setLoading(false);
@@ -94,10 +95,10 @@ export function useCampaigns(): UseCampaigns {
         status: data.status || 'draft',
         audience: data.audience || '',
         sentCount: data.sent_count || 0,
-        openRate: data.open_rate ? parseFloat(data.open_rate) : undefined,
-        scheduledDate: data.scheduled_date,
+        openRate: data.open_rate ?? undefined,
+        scheduledDate: data.scheduled_date ?? undefined,
       };
-    } catch (err: any) {
+    } catch (err) {
       logger.error('Error fetching campaign:', err);
       return null;
     }
@@ -144,15 +145,15 @@ export function useCampaigns(): UseCampaigns {
         status: data.status || 'draft',
         audience: data.audience || '',
         sentCount: data.sent_count || 0,
-        openRate: data.open_rate ? parseFloat(data.open_rate) : undefined,
-        scheduledDate: data.scheduled_date,
+        openRate: data.open_rate ?? undefined,
+        scheduledDate: data.scheduled_date ?? undefined,
       };
 
       setCampaigns(prev => [newCampaign, ...prev]);
       return newCampaign;
-    } catch (err: any) {
+    } catch (err) {
       logger.error('Error adding campaign:', err);
-      setError(err.message || 'Failed to add campaign');
+      setError(getErrorMessage(err) || 'Failed to add campaign');
       return null;
     }
   }, [profile?.clinic_id]);
@@ -166,7 +167,7 @@ export function useCampaigns(): UseCampaigns {
     }
 
     try {
-      const dbUpdates: any = {};
+      const dbUpdates: CampaignRowUpdate = {};
       if (updates.name !== undefined) dbUpdates.name = updates.name;
       if (updates.type !== undefined) dbUpdates.type = updates.type;
       if (updates.status !== undefined) dbUpdates.status = updates.status;
@@ -191,15 +192,15 @@ export function useCampaigns(): UseCampaigns {
         status: data.status || 'draft',
         audience: data.audience || '',
         sentCount: data.sent_count || 0,
-        openRate: data.open_rate ? parseFloat(data.open_rate) : undefined,
-        scheduledDate: data.scheduled_date,
+        openRate: data.open_rate ?? undefined,
+        scheduledDate: data.scheduled_date ?? undefined,
       };
 
       setCampaigns(prev => prev.map(camp => camp.id === id ? updatedCampaign : camp));
       return updatedCampaign;
-    } catch (err: any) {
+    } catch (err) {
       logger.error('Error updating campaign:', err);
-      setError(err.message || 'Failed to update campaign');
+      setError(getErrorMessage(err) || 'Failed to update campaign');
       return null;
     }
   }, [campaigns]);
@@ -225,9 +226,9 @@ export function useCampaigns(): UseCampaigns {
 
       setCampaigns(prev => prev.filter(camp => camp.id !== id));
       return true;
-    } catch (err: any) {
+    } catch (err) {
       logger.error('Error deleting campaign:', err);
-      setError(err.message || 'Failed to delete campaign');
+      setError(getErrorMessage(err) || 'Failed to delete campaign');
       return false;
     }
   }, []);

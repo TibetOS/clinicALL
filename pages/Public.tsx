@@ -1331,14 +1331,17 @@ export const HealthDeclaration = () => {
     }
   }, [tokenValidation.valid, tokenValidation.token, patient]);
 
-  const updateForm = (key: string, value: any) => {
+  type FormDataKey = keyof typeof formData;
+  type NestedFormKey = 'lifestyle' | 'treatments' | 'healthQuestions' | 'healthDetails';
+
+  const updateForm = <K extends FormDataKey>(key: K, value: typeof formData[K]) => {
      setFormData(prev => ({ ...prev, [key]: value }));
   };
-  
-  const updateNested = (category: string, key: string, value: any) => {
-     setFormData(prev => ({ 
-        ...prev, 
-        [category]: { ...(prev as any)[category], [key]: value } 
+
+  const updateNested = <K extends NestedFormKey>(category: K, key: string, value: boolean | string) => {
+     setFormData(prev => ({
+        ...prev,
+        [category]: { ...prev[category], [key]: value }
      }));
   };
 

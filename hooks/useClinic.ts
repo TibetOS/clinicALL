@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { supabase, isSupabaseConfigured } from '../lib/supabase';
 import { ClinicProfile } from '../types';
 import { createLogger } from '../lib/logger';
+import { getErrorMessage } from '../lib/database.types';
 
 const logger = createLogger('useClinic');
 
@@ -99,8 +100,8 @@ export function useClinic(slug: string | undefined): UseClinic {
       };
 
       setClinic(transformedClinic);
-    } catch (err: any) {
-      setError(err.message || 'Failed to fetch clinic');
+    } catch (err) {
+      setError(getErrorMessage(err) || 'Failed to fetch clinic');
       logger.error('Error fetching clinic:', err);
     } finally {
       setLoading(false);

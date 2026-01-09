@@ -4,6 +4,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { InventoryItem } from '../types';
 import { MOCK_INVENTORY } from '../data';
 import { createLogger } from '../lib/logger';
+import { InventoryItemRow, InventoryItemRowUpdate, getErrorMessage } from '../lib/database.types';
 
 const logger = createLogger('useInventory');
 
@@ -61,7 +62,7 @@ export function useInventory(): UseInventory {
 
       if (fetchError) throw fetchError;
 
-      const transformedItems: InventoryItem[] = (data || []).map((item: any) => ({
+      const transformedItems: InventoryItem[] = (data as InventoryItemRow[] || []).map((item) => ({
         id: item.id,
         name: item.name,
         sku: item.sku || '',
@@ -75,8 +76,8 @@ export function useInventory(): UseInventory {
       }));
 
       setItems(transformedItems);
-    } catch (err: any) {
-      setError(err.message || 'Failed to fetch inventory');
+    } catch (err) {
+      setError(getErrorMessage(err) || 'Failed to fetch inventory');
       logger.error('Error fetching inventory:', err);
     } finally {
       setLoading(false);
@@ -109,7 +110,7 @@ export function useInventory(): UseInventory {
         supplier: data.supplier || '',
         status: data.status || calculateStatus(data.quantity, data.min_quantity),
       };
-    } catch (err: any) {
+    } catch (err) {
       logger.error('Error fetching inventory item:', err);
       return null;
     }
@@ -169,9 +170,9 @@ export function useInventory(): UseInventory {
 
       setItems(prev => [...prev, newItem]);
       return newItem;
-    } catch (err: any) {
+    } catch (err) {
       logger.error('Error adding inventory item:', err);
-      setError(err.message || 'Failed to add inventory item');
+      setError(getErrorMessage(err) || 'Failed to add inventory item');
       return null;
     }
   }, [profile?.clinic_id]);
@@ -193,7 +194,7 @@ export function useInventory(): UseInventory {
     }
 
     try {
-      const dbUpdates: any = {};
+      const dbUpdates: InventoryItemRowUpdate = {};
       if (updates.name !== undefined) dbUpdates.name = updates.name;
       if (updates.sku !== undefined) dbUpdates.sku = updates.sku;
       if (updates.category !== undefined) dbUpdates.category = updates.category;
@@ -235,9 +236,9 @@ export function useInventory(): UseInventory {
 
       setItems(prev => prev.map(item => item.id === id ? updatedItem : item));
       return updatedItem;
-    } catch (err: any) {
+    } catch (err) {
       logger.error('Error updating inventory item:', err);
-      setError(err.message || 'Failed to update inventory item');
+      setError(getErrorMessage(err) || 'Failed to update inventory item');
       return null;
     }
   }, [items]);
@@ -263,9 +264,9 @@ export function useInventory(): UseInventory {
 
       setItems(prev => prev.filter(item => item.id !== id));
       return true;
-    } catch (err: any) {
+    } catch (err) {
       logger.error('Error deleting inventory item:', err);
-      setError(err.message || 'Failed to delete inventory item');
+      setError(getErrorMessage(err) || 'Failed to delete inventory item');
       return false;
     }
   }, []);

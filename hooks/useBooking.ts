@@ -2,6 +2,7 @@ import { useState, useCallback } from 'react';
 import { supabase, isSupabaseConfigured } from '../lib/supabase';
 import { TimeSlot } from '../types';
 import { createLogger } from '../lib/logger';
+import { getErrorMessage } from '../lib/database.types';
 
 const logger = createLogger('useBooking');
 
@@ -103,8 +104,8 @@ export function useBooking(): UseBooking {
           available: !isBlocked,
         };
       });
-    } catch (err: any) {
-      setError(err.message || 'Failed to fetch available slots');
+    } catch (err) {
+      setError(getErrorMessage(err) || 'Failed to fetch available slots');
       logger.error('Error fetching slots:', err);
       return [];
     } finally {
@@ -180,8 +181,8 @@ export function useBooking(): UseBooking {
         appointmentId: appointment.id,
         patientId,
       };
-    } catch (err: any) {
-      const errorMessage = err.message || 'Failed to create booking';
+    } catch (err) {
+      const errorMessage = getErrorMessage(err) || 'Failed to create booking';
       setError(errorMessage);
       logger.error('Error creating booking:', err);
       return {

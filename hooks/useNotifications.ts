@@ -4,6 +4,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { Notification, NotificationAction } from '../types';
 import { MOCK_NOTIFICATIONS } from '../data';
 import { createLogger } from '../lib/logger';
+import { NotificationRow, getErrorMessage } from '../lib/database.types';
 
 const logger = createLogger('useNotifications');
 
@@ -64,7 +65,7 @@ export function useNotifications(): UseNotifications {
 
       if (fetchError) throw fetchError;
 
-      const transformedNotifications: Notification[] = (data || []).map((n: any) => ({
+      const transformedNotifications: Notification[] = (data as NotificationRow[] || []).map((n) => ({
         id: n.id,
         title: n.title,
         message: n.message,
@@ -74,8 +75,8 @@ export function useNotifications(): UseNotifications {
       }));
 
       setNotifications(transformedNotifications);
-    } catch (err: any) {
-      setError(err.message || 'Failed to fetch notifications');
+    } catch (err) {
+      setError(getErrorMessage(err) || 'Failed to fetch notifications');
       logger.error('Error fetching notifications:', err);
     } finally {
       setLoading(false);
@@ -125,9 +126,9 @@ export function useNotifications(): UseNotifications {
 
       setNotifications(prev => [newNotification, ...prev]);
       return newNotification;
-    } catch (err: any) {
+    } catch (err) {
       logger.error('Error adding notification:', err);
-      setError(err.message || 'Failed to add notification');
+      setError(getErrorMessage(err) || 'Failed to add notification');
       return null;
     }
   }, [profile?.clinic_id, user?.id]);
@@ -152,9 +153,9 @@ export function useNotifications(): UseNotifications {
         n.id === id ? { ...n, read: true } : n
       ));
       return true;
-    } catch (err: any) {
+    } catch (err) {
       logger.error('Error marking notification as read:', err);
-      setError(err.message || 'Failed to update notification');
+      setError(getErrorMessage(err) || 'Failed to update notification');
       return false;
     }
   }, []);
@@ -178,9 +179,9 @@ export function useNotifications(): UseNotifications {
 
       setNotifications(prev => prev.map(n => ({ ...n, read: true })));
       return true;
-    } catch (err: any) {
+    } catch (err) {
       logger.error('Error marking all notifications as read:', err);
-      setError(err.message || 'Failed to update notifications');
+      setError(getErrorMessage(err) || 'Failed to update notifications');
       return false;
     }
   }, [notifications]);
@@ -201,9 +202,9 @@ export function useNotifications(): UseNotifications {
 
       setNotifications(prev => prev.filter(n => n.id !== id));
       return true;
-    } catch (err: any) {
+    } catch (err) {
       logger.error('Error deleting notification:', err);
-      setError(err.message || 'Failed to delete notification');
+      setError(getErrorMessage(err) || 'Failed to delete notification');
       return false;
     }
   }, []);
@@ -227,9 +228,9 @@ export function useNotifications(): UseNotifications {
 
       setNotifications([]);
       return true;
-    } catch (err: any) {
+    } catch (err) {
       logger.error('Error clearing notifications:', err);
-      setError(err.message || 'Failed to clear notifications');
+      setError(getErrorMessage(err) || 'Failed to clear notifications');
       return false;
     }
   }, [notifications]);
