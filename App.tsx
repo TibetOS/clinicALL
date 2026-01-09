@@ -284,10 +284,10 @@ const AdminLayout = ({ children }: { children?: React.ReactNode }) => {
 
            <Button
              variant="ghost"
-             className="w-full justify-start text-slate-400 hover:text-red-400 hover:bg-slate-700/50 rounded-xl py-3 min-h-[48px] select-none group transition-all duration-200"
+             className="w-full justify-start gap-3 text-slate-400 hover:text-red-400 hover:bg-slate-700/50 rounded-xl py-3 min-h-[48px] select-none group transition-all duration-200"
              onClick={() => setLogoutDialogOpen(true)}
            >
-             <LogOut size={20} className="ml-3 transition-transform duration-200 group-hover:rotate-[-12deg] group-hover:scale-110" /> התנתק
+             <LogOut size={20} className="transition-transform duration-200 group-hover:rotate-[-12deg] group-hover:scale-110" /> התנתק
            </Button>
         </div>
       </aside>
@@ -561,13 +561,14 @@ const AdminLayout = ({ children }: { children?: React.ReactNode }) => {
             </Button>
             <Button
               variant="destructive"
+              className="gap-2"
               onClick={async () => {
                 setLogoutDialogOpen(false);
                 await signOut();
                 navigate('/login');
               }}
             >
-              <LogOut size={16} className="ml-2" />
+              <LogOut size={16} />
               כן, התנתק
             </Button>
           </div>
