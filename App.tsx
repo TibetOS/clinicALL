@@ -270,7 +270,7 @@ const AdminLayout = ({ children }: { children?: React.ReactNode }) => {
 
           <div className="flex items-center gap-2 lg:gap-4">
              {/* Public Site Link */}
-             <a href="/c/dr-sarah" target="_blank" className="hidden md:flex">
+             <a href="/c/dr-sarah" target="_blank" rel="noopener noreferrer" className="hidden md:flex">
                 <Button size="sm" variant="outline" className="gap-2">
                    <Sparkles size={14}/> הצג אתר חי
                 </Button>

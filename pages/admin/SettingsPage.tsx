@@ -111,7 +111,7 @@ export const SettingsPage = () => {
                 <Card className="p-6 rounded-3xl border-stone-100 shadow-soft">
                   <div className="flex justify-between items-center mb-6">
                     <h3 className="text-lg font-bold">עיצוב עמוד נחיתה</h3>
-                    <a href="/c/dr-sarah" target="_blank">
+                    <a href="/c/dr-sarah" target="_blank" rel="noopener noreferrer">
                       <Button variant="outline" size="sm">
                         <Globe size={14} className="ml-2" /> צפה באתר החי
                       </Button>

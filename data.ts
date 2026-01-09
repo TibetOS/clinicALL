@@ -2,6 +2,37 @@
 
 import { Patient, Appointment, Service, Declaration, ClinicalNote, InventoryItem, Notification, Lead, Invoice, Campaign, HealthDeclarationToken } from './types';
 
+/**
+ * SECURITY: Generate random tokens at runtime for mock data
+ * This prevents predictable token values that could be guessed
+ */
+const generateMockToken = (): string => {
+  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+  const tokenLength = 12;
+  let token = 'mock_'; // Prefix to identify mock tokens
+
+  // Use crypto.getRandomValues for secure random generation
+  if (typeof crypto !== 'undefined' && crypto.getRandomValues) {
+    const array = new Uint8Array(tokenLength);
+    crypto.getRandomValues(array);
+    for (let i = 0; i < tokenLength; i++) {
+      token += chars[array[i] % chars.length];
+    }
+  } else {
+    // Fallback for environments without crypto (should not happen in browsers)
+    for (let i = 0; i < tokenLength; i++) {
+      token += chars[Math.floor(Math.random() * chars.length)];
+    }
+  }
+  return token;
+};
+
+// Pre-generate mock tokens at module load time
+// These are regenerated on each page refresh, making them unpredictable
+const MOCK_TOKEN_1 = generateMockToken();
+const MOCK_TOKEN_2 = generateMockToken();
+const MOCK_TOKEN_3 = generateMockToken();
+
 // Helper to create dates relative to today for mock data
 const getRelativeDate = (daysOffset: number): string => {
   const date = new Date();
@@ -252,10 +283,12 @@ const getExpiryDate = (daysFromNow: number): string => {
   return date.toISOString();
 };
 
+// SECURITY: Mock tokens are generated randomly at runtime
+// See generateMockToken() at the top of this file
 export const MOCK_HEALTH_TOKENS: HealthDeclarationToken[] = [
   {
     id: 'hdt-1',
-    token: 'abc123def456',
+    token: MOCK_TOKEN_1, // Randomly generated at runtime
     clinicId: 'clinic-1',
     patientId: '1',
     patientName: 'מטופל/ת לדוגמה א',
@@ -268,7 +301,7 @@ export const MOCK_HEALTH_TOKENS: HealthDeclarationToken[] = [
   },
   {
     id: 'hdt-2',
-    token: 'xyz789ghi012',
+    token: MOCK_TOKEN_2, // Randomly generated at runtime
     clinicId: 'clinic-1',
     patientName: 'מטופל/ת חדש/ה לדוגמה',
     patientPhone: '050-000-1005',
@@ -278,7 +311,7 @@ export const MOCK_HEALTH_TOKENS: HealthDeclarationToken[] = [
   },
   {
     id: 'hdt-3',
-    token: 'demo12345678',
+    token: MOCK_TOKEN_3, // Randomly generated at runtime
     clinicId: 'clinic-1',
     patientId: '2',
     patientName: 'מטופל/ת לדוגמה ב',

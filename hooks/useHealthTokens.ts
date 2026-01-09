@@ -176,6 +176,28 @@ export function useHealthTokens(): UseHealthTokens {
     }
   }, []);
 
+  /**
+   * Validate a health declaration token
+   *
+   * SECURITY: Defense-in-Depth Token Validation
+   * -------------------------------------------
+   * Token expiry is validated at multiple levels:
+   *
+   * 1. Database Level (RLS Policies):
+   *    Supabase Row Level Security policies should enforce that only
+   *    active, non-expired tokens can be queried. This is the primary
+   *    security control and runs server-side.
+   *
+   * 2. Application Level (this function):
+   *    Client-side validation provides defense-in-depth by checking
+   *    token status and expiry date. This catches edge cases where:
+   *    - Token expired between RLS check and form submission
+   *    - RLS policies are misconfigured
+   *    - Mock mode is being used (no RLS)
+   *
+   * Both layers must pass for a token to be considered valid.
+   * The client-side check is NOT a replacement for proper RLS policies.
+   */
   const validateToken = useCallback(async (tokenValue: string): Promise<{ valid: boolean; token?: HealthDeclarationToken; reason?: string }> => {
     const token = await getTokenByValue(tokenValue);
 
@@ -187,6 +209,7 @@ export function useHealthTokens(): UseHealthTokens {
       return { valid: false, token, reason: 'TOKEN_ALREADY_USED' };
     }
 
+    // Defense-in-depth: Check expiry even though RLS should enforce this
     if (token.status === 'expired' || new Date(token.expiresAt) < new Date()) {
       return { valid: false, token, reason: 'TOKEN_EXPIRED' };
     }
