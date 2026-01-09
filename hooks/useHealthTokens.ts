@@ -7,6 +7,30 @@ import { createLogger } from '../lib/logger';
 
 const logger = createLogger('useHealthTokens');
 
+/**
+ * SECURITY NOTE: Token validation is enforced at the database level via RLS policies.
+ * See: supabase/rls_policies.sql
+ *
+ * - Anonymous users can ONLY look up tokens that are 'active' AND not expired
+ * - Expired, used, or invalid tokens will return no data from the database
+ * - This prevents token enumeration attacks and cross-clinic token access
+ */
+
+// Database row type for health_declaration_tokens table
+interface HealthTokenRow {
+  id: string;
+  token: string;
+  clinic_id: string;
+  patient_id: string | null;
+  patient_name: string | null;
+  patient_phone: string | null;
+  patient_email: string | null;
+  created_at: string;
+  expires_at: string;
+  status: 'active' | 'used' | 'expired';
+  used_at: string | null;
+}
+
 // Generate a secure random token
 export const generateToken = (): string => {
   const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789';
@@ -88,57 +112,65 @@ export function useHealthTokens(): UseHealthTokens {
 
       if (fetchError) throw fetchError;
 
-      const transformedTokens: HealthDeclarationToken[] = (data || []).map((t: any) => ({
+      const transformedTokens: HealthDeclarationToken[] = (data || []).map((t: HealthTokenRow) => ({
         id: t.id,
         token: t.token,
         clinicId: t.clinic_id,
-        patientId: t.patient_id,
-        patientName: t.patient_name,
-        patientPhone: t.patient_phone,
-        patientEmail: t.patient_email,
+        patientId: t.patient_id ?? undefined,
+        patientName: t.patient_name ?? undefined,
+        patientPhone: t.patient_phone ?? undefined,
+        patientEmail: t.patient_email ?? undefined,
         createdAt: t.created_at,
         expiresAt: t.expires_at,
         status: t.status,
-        usedAt: t.used_at,
+        usedAt: t.used_at ?? undefined,
       }));
 
       setTokens(transformedTokens);
-    } catch (err: any) {
-      setError(err.message || 'Failed to fetch tokens');
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Failed to fetch tokens';
+      setError(message);
       logger.error('Error fetching health tokens:', err);
     } finally {
       setLoading(false);
     }
   }, [profile?.clinic_id]);
 
+  /**
+   * Look up a token by its value.
+   * SECURITY: RLS policies ensure only active, non-expired tokens are returned.
+   * Invalid/expired/used tokens will return null (no data from database).
+   */
   const getTokenByValue = useCallback(async (tokenValue: string): Promise<HealthDeclarationToken | null> => {
     if (!isSupabaseConfigured()) {
       return mockTokensStore.find(t => t.token === tokenValue) || null;
     }
 
     try {
+      // RLS policy 'anon_lookup_valid_tokens' ensures only active, non-expired tokens are returned
       const { data, error: fetchError } = await supabase
         .from('health_declaration_tokens')
         .select('*')
         .eq('token', tokenValue)
         .single();
 
-      if (fetchError) return null;
+      if (fetchError || !data) return null;
 
+      const row = data as HealthTokenRow;
       return {
-        id: data.id,
-        token: data.token,
-        clinicId: data.clinic_id,
-        patientId: data.patient_id,
-        patientName: data.patient_name,
-        patientPhone: data.patient_phone,
-        patientEmail: data.patient_email,
-        createdAt: data.created_at,
-        expiresAt: data.expires_at,
-        status: data.status,
-        usedAt: data.used_at,
+        id: row.id,
+        token: row.token,
+        clinicId: row.clinic_id,
+        patientId: row.patient_id ?? undefined,
+        patientName: row.patient_name ?? undefined,
+        patientPhone: row.patient_phone ?? undefined,
+        patientEmail: row.patient_email ?? undefined,
+        createdAt: row.created_at,
+        expiresAt: row.expires_at,
+        status: row.status,
+        usedAt: row.used_at ?? undefined,
       };
-    } catch (err: any) {
+    } catch (err) {
       logger.error('Error fetching token:', err);
       return null;
     }
@@ -217,9 +249,10 @@ export function useHealthTokens(): UseHealthTokens {
 
       setTokens(prev => [newToken, ...prev]);
       return newToken;
-    } catch (err: any) {
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Failed to create token';
       logger.error('Error creating token:', err);
-      setError(err.message || 'Failed to create token');
+      setError(message);
       return null;
     }
   }, [profile?.clinic_id]);
@@ -247,7 +280,7 @@ export function useHealthTokens(): UseHealthTokens {
         t.id === tokenId ? { ...t, status: 'used', usedAt } : t
       ));
       return true;
-    } catch (err: any) {
+    } catch (err) {
       logger.error('Error marking token as used:', err);
       return false;
     }
@@ -270,7 +303,7 @@ export function useHealthTokens(): UseHealthTokens {
 
       setTokens(prev => prev.filter(t => t.id !== tokenId));
       return true;
-    } catch (err: any) {
+    } catch (err) {
       logger.error('Error deleting token:', err);
       return false;
     }

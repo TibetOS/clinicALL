@@ -37,6 +37,42 @@ const PageLoader = () => (
   </div>
 );
 
+// Role-protected page wrapper for granular access control
+const RoleProtectedPage = ({
+  children,
+  requiredRole
+}: {
+  children: React.ReactNode;
+  requiredRole: 'owner' | 'admin' | 'staff';
+}) => {
+  const { profile } = useAuth();
+  const roleHierarchy: Record<string, number> = {
+    owner: 3,
+    admin: 2,
+    staff: 1,
+    client: 0
+  };
+
+  const userLevel = roleHierarchy[profile?.role || 'client'] || 0;
+  const requiredLevel = roleHierarchy[requiredRole] || 0;
+
+  if (userLevel < requiredLevel) {
+    return (
+      <div className="flex items-center justify-center h-64" dir="rtl">
+        <div className="text-center max-w-md">
+          <div className="h-16 w-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+            <X className="h-8 w-8 text-red-600" />
+          </div>
+          <h2 className="text-xl font-bold text-gray-900 mb-2">אין הרשאה</h2>
+          <p className="text-gray-500">אין לך הרשאה לצפות בדף זה. פנה למנהל המערכת לקבלת גישה.</p>
+        </div>
+      </div>
+    );
+  }
+
+  return <>{children}</>;
+};
+
 // Layout Component
 const AdminLayout = ({ children }: { children?: React.ReactNode }) => {
   const [sidebarOpen, setSidebarOpen] = useState(true);
@@ -85,7 +121,8 @@ const AdminLayout = ({ children }: { children?: React.ReactNode }) => {
       declarationDialog.tokenValue,
       patientPhone || ''
     );
-    window.open(whatsappLink, '_blank');
+    // SECURITY: Use noopener,noreferrer to prevent tabnabbing attacks
+    window.open(whatsappLink, '_blank', 'noopener,noreferrer');
   };
 
   // Share via Email
@@ -483,18 +520,37 @@ function App() {
 
           <Route path="/admin" element={<Navigate to="/admin/dashboard" replace />} />
 
+          {/* Admin routes with role-based access control */}
           <Route path="/admin/*" element={
-            <ProtectedRoute>
+            <ProtectedRoute requiredRole="staff">
               <AdminLayout>
                 <Suspense fallback={<PageLoader />}>
                   <Routes>
+                    {/* Staff+ can access dashboard, patients, calendar */}
                     <Route path="dashboard" element={<Dashboard />} />
                     <Route path="patients" element={<PatientList />} />
                     <Route path="patients/:id" element={<PatientDetails />} />
                     <Route path="calendar" element={<Calendar />} />
-                    <Route path="services" element={<ServicesPage />} />
-                    <Route path="inventory" element={<InventoryPage />} />
-                    <Route path="settings" element={<SettingsPage />} />
+
+                    {/* Admin+ can manage services and inventory */}
+                    <Route path="services" element={
+                      <RoleProtectedPage requiredRole="admin">
+                        <ServicesPage />
+                      </RoleProtectedPage>
+                    } />
+                    <Route path="inventory" element={
+                      <RoleProtectedPage requiredRole="admin">
+                        <InventoryPage />
+                      </RoleProtectedPage>
+                    } />
+
+                    {/* Owner only can access settings */}
+                    <Route path="settings" element={
+                      <RoleProtectedPage requiredRole="owner">
+                        <SettingsPage />
+                      </RoleProtectedPage>
+                    } />
+
                     <Route path="*" element={<Navigate to="dashboard" replace />} />
                   </Routes>
                 </Suspense>

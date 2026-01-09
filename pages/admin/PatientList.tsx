@@ -277,13 +277,15 @@ export const PatientList = () => {
   const handleSendWhatsApp = () => {
     if (!generatedToken || !healthFormData.patientPhone) return;
     const link = generateWhatsAppLink(generatedToken.token, healthFormData.patientPhone);
-    window.open(link, '_blank');
+    // SECURITY: Use noopener,noreferrer to prevent tabnabbing attacks
+    window.open(link, '_blank', 'noopener,noreferrer');
   };
 
   const handleSendEmail = () => {
     if (!generatedToken || !healthFormData.patientEmail) return;
     const link = generateEmailLink(generatedToken.token, healthFormData.patientEmail, 'ClinicALL');
-    window.open(link, '_blank');
+    // SECURITY: Use noopener,noreferrer to prevent tabnabbing attacks
+    window.open(link, '_blank', 'noopener,noreferrer');
   };
 
   return (

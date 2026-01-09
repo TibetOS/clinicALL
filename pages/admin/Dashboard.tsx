@@ -15,13 +15,24 @@ export const Dashboard = () => {
   const navigate = useNavigate();
 
   // ========== DATA HOOKS ==========
-  const { appointments, loading: appointmentsLoading, addAppointment } = useAppointments();
-  const { patients, loading: patientsLoading, addPatient } = usePatients();
-  const { inventory, loading: inventoryLoading } = useInventory();
-  const { leads, loading: leadsLoading } = useLeads();
-  const { invoices, loading: invoicesLoading } = useInvoices();
-  const { declarations, loading: declarationsLoading } = useDeclarations();
+  const { appointments, loading: appointmentsLoading, error: appointmentsError, addAppointment } = useAppointments();
+  const { patients, loading: patientsLoading, error: patientsError, addPatient } = usePatients();
+  const { inventory, loading: inventoryLoading, error: inventoryError } = useInventory();
+  const { leads, loading: leadsLoading, error: leadsError } = useLeads();
+  const { invoices, loading: invoicesLoading, error: invoicesError } = useInvoices();
+  const { declarations, loading: declarationsLoading, error: declarationsError } = useDeclarations();
   const { services } = useServices();
+
+  // Aggregate data fetch errors for display
+  const dataErrors = [
+    appointmentsError && 'תורים',
+    patientsError && 'מטופלים',
+    inventoryError && 'מלאי',
+    leadsError && 'לידים',
+    invoicesError && 'חשבוניות',
+    declarationsError && 'הצהרות'
+  ].filter(Boolean);
+  const hasDataErrors = dataErrors.length > 0;
 
   // ========== DIALOG STATES ==========
   const [isPosOpen, setIsPosOpen] = useState(false);
@@ -257,6 +268,19 @@ export const Dashboard = () => {
       {successMessage && (
         <div className="fixed top-6 left-1/2 -translate-x-1/2 z-50 bg-green-600 text-white px-6 py-3 rounded-xl shadow-lg animate-in slide-in-from-top-2 duration-300">
           {successMessage}
+        </div>
+      )}
+
+      {/* Data Fetch Error Banner */}
+      {hasDataErrors && (
+        <div className="bg-red-50 border border-red-200 rounded-xl p-4 flex items-start gap-3">
+          <AlertTriangle className="h-5 w-5 text-red-500 mt-0.5 shrink-0" />
+          <div>
+            <h4 className="font-medium text-red-800">שגיאה בטעינת נתונים</h4>
+            <p className="text-sm text-red-600 mt-1">
+              לא ניתן לטעון: {dataErrors.join(', ')}. נסה לרענן את הדף.
+            </p>
+          </div>
         </div>
       )}
 
