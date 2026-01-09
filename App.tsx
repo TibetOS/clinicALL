@@ -27,13 +27,23 @@ const ServicesPage = lazy(() => import('./pages/Services').then(m => ({ default:
 const InventoryPage = lazy(() => import('./pages/Inventory').then(m => ({ default: m.InventoryPage })));
 const PatientDetails = lazy(() => import('./pages/PatientDetails').then(m => ({ default: m.PatientDetails })));
 
-// Loading spinner for lazy loaded routes
+// Loading spinner for lazy loaded routes with enhanced animation
 const PageLoader = () => (
-  <div className="flex items-center justify-center h-64">
+  <div className="flex items-center justify-center h-64 animate-fade-in">
     <div className="flex flex-col items-center gap-4">
-      <div className="w-10 h-10 border-4 border-primary border-t-transparent rounded-full animate-spin" />
-      <p className="text-gray-500 text-sm">טוען...</p>
+      <div className="relative">
+        <div className="w-12 h-12 border-4 border-rose-200 rounded-full" />
+        <div className="absolute inset-0 w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin" />
+      </div>
+      <p className="text-gray-500 text-sm animate-pulse">טוען...</p>
     </div>
+  </div>
+);
+
+// Animated page wrapper for route transitions
+const AnimatedPage = ({ children }: { children: React.ReactNode }) => (
+  <div className="page-transition">
+    {children}
   </div>
 );
 
@@ -198,7 +208,7 @@ const AdminLayout = ({ children }: { children?: React.ReactNode }) => {
         </div>
 
         <nav className="p-4 space-y-1.5 mt-4 overflow-y-auto custom-scrollbar flex-1">
-          {navItems.map((item) => {
+          {navItems.map((item, index) => {
             const isActive = location.pathname.startsWith(item.path);
             const Icon = item.icon;
             return (
@@ -206,19 +216,39 @@ const AdminLayout = ({ children }: { children?: React.ReactNode }) => {
                 key={item.path}
                 to={item.path}
                 className={`
-                  flex items-center gap-3 px-4 py-3 text-sm font-medium rounded-xl transition-all duration-200 group relative
+                  flex items-center gap-3 px-4 py-3 text-sm font-medium rounded-xl transition-all duration-200 ease-out group relative transform-gpu
                   ${isActive
-                    ? 'bg-rose-500 text-white shadow-lg'
-                    : 'text-slate-300 hover:bg-slate-700/50 hover:text-white'}
+                    ? 'bg-rose-500 text-white shadow-lg scale-100'
+                    : 'text-slate-300 hover:bg-slate-700/50 hover:text-white hover:translate-x-1 active:scale-[0.98]'}
                 `}
+                style={{ animationDelay: `${index * 50}ms` }}
               >
-                {/* Active indicator bar on right */}
-                {isActive && (
-                  <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-8 rounded-l-full bg-rose-300" />
-                )}
-                <Icon size={20} className={isActive ? 'text-white' : 'text-slate-400 group-hover:text-slate-200'} />
-                {item.label}
-                {isActive && <ChevronLeft className="mr-auto h-4 w-4 text-rose-200" />}
+                {/* Active indicator bar on right with animation */}
+                <div
+                  className={`
+                    absolute left-0 top-1/2 -translate-y-1/2 w-1 rounded-l-full bg-rose-300 transition-all duration-300 ease-out
+                    ${isActive ? 'h-8 opacity-100' : 'h-0 opacity-0'}
+                  `}
+                  style={{ transitionTimingFunction: 'cubic-bezier(0.34, 1.56, 0.64, 1)' }}
+                />
+                <Icon
+                  size={20}
+                  className={`
+                    transition-all duration-200
+                    ${isActive
+                      ? 'text-white'
+                      : 'text-slate-400 group-hover:text-slate-200 group-hover:scale-110'}
+                  `}
+                />
+                <span className="transition-transform duration-200">{item.label}</span>
+                <ChevronLeft
+                  className={`
+                    mr-auto h-4 w-4 transition-all duration-200
+                    ${isActive
+                      ? 'text-rose-200 opacity-100 translate-x-0'
+                      : 'opacity-0 translate-x-2 group-hover:opacity-50 group-hover:translate-x-0'}
+                  `}
+                />
               </Link>
             )
           })}
@@ -251,13 +281,13 @@ const AdminLayout = ({ children }: { children?: React.ReactNode }) => {
 
            <Button
              variant="ghost"
-             className="w-full justify-start text-slate-400 hover:text-red-400 hover:bg-slate-700/50 rounded-xl py-3 min-h-[48px] select-none"
+             className="w-full justify-start text-slate-400 hover:text-red-400 hover:bg-slate-700/50 rounded-xl py-3 min-h-[48px] select-none group transition-all duration-200"
              onClick={async () => {
                await signOut();
                navigate('/login');
              }}
            >
-             <LogOut size={20} className="ml-3" /> התנתק
+             <LogOut size={20} className="ml-3 transition-transform duration-200 group-hover:rotate-[-12deg] group-hover:scale-110" /> התנתק
            </Button>
         </div>
       </aside>
@@ -296,17 +326,28 @@ const AdminLayout = ({ children }: { children?: React.ReactNode }) => {
               </button>
 
               {isNotifOpen && (
-                <div className="absolute top-12 left-0 w-80 bg-white rounded-xl shadow-xl border border-stone-200 overflow-hidden animate-in fade-in zoom-in-95 origin-top-left z-50">
+                <div
+                  className="absolute top-12 left-0 w-80 bg-white rounded-xl shadow-xl border border-stone-200 overflow-hidden z-50 transform-gpu"
+                  style={{
+                    animation: 'fadeInScale 200ms cubic-bezier(0.16, 1, 0.3, 1) forwards',
+                    transformOrigin: 'top left'
+                  }}
+                >
                   <div className="p-3 border-b flex justify-between items-center bg-gray-50">
                     <span className="font-bold text-sm text-gray-900">התראות ({unreadCount})</span>
-                    <button className="text-xs text-primary hover:underline" onClick={() => markAllAsRead()}>סמן הכל כנקרא</button>
+                    <button className="text-xs text-primary hover:underline transition-colors duration-200" onClick={() => markAllAsRead()}>סמן הכל כנקרא</button>
                   </div>
                   <div className="max-h-[400px] overflow-y-auto custom-scrollbar">
                     {notifications.length > 0 ? (
-                      notifications.map(notif => (
+                      notifications.map((notif, index) => (
                         <div
                           key={notif.id}
-                          className={`p-3 border-b border-gray-50 hover:bg-gray-50 transition-colors ${!notif.read ? 'bg-blue-50/50' : ''}`}
+                          className={`p-3 border-b border-gray-50 hover:bg-gray-50 transition-all duration-200 cursor-pointer hover:translate-x-1 ${!notif.read ? 'bg-blue-50/50' : ''}`}
+                          style={{
+                            animation: `fadeInUp 200ms cubic-bezier(0.16, 1, 0.3, 1) forwards`,
+                            animationDelay: `${index * 50}ms`,
+                            opacity: 0
+                          }}
                           onClick={() => !notif.action && markAsRead(notif.id)}
                         >
                           <div className="flex gap-3">
@@ -397,12 +438,15 @@ const AdminLayout = ({ children }: { children?: React.ReactNode }) => {
       </div>
       
       {/* Mobile Overlay - positioned to not cover the sidebar */}
-      {sidebarOpen && (
-        <div
-          className="fixed inset-y-0 left-0 right-72 bg-black/40 backdrop-blur-sm z-40 lg:hidden transition-opacity"
-          onClick={() => setSidebarOpen(false)}
-        />
-      )}
+      <div
+        className={`
+          fixed inset-y-0 left-0 right-72 z-40 lg:hidden transition-all duration-300
+          ${sidebarOpen
+            ? 'bg-black/40 backdrop-blur-sm opacity-100 pointer-events-auto'
+            : 'bg-black/0 backdrop-blur-none opacity-0 pointer-events-none'}
+        `}
+        onClick={() => setSidebarOpen(false)}
+      />
 
       {/* Send Declaration Dialog */}
       <Dialog
