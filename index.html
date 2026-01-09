@@ -435,6 +435,60 @@
           animation: none !important;
         }
       }
+
+      /* ===== ACCESSIBILITY: Focus visible indicators ===== */
+
+      /* Skip to main content link */
+      .skip-link {
+        position: absolute;
+        top: -40px;
+        left: 0;
+        right: 0;
+        background: var(--color-primary);
+        color: white;
+        padding: 8px 16px;
+        text-align: center;
+        text-decoration: none;
+        font-weight: 600;
+        z-index: 9999;
+        transition: top 0.2s ease;
+      }
+
+      .skip-link:focus {
+        top: 0;
+        outline: none;
+      }
+
+      /* Focus visible styles for keyboard navigation */
+      *:focus-visible {
+        outline: 2px solid var(--color-primary);
+        outline-offset: 2px;
+      }
+
+      /* Remove outline for mouse users */
+      *:focus:not(:focus-visible) {
+        outline: none;
+      }
+
+      /* Enhanced focus styles for interactive elements */
+      button:focus-visible,
+      a:focus-visible,
+      input:focus-visible,
+      select:focus-visible,
+      textarea:focus-visible,
+      [tabindex]:focus-visible {
+        outline: 2px solid var(--color-primary);
+        outline-offset: 2px;
+        box-shadow: 0 0 0 4px rgba(244, 63, 94, 0.2);
+      }
+
+      /* Focus styles for cards and clickable areas */
+      .card:focus-visible,
+      [role="button"]:focus-visible {
+        outline: 2px solid var(--color-primary);
+        outline-offset: 2px;
+        box-shadow: 0 0 0 4px rgba(244, 63, 94, 0.15);
+      }
     </style>
   <script type="importmap">
 {
@@ -453,6 +507,8 @@
 </script>
 </head>
   <body>
+    <!-- Skip to main content link for accessibility -->
+    <a href="#main-content" class="skip-link">דלג לתוכן הראשי (Skip to main content)</a>
     <div id="root"></div>
   <script type="module" src="/index.tsx"></script>
 </body>

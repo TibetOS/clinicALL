@@ -187,10 +187,14 @@ export const Dashboard = () => {
         patientPhone,
       });
       if (token && patientPhone) {
-        const link = generateShareLink(token.token);
         const whatsappLink = generateWhatsAppLink(token.token, patientPhone);
         window.open(whatsappLink, '_blank', 'noopener,noreferrer');
         showSuccess('הקישור נשלח בהצלחה');
+      } else if (token) {
+        // If no phone, copy link to clipboard
+        const link = generateShareLink(token.token);
+        await navigator.clipboard.writeText(link);
+        showSuccess('הקישור הועתק ללוח');
       }
     } finally {
       setSendingDeclaration(null);
