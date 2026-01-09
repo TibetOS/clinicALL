@@ -180,20 +180,20 @@ const AdminLayout = ({ children }: { children?: React.ReactNode }) => {
           ${sidebarOpen ? 'translate-x-0' : 'translate-x-full'}
           lg:relative lg:translate-x-0
         `}
-        style={{ backgroundColor: '#FAF8F5', borderColor: '#F0EDE8' }}
+        style={{ backgroundColor: '#8B7355', borderColor: '#6B5A47' }}
       >
-        <div className="h-16 lg:h-20 flex items-center px-6 lg:px-8 border-b shrink-0 justify-between lg:justify-start" style={{ borderColor: '#F0EDE8' }}>
+        <div className="h-16 lg:h-20 flex items-center px-6 lg:px-8 border-b shrink-0 justify-between lg:justify-start" style={{ borderColor: 'rgba(255,255,255,0.1)' }}>
           <div className="flex items-center">
             <Link to="/">
-               <div className="h-10 w-10 rounded-2xl flex items-center justify-center text-white font-bold text-lg ml-3 shadow-lg" style={{ background: 'linear-gradient(135deg, #8B7355, #6B5A47)', boxShadow: '0 4px 14px rgba(139, 115, 85, 0.3)' }}>C</div>
+               <div className="h-10 w-10 rounded-2xl flex items-center justify-center font-bold text-lg ml-3 shadow-lg" style={{ backgroundColor: '#FAF8F5', color: '#8B7355', boxShadow: '0 4px 14px rgba(0, 0, 0, 0.15)' }}>C</div>
             </Link>
             <div>
-               <span className="font-bold text-xl tracking-tight block leading-tight" style={{ color: '#8B7355' }}>ClinicALL</span>
-               <span className="text-[10px] font-medium tracking-widest uppercase" style={{ color: '#A89080' }}>Medical System</span>
+               <span className="font-bold text-xl tracking-tight block leading-tight" style={{ color: '#FAF8F5' }}>ClinicALL</span>
+               <span className="text-[10px] font-medium tracking-widest uppercase" style={{ color: '#D4A5A5' }}>Medical System</span>
             </div>
           </div>
           {/* Close button for mobile */}
-          <button onClick={() => setSidebarOpen(false)} className="lg:hidden p-1" style={{ color: '#8B7355' }} aria-label="סגור תפריט">
+          <button onClick={() => setSidebarOpen(false)} className="lg:hidden p-1" style={{ color: '#FAF8F5' }} aria-label="סגור תפריט">
             <X size={24} />
           </button>
         </div>
@@ -209,19 +209,19 @@ const AdminLayout = ({ children }: { children?: React.ReactNode }) => {
                 className={`
                   flex items-center gap-3 px-4 py-3 text-sm font-medium rounded-xl transition-all duration-200 group relative
                   ${isActive
-                    ? 'text-white shadow-md'
-                    : 'hover:bg-white/60'}
+                    ? 'shadow-md'
+                    : 'hover:bg-white/10'}
                 `}
                 style={isActive
-                  ? { backgroundColor: '#8B7355' }
-                  : { color: '#6B5A47' }
+                  ? { backgroundColor: '#D4A5A5', color: '#6B5A47' }
+                  : { color: '#FAF8F5' }
                 }
               >
                 {/* Active indicator bar on right */}
                 {isActive && (
-                  <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-8 rounded-l-full" style={{ backgroundColor: '#D4A5A5' }} />
+                  <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-8 rounded-l-full" style={{ backgroundColor: '#FAF8F5' }} />
                 )}
-                <Icon size={20} className={isActive ? 'text-white' : ''} style={!isActive ? { color: '#A89080' } : {}} />
+                <Icon size={20} style={isActive ? { color: '#6B5A47' } : { color: '#E4C5C5' }} />
                 {item.label}
                 {isActive && <ChevronLeft className="mr-auto h-4 w-4 opacity-70" />}
               </Link>
@@ -230,34 +230,34 @@ const AdminLayout = ({ children }: { children?: React.ReactNode }) => {
         </nav>
 
         {/* Subscription Widget & Logout */}
-        <div className="p-4 mt-auto border-t" style={{ backgroundColor: 'rgba(255,255,255,0.5)', borderColor: '#F0EDE8' }}>
+        <div className="p-4 mt-auto border-t" style={{ backgroundColor: 'rgba(0,0,0,0.1)', borderColor: 'rgba(255,255,255,0.1)' }}>
            {/* Plan Widget - Clickable Link to Settings */}
            <Link to="/admin/settings?tab=billing">
-             <div className="rounded-2xl p-4 text-white mb-4 shadow-lg relative overflow-hidden group cursor-pointer hover:shadow-xl transition-all transform hover:-translate-y-0.5" style={{ background: 'linear-gradient(135deg, #8B7355, #6B5A47)' }}>
-                <div className="absolute -top-6 -right-6 w-20 h-20 rounded-full blur-xl group-hover:opacity-30 transition-opacity opacity-20" style={{ backgroundColor: '#D4A5A5' }}></div>
+             <div className="rounded-2xl p-4 mb-4 shadow-lg relative overflow-hidden group cursor-pointer hover:shadow-xl transition-all transform hover:-translate-y-0.5" style={{ backgroundColor: '#FAF8F5' }}>
+                <div className="absolute -top-6 -right-6 w-20 h-20 rounded-full blur-xl group-hover:opacity-40 transition-opacity opacity-20" style={{ backgroundColor: '#D4A5A5' }}></div>
 
                 <div className="flex justify-between items-start mb-2 relative z-10">
                    <div>
-                      <p className="text-[10px] uppercase tracking-wider font-semibold" style={{ color: '#E4C5C5' }}>התוכנית שלך</p>
+                      <p className="text-[10px] uppercase tracking-wider font-semibold" style={{ color: '#A89080' }}>התוכנית שלך</p>
                       <div className="flex items-center gap-2 mt-0.5">
                          <Crown size={14} style={{ color: '#D4A5A5' }} />
-                         <span className="font-bold text-sm">Professional</span>
+                         <span className="font-bold text-sm" style={{ color: '#6B5A47' }}>Professional</span>
                       </div>
                    </div>
                    <Badge className="text-[10px] h-5 border-none" style={{ backgroundColor: '#D4A5A5', color: '#6B5A47' }}>פעיל</Badge>
                 </div>
 
-                <div className="w-full rounded-full h-1.5 mb-2 relative z-10" style={{ backgroundColor: 'rgba(255,255,255,0.2)' }}>
+                <div className="w-full rounded-full h-1.5 mb-2 relative z-10" style={{ backgroundColor: '#F0EDE8' }}>
                    <div className="h-1.5 rounded-full" style={{ width: '65%', backgroundColor: '#D4A5A5' }}></div>
                 </div>
-                <p className="text-[10px] relative z-10" style={{ color: '#E4C5C5' }}>65% ניצולת חבילה החודש</p>
+                <p className="text-[10px] relative z-10" style={{ color: '#A89080' }}>65% ניצולת חבילה החודש</p>
              </div>
            </Link>
 
            <Button
              variant="ghost"
-             className="w-full justify-start rounded-xl"
-             style={{ color: '#C49090' }}
+             className="w-full justify-start rounded-xl hover:bg-white/10"
+             style={{ color: '#E4C5C5' }}
              onClick={async () => {
                await signOut();
                navigate('/login');

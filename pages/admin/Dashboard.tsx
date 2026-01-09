@@ -296,7 +296,7 @@ export const Dashboard = () => {
 
         <div className="bg-white rounded-2xl p-4 shadow-sm border" style={{ borderColor: COLORS.creamDark }}>
           <div className="flex items-center gap-2 mb-1">
-            <CheckCircle size={16} style={{ color: COLORS.rose }} />
+            <CheckCircle size={16} style={{ color: COLORS.taupe }} />
             <span className="text-xs font-medium" style={{ color: COLORS.taupeLight }}>הושלמו</span>
           </div>
           <p className="text-2xl font-bold" style={{ color: COLORS.taupeDark }}>{completedToday}</p>
@@ -304,7 +304,7 @@ export const Dashboard = () => {
 
         <div className="bg-white rounded-2xl p-4 shadow-sm border" style={{ borderColor: COLORS.creamDark }}>
           <div className="flex items-center gap-2 mb-1">
-            <Heart size={16} style={{ color: COLORS.rose }} />
+            <Heart size={16} style={{ color: COLORS.taupe }} />
             <span className="text-xs font-medium" style={{ color: COLORS.taupeLight }}>הכנסות היום</span>
           </div>
           <p className="text-2xl font-bold" style={{ color: COLORS.taupeDark }}>₪{todaysRevenue.toLocaleString()}</p>
@@ -529,17 +529,22 @@ export const Dashboard = () => {
             onClick={() => navigate('/admin/patients')}
           >
             <div className="flex items-center gap-3">
-              <div className="w-12 h-12 rounded-xl flex items-center justify-center" style={{ backgroundColor: COLORS.roseLight }}>
+              <div className="w-12 h-12 rounded-xl flex items-center justify-center" style={{ backgroundColor: lapsedClients.length > 0 ? COLORS.roseLight : COLORS.cream }}>
                 <Clock size={24} style={{ color: COLORS.taupeDark }} />
               </div>
               <div className="flex-1">
                 <p className="text-sm font-medium" style={{ color: COLORS.taupeLight }}>לקוחות רדומות</p>
-                <p className="text-2xl font-bold" style={{ color: COLORS.taupeDark }}>
-                  {lapsedClients.length > 0 ? lapsedClients.length : '—'}
-                </p>
-                <p className="text-xs" style={{ color: COLORS.taupeLight }}>
-                  {lapsedClients.length > 0 ? 'לא ביקרו 60+ יום' : 'כולן פעילות!'}
-                </p>
+                {lapsedClients.length > 0 ? (
+                  <>
+                    <p className="text-2xl font-bold" style={{ color: COLORS.taupeDark }}>{lapsedClients.length}</p>
+                    <p className="text-xs" style={{ color: COLORS.taupeLight }}>לא ביקרו 60+ יום</p>
+                  </>
+                ) : (
+                  <>
+                    <p className="text-lg font-bold" style={{ color: COLORS.rose }}>מעולה! 🎉</p>
+                    <p className="text-xs" style={{ color: COLORS.taupeLight }}>כל הלקוחות פעילות</p>
+                  </>
+                )}
               </div>
             </div>
           </Card>
@@ -556,12 +561,17 @@ export const Dashboard = () => {
               </div>
               <div className="flex-1">
                 <p className="text-sm font-medium" style={{ color: COLORS.taupeLight }}>לביקורת מעקב</p>
-                <p className="text-2xl font-bold" style={{ color: COLORS.taupeDark }}>
-                  {dueForFollowUp.length > 0 ? dueForFollowUp.length : '—'}
-                </p>
-                <p className="text-xs" style={{ color: COLORS.taupeLight }}>
-                  {dueForFollowUp.length > 0 ? 'בוטוקס 2 שבועות' : 'אין מעקבים'}
-                </p>
+                {dueForFollowUp.length > 0 ? (
+                  <>
+                    <p className="text-2xl font-bold" style={{ color: COLORS.taupeDark }}>{dueForFollowUp.length}</p>
+                    <p className="text-xs" style={{ color: COLORS.taupeLight }}>בוטוקס 2 שבועות</p>
+                  </>
+                ) : (
+                  <>
+                    <p className="text-lg font-bold" style={{ color: COLORS.rose }}>הכל מטופל ✓</p>
+                    <p className="text-xs" style={{ color: COLORS.taupeLight }}>אין מעקבים ממתינים</p>
+                  </>
+                )}
               </div>
             </div>
           </Card>
@@ -578,12 +588,17 @@ export const Dashboard = () => {
               </div>
               <div className="flex-1">
                 <p className="text-sm font-medium" style={{ color: COLORS.taupeLight }}>ימי הולדת</p>
-                <p className="text-2xl font-bold" style={{ color: COLORS.taupeDark }}>
-                  {upcomingBirthdays.length > 0 ? upcomingBirthdays.length : '—'}
-                </p>
-                <p className="text-xs" style={{ color: COLORS.taupeLight }}>
-                  {upcomingBirthdays.length > 0 ? 'השבוע' : 'אין השבוע'}
-                </p>
+                {upcomingBirthdays.length > 0 ? (
+                  <>
+                    <p className="text-2xl font-bold" style={{ color: COLORS.taupeDark }}>{upcomingBirthdays.length}</p>
+                    <p className="text-xs" style={{ color: COLORS.taupeLight }}>השבוע</p>
+                  </>
+                ) : (
+                  <>
+                    <p className="text-lg font-bold" style={{ color: COLORS.taupeLight }}>אין השבוע</p>
+                    <p className="text-xs" style={{ color: COLORS.taupeLight }}>שבוע שקט</p>
+                  </>
+                )}
               </div>
             </div>
           </Card>
