@@ -10,6 +10,95 @@ This directory contains reusable UI components for the ClinicALL application.
 | `FaceMap.tsx` | SVG-based injectable face diagram for clinical notes |
 | `ProtectedRoute.tsx` | Auth guard wrapper for protected routes |
 | `ImageSlider.tsx` | Image carousel/slider component |
+| `ui/` | shadcn/ui components directory (Radix-based) |
+
+## shadcn/ui Components (`ui/`)
+
+New Radix UI-based components following shadcn/ui patterns:
+
+| File | Description |
+|------|-------------|
+| `alert-dialog.tsx` | Confirmation dialogs for destructive actions |
+| `command.tsx` | Command palette/search (cmdk-based) |
+| `dialog.tsx` | Radix-based modal dialog |
+| `drawer.tsx` | Mobile-friendly bottom drawer (vaul-based) |
+| `dropdown-menu.tsx` | Context menus and action dropdowns |
+| `empty.tsx` | Empty state placeholder component |
+| `popover.tsx` | Floating content panels |
+| `tooltip.tsx` | Hover tooltips |
+| `index.ts` | Barrel export for all shadcn/ui components |
+
+### Usage
+
+```tsx
+// Import from ui/ directory
+import { AlertDialog, AlertDialogTrigger, AlertDialogContent } from '@/components/ui/alert-dialog';
+import { Tooltip, TooltipTrigger, TooltipContent, TooltipProvider } from '@/components/ui/tooltip';
+import { Empty } from '@/components/ui/empty';
+
+// Or import everything from the barrel
+import { AlertDialog, Tooltip, Empty } from '@/components/ui';
+```
+
+### AlertDialog Example
+
+```tsx
+<AlertDialog>
+  <AlertDialogTrigger asChild>
+    <Button variant="destructive">מחק מטופל</Button>
+  </AlertDialogTrigger>
+  <AlertDialogContent>
+    <AlertDialogHeader>
+      <AlertDialogTitle>האם אתה בטוח?</AlertDialogTitle>
+      <AlertDialogDescription>
+        פעולה זו לא ניתנת לביטול.
+      </AlertDialogDescription>
+    </AlertDialogHeader>
+    <AlertDialogFooter>
+      <AlertDialogCancel>ביטול</AlertDialogCancel>
+      <AlertDialogAction onClick={handleDelete}>מחק</AlertDialogAction>
+    </AlertDialogFooter>
+  </AlertDialogContent>
+</AlertDialog>
+```
+
+### Empty State Example
+
+```tsx
+<Empty
+  icon={<Users className="h-6 w-6 text-muted-foreground" />}
+  title="אין מטופלים"
+  description="הוסף מטופל חדש כדי להתחיל"
+  action={<Button>הוסף מטופל</Button>}
+/>
+```
+
+### Tooltip Example
+
+```tsx
+<TooltipProvider>
+  <Tooltip>
+    <TooltipTrigger asChild>
+      <Button variant="ghost" size="icon">
+        <HelpCircle className="h-4 w-4" />
+      </Button>
+    </TooltipTrigger>
+    <TooltipContent>
+      <p>עזרה נוספת</p>
+    </TooltipContent>
+  </Tooltip>
+</TooltipProvider>
+```
+
+### Dependencies
+
+- `@radix-ui/react-alert-dialog` - AlertDialog primitive
+- `@radix-ui/react-dialog` - Dialog primitive
+- `@radix-ui/react-dropdown-menu` - DropdownMenu primitive
+- `@radix-ui/react-popover` - Popover primitive
+- `@radix-ui/react-tooltip` - Tooltip primitive
+- `cmdk` - Command palette
+- `vaul` - Drawer component
 
 ## Design System (`ui.tsx`)
 
