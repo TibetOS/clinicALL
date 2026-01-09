@@ -109,7 +109,7 @@ const INITIAL_HEALTH_FORM: HealthDeclarationFormData = {
 export const PatientList = () => {
   const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState('');
-  const { patients, loading: patientsLoading, addPatient, deletePatient } = usePatients();
+  const { patients, loading: patientsLoading, addPatient, updatePatient, deletePatient } = usePatients();
   const { createToken, generateShareLink, generateWhatsAppLink, generateEmailLink } = useHealthTokens();
   const [isAddPatientOpen, setIsAddPatientOpen] = useState(false);
   const [isFilterOpen, setIsFilterOpen] = useState(false);
@@ -262,6 +262,14 @@ export const PatientList = () => {
 
     if (token) {
       setGeneratedToken(token);
+
+      // Update patient's declaration status to 'pending' if this is for an existing patient
+      if (healthFormData.patientId) {
+        await updatePatient(healthFormData.patientId, {
+          declarationStatus: 'pending',
+          pendingDeclarationToken: token.token,
+        });
+      }
     }
   };
 

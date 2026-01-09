@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { supabase, isSupabaseConfigured } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
-import { Patient, RiskLevel } from '../types';
+import { Patient, RiskLevel, DeclarationStatus } from '../types';
 import { MOCK_PATIENTS } from '../data';
 import { createLogger } from '../lib/logger';
 import { PatientRow, PatientRowUpdate, getErrorMessage } from '../lib/database.types';
@@ -18,6 +18,10 @@ interface PatientInput {
   gender?: string;
   aestheticInterests?: string[];
   skinType?: string;
+  // Health declaration fields
+  lastDeclarationDate?: string;
+  declarationStatus?: DeclarationStatus;
+  pendingDeclarationToken?: string;
 }
 
 interface UsePatients {
@@ -48,6 +52,10 @@ function transformPatientRow(p: PatientRow): Patient {
     gender: p.gender ?? undefined,
     aestheticInterests: p.aesthetic_interests || [],
     skinType: p.skin_type ?? undefined,
+    // Health declaration fields
+    lastDeclarationDate: p.last_declaration_date ?? undefined,
+    declarationStatus: p.declaration_status ?? undefined,
+    pendingDeclarationToken: p.pending_declaration_token ?? undefined,
   };
 }
 
@@ -188,6 +196,10 @@ export function usePatients(): UsePatients {
       if (updates.gender !== undefined) dbUpdates.gender = updates.gender;
       if (updates.aestheticInterests !== undefined) dbUpdates.aesthetic_interests = updates.aestheticInterests;
       if (updates.skinType !== undefined) dbUpdates.skin_type = updates.skinType;
+      // Health declaration fields
+      if (updates.lastDeclarationDate !== undefined) dbUpdates.last_declaration_date = updates.lastDeclarationDate;
+      if (updates.declarationStatus !== undefined) dbUpdates.declaration_status = updates.declarationStatus;
+      if (updates.pendingDeclarationToken !== undefined) dbUpdates.pending_declaration_token = updates.pendingDeclarationToken;
 
       const { data, error: updateError } = await supabase
         .from('patients')
