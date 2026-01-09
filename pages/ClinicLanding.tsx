@@ -228,15 +228,21 @@ export const ClinicLanding = () => {
                   <a href={`tel:${profile.phone}`} className="text-stone-600 hover:text-[var(--brand-color)]">{profile.phone}</a>
                 </div>
               </div>
-              <div className="flex items-center gap-4">
-                <div className="w-12 h-12 rounded-full bg-white flex items-center justify-center shadow-sm" style={{ color: profile.brandColor }}>
-                  <Clock size={22} />
+              {profile.openingHours && Object.keys(profile.openingHours).length > 0 && (
+                <div className="flex items-center gap-4">
+                  <div className="w-12 h-12 rounded-full bg-white flex items-center justify-center shadow-sm" style={{ color: profile.brandColor }}>
+                    <Clock size={22} />
+                  </div>
+                  <div>
+                    <span className="block font-bold text-stone-900">שעות פעילות</span>
+                    <span className="text-stone-600">
+                      {Object.entries(profile.openingHours).map(([day, hours]) => (
+                        <span key={day} className="block">{day}: {hours}</span>
+                      ))}
+                    </span>
+                  </div>
                 </div>
-                <div>
-                  <span className="block font-bold text-stone-900">שעות פעילות</span>
-                  <span className="text-stone-600">א׳-ה׳: 09:00-19:00</span>
-                </div>
-              </div>
+              )}
 
               <Button
                 size="lg"
@@ -250,7 +256,7 @@ export const ClinicLanding = () => {
 
             <div className="bg-white rounded-2xl shadow-lg overflow-hidden min-h-[280px]">
               <iframe
-                src={`https://www.google.com/maps?q=${encodeURIComponent(profile.address)}&output=embed`}
+                src={profile.googleMapsUrl || `https://maps.google.com/maps?q=${encodeURIComponent(profile.address)}&output=embed`}
                 width="100%"
                 height="100%"
                 style={{ border: 0, minHeight: '280px' }}
