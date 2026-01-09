@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import {
   Search, Filter, Plus, Package, AlertTriangle,
-  ArrowDown, ArrowUp, History, Download, MoreHorizontal, Pencil, Trash2
+  ArrowDown, ArrowUp, History, Download
 } from 'lucide-react';
 import { Card, Button, Input, Badge, Dialog, Label } from '../components/ui';
 import {
@@ -11,13 +11,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from '../components/ui/select';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from '../components/ui/dropdown-menu';
 import { Progress } from '../components/ui/progress';
 import { Empty } from '../components/ui/empty';
 import { useInventory } from '../hooks';

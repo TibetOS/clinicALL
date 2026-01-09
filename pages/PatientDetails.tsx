@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import {
   Phone, Mail, AlertTriangle, FileText, Image as ImageIcon,
   Activity, Save, Plus, MoreHorizontal, X, ZoomIn,
@@ -52,7 +52,8 @@ export const PatientDetails = () => {
   const [activeTab, setActiveTab] = useState('clinical');
 
   // Use hooks for data fetching
-  const { getPatient } = usePatients();
+  const { getPatient, deletePatient } = usePatients();
+  const navigate = useNavigate();
   const { appointments } = useAppointments({ patientId: id });
   const { declarations } = useDeclarations({ patientId: id });
   const { clinicalNotes, addClinicalNote } = useClinicalNotes({ patientId: id });
@@ -101,6 +102,21 @@ export const PatientDetails = () => {
      { id: 'mf-1', name: 'שאלון אבחון עור מקיף', category: 'אבחון', date: '2023-10-15', status: 'completed' },
      { id: 'mf-2', name: 'מעקב טיפול בפיגמנטציה', category: 'מעקב', date: '2023-09-01', status: 'completed' }
   ]);
+
+  // Delete Patient State
+  const [isDeleting, setIsDeleting] = useState(false);
+
+  const handleDeletePatient = async () => {
+    if (!patient) return;
+
+    setIsDeleting(true);
+    const success = await deletePatient(patient.id);
+    setIsDeleting(false);
+
+    if (success) {
+      navigate('/admin/patients');
+    }
+  };
 
   // Medical forms would be fetched via a secured API endpoint in production
   // verifying tenant_id for multi-tenant security
@@ -211,8 +227,14 @@ export const PatientDetails = () => {
                     </AlertDialogDescription>
                   </AlertDialogHeader>
                   <AlertDialogFooter className="flex-row-reverse gap-2">
-                    <AlertDialogCancel>ביטול</AlertDialogCancel>
-                    <AlertDialogAction className="bg-red-600 hover:bg-red-700">מחק</AlertDialogAction>
+                    <AlertDialogCancel disabled={isDeleting}>ביטול</AlertDialogCancel>
+                    <AlertDialogAction
+                      className="bg-red-600 hover:bg-red-700"
+                      disabled={isDeleting}
+                      onClick={handleDeletePatient}
+                    >
+                      {isDeleting ? 'מוחק...' : 'מחק'}
+                    </AlertDialogAction>
                   </AlertDialogFooter>
                 </AlertDialogContent>
               </AlertDialog>

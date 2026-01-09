@@ -60,7 +60,7 @@ export const Calendar = () => {
   const [view, setView] = useState<'week' | 'day'>(() =>
     typeof window !== 'undefined' && window.innerWidth < 768 ? 'day' : 'week'
   );
-  const { appointments, addAppointment, loading, error } = useAppointments();
+  const { appointments, addAppointment, updateAppointment, loading, error } = useAppointments();
   const { services, loading: servicesLoading } = useServices();
   const { addNotification } = useNotifications();
   const { patients } = usePatients();
@@ -78,6 +78,7 @@ export const Calendar = () => {
   const [saving, setSaving] = useState(false);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [appointmentToDelete, setAppointmentToDelete] = useState<Appointment | null>(null);
+  const [canceling, setCanceling] = useState(false);
 
   // Auto-switch to day view on mobile resize
   useEffect(() => {
@@ -121,6 +122,19 @@ export const Calendar = () => {
   const showSuccess = (message: string) => {
     setSuccessMessage(message);
     setTimeout(() => setSuccessMessage(null), 3000);
+  };
+
+  const handleCancelAppointment = async () => {
+    if (!appointmentToDelete) return;
+
+    setCanceling(true);
+    const result = await updateAppointment(appointmentToDelete.id, { status: 'cancelled' });
+    setCanceling(false);
+
+    if (result) {
+      showSuccess('התור בוטל בהצלחה');
+      setAppointmentToDelete(null);
+    }
   };
 
   const openNewApptDialog = (day?: Date, hour?: number) => {
@@ -515,7 +529,7 @@ export const Calendar = () => {
       </Dialog>
 
       {/* Cancel Appointment AlertDialog */}
-      <AlertDialog open={!!appointmentToDelete} onOpenChange={(open) => !open && setAppointmentToDelete(null)}>
+      <AlertDialog open={!!appointmentToDelete} onOpenChange={(open) => !canceling && !open && setAppointmentToDelete(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
             <div className="flex justify-center mb-4">
@@ -529,16 +543,13 @@ export const Calendar = () => {
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter className="flex-row-reverse gap-2 sm:justify-center">
-            <AlertDialogCancel>חזור</AlertDialogCancel>
+            <AlertDialogCancel disabled={canceling}>חזור</AlertDialogCancel>
             <AlertDialogAction
               className="bg-red-600 hover:bg-red-700"
-              onClick={() => {
-                // TODO: Implement cancel appointment
-                showSuccess('התור בוטל');
-                setAppointmentToDelete(null);
-              }}
+              disabled={canceling}
+              onClick={handleCancelAppointment}
             >
-              בטל תור
+              {canceling ? 'מבטל...' : 'בטל תור'}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
