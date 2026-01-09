@@ -396,10 +396,10 @@ const AdminLayout = ({ children }: { children?: React.ReactNode }) => {
         </main>
       </div>
       
-      {/* Mobile Overlay */}
+      {/* Mobile Overlay - positioned to not cover the sidebar */}
       {sidebarOpen && (
         <div
-          className="fixed inset-0 bg-black/40 backdrop-blur-sm z-40 lg:hidden transition-opacity"
+          className="fixed inset-y-0 left-0 right-72 bg-black/40 backdrop-blur-sm z-40 lg:hidden transition-opacity"
           onClick={() => setSidebarOpen(false)}
         />
       )}
