@@ -1,9 +1,9 @@
 
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import {
-  Check, Minus, ChevronDown, ChevronUp, HelpCircle,
-  ShieldCheck, CreditCard, ArrowRight, Star, X
+  Check, Minus, ChevronDown, ChevronUp,
+  ShieldCheck, CreditCard
 } from 'lucide-react';
 import { Button, Card, Badge, Switch } from '../components/ui';
 

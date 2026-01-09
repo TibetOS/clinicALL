@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import {
-  Plus, Search, Filter, Pencil, Trash2, Clock, Banknote,
-  MoreVertical, Syringe, Sparkles, Heart, Zap, ChevronLeft
+  Plus, Search, Pencil, Trash2, Clock, Banknote,
+  Syringe, Sparkles, Heart, Zap
 } from 'lucide-react';
 import { Card, Button, Input, Badge, Dialog, Label, Skeleton } from '../components/ui';
 import { useServices } from '../hooks';
@@ -161,7 +161,7 @@ export const ServicesPage = () => {
         </div>
         <div className="flex gap-2 w-full sm:w-auto overflow-x-auto pb-2 sm:pb-0">
           <Button
-            variant={selectedCategory === null ? 'default' : 'outline'}
+            variant={selectedCategory === null ? 'primary' : 'outline'}
             size="sm"
             onClick={() => setSelectedCategory(null)}
           >
@@ -173,7 +173,7 @@ export const ServicesPage = () => {
             return (
               <Button
                 key={cat}
-                variant={selectedCategory === cat ? 'default' : 'outline'}
+                variant={selectedCategory === cat ? 'primary' : 'outline'}
                 size="sm"
                 onClick={() => setSelectedCategory(cat)}
                 className="whitespace-nowrap"

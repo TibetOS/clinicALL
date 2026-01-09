@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import { useState } from 'react';
 import {
   Search, Filter, Plus, Package, AlertTriangle,
   ArrowDown, ArrowUp, History, Download
@@ -55,18 +55,6 @@ export const InventoryPage = () => {
   const showSuccess = (message: string) => {
     setSuccessMessage(message);
     setTimeout(() => setSuccessMessage(null), 3000);
-  };
-
-  const openAdjustment = (item: InventoryItem, type: 'add' | 'remove') => {
-    setAdjustment({
-      itemId: item.id,
-      itemName: item.name,
-      currentQuantity: item.quantity,
-      adjustmentType: type,
-      amount: 1,
-      reason: '',
-    });
-    setIsAdjustOpen(true);
   };
 
   const handleAdjustment = async () => {

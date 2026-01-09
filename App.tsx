@@ -4,7 +4,7 @@ import { BrowserRouter, Routes, Route, Navigate, useLocation, Link, useNavigate 
 import {
   LayoutDashboard, Users, Calendar as CalendarIcon, Settings,
   Menu, Bell, LogOut, ChevronLeft, Package,
-  Crown, Sparkles, X, Syringe, Send, FileHeart, MessageCircle, Mail
+  Crown, Sparkles, X, Syringe, FileHeart, MessageCircle, Mail
 } from 'lucide-react';
 import { LoginPage, HealthDeclaration, SignupPage, LandingPage, LockScreen, ResetPasswordPage } from './pages/Public';
 import { ClinicLanding } from './pages/ClinicLanding';
@@ -45,7 +45,7 @@ const AdminLayout = ({ children }: { children?: React.ReactNode }) => {
   const { profile, signOut } = useAuth();
 
   // Notifications State
-  const { notifications, unreadCount, markAsRead, markAllAsRead, deleteNotification } = useNotifications();
+  const { notifications, unreadCount, markAsRead, markAllAsRead } = useNotifications();
   const [isNotifOpen, setIsNotifOpen] = useState(false);
   const notifRef = useRef<HTMLDivElement>(null);
 
@@ -55,7 +55,8 @@ const AdminLayout = ({ children }: { children?: React.ReactNode }) => {
     open: boolean;
     notification: Notification | null;
     generatedLink: string | null;
-  }>({ open: false, notification: null, generatedLink: null });
+    tokenValue: string | null;
+  }>({ open: false, notification: null, generatedLink: null, tokenValue: null });
 
   // Handle send declaration action from notification
   const handleSendDeclaration = async (notif: Notification) => {
@@ -71,18 +72,17 @@ const AdminLayout = ({ children }: { children?: React.ReactNode }) => {
 
     if (token) {
       const link = generateShareLink(token.token);
-      setDeclarationDialog({ open: true, notification: notif, generatedLink: link });
+      setDeclarationDialog({ open: true, notification: notif, generatedLink: link, tokenValue: token.token });
       setIsNotifOpen(false);
     }
   };
 
   // Share via WhatsApp
   const shareViaWhatsApp = () => {
-    if (!declarationDialog.notification?.metadata || !declarationDialog.generatedLink) return;
-    const { patientName, patientPhone } = declarationDialog.notification.metadata;
+    if (!declarationDialog.notification?.metadata || !declarationDialog.tokenValue) return;
+    const { patientPhone } = declarationDialog.notification.metadata;
     const whatsappLink = generateWhatsAppLink(
-      declarationDialog.generatedLink,
-      patientName || '',
+      declarationDialog.tokenValue,
       patientPhone || ''
     );
     window.open(whatsappLink, '_blank');
@@ -90,11 +90,10 @@ const AdminLayout = ({ children }: { children?: React.ReactNode }) => {
 
   // Share via Email
   const shareViaEmail = () => {
-    if (!declarationDialog.notification?.metadata || !declarationDialog.generatedLink) return;
-    const { patientName, patientEmail } = declarationDialog.notification.metadata;
+    if (!declarationDialog.notification?.metadata || !declarationDialog.tokenValue) return;
+    const { patientEmail } = declarationDialog.notification.metadata;
     const emailLink = generateEmailLink(
-      declarationDialog.generatedLink,
-      patientName || '',
+      declarationDialog.tokenValue,
       patientEmail || ''
     );
     // Validate mailto: URL before navigating
@@ -108,7 +107,7 @@ const AdminLayout = ({ children }: { children?: React.ReactNode }) => {
     if (declarationDialog.notification) {
       markAsRead(declarationDialog.notification.id);
     }
-    setDeclarationDialog({ open: false, notification: null, generatedLink: null });
+    setDeclarationDialog({ open: false, notification: null, generatedLink: null, tokenValue: null });
   };
 
   useEffect(() => {

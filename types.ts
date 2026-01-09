@@ -108,11 +108,14 @@ export interface Declaration {
   }
 }
 
+/** Icon component type for use in Stat interface */
+export type IconComponent = React.ComponentType<{ size?: number; className?: string }>;
+
 export interface Stat {
   label: string;
   value: string | number;
   change?: number;
-  icon: any;
+  icon: IconComponent;
   trend?: 'up' | 'down' | 'neutral';
 }
 

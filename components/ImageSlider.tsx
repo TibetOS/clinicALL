@@ -19,10 +19,10 @@ export const ImageSlider: React.FC<ImageSliderProps> = ({ beforeImage, afterImag
     const { left, width } = containerRef.current.getBoundingClientRect();
     let clientX;
 
-    if ('touches' in event) {
+    if ('touches' in event && event.touches[0]) {
       clientX = event.touches[0].clientX;
     } else {
-      clientX = (event as any).clientX;
+      clientX = (event as MouseEvent).clientX;
     }
 
     const position = ((clientX - left) / width) * 100;
@@ -30,7 +30,6 @@ export const ImageSlider: React.FC<ImageSliderProps> = ({ beforeImage, afterImag
   };
 
   const handleMouseDown = () => setIsDragging(true);
-  const handleMouseUp = () => setIsDragging(false);
 
   useEffect(() => {
     const handleGlobalMove = (e: MouseEvent | TouchEvent) => {

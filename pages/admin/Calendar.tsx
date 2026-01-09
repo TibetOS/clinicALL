@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { Plus, ChevronLeft, ChevronRight, FileCheck, Clock, AlertCircle, FileHeart } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { Plus, ChevronLeft, ChevronRight, FileCheck, Clock, AlertCircle } from 'lucide-react';
 import { Card, Button, Input, Dialog, Label } from '../../components/ui';
 import { useAppointments, useServices, useNotifications, usePatients } from '../../hooks';
 import { AppointmentDeclarationStatus } from '../../types';
@@ -30,13 +30,13 @@ export const Calendar = () => {
   const { addNotification } = useNotifications();
   const { patients } = usePatients();
   const [isNewApptOpen, setIsNewApptOpen] = useState(false);
-  const [selectedSlot, setSelectedSlot] = useState<{ date: Date; hour: number } | null>(null);
+  const [, setSelectedSlot] = useState<{ date: Date; hour: number } | null>(null);
 
   // Form state
   const [apptForm, setApptForm] = useState({
     patientName: '',
     serviceId: '',
-    date: new Date().toISOString().split('T')[0],
+    date: new Date().toISOString().split('T')[0] ?? '',
     time: '10:00',
     notes: '',
   });
@@ -73,7 +73,7 @@ export const Calendar = () => {
   const getAppointmentsForSlot = (day: Date, hour: number) => {
     return appointments.filter(a => {
       const apptDate = new Date(a.date);
-      const apptHour = parseInt(a.time.split(':')[0]);
+      const apptHour = parseInt(a.time.split(':')[0] ?? '0', 10);
       return (
         apptDate.getDate() === day.getDate() &&
         apptDate.getMonth() === day.getMonth() &&
@@ -91,10 +91,9 @@ export const Calendar = () => {
     if (day && hour !== undefined) {
       setApptForm(prev => ({
         ...prev,
-        date: day.toISOString().split('T')[0],
+        date: day.toISOString().split('T')[0] ?? '',
         time: `${hour.toString().padStart(2, '0')}:00`,
       }));
-      setSelectedSlot({ date: day, hour });
     }
     setIsNewApptOpen(true);
   };
@@ -120,7 +119,6 @@ export const Calendar = () => {
       duration: service?.duration || 30,
       status: 'pending',
       notes: apptForm.notes,
-      declarationStatus: 'required', // New appointments need declaration check
     });
 
     setSaving(false);
@@ -155,11 +153,10 @@ export const Calendar = () => {
       setApptForm({
         patientName: '',
         serviceId: '',
-        date: new Date().toISOString().split('T')[0],
+        date: new Date().toISOString().split('T')[0] ?? '',
         time: '10:00',
         notes: '',
       });
-      setSelectedSlot(null);
       showSuccess('התור נקבע בהצלחה');
     }
   };
@@ -281,7 +278,7 @@ export const Calendar = () => {
                                appt.status === 'pending' ? 'bg-amber-50 border-amber-500 text-amber-800' : 'bg-gray-100 border-gray-400 text-gray-700'}
                           `}
                           style={{
-                            top: `${(parseInt(appt.time.split(':')[1]) / 60) * 100}%`,
+                            top: `${(parseInt(appt.time.split(':')[1] ?? '0', 10) / 60) * 100}%`,
                             height: `${(appt.duration / 60) * 100}%`,
                             minHeight: '40px'
                           }}

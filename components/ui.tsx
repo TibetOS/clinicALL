@@ -116,7 +116,7 @@ export const Switch = React.forwardRef<HTMLButtonElement, { checked?: boolean; o
 Switch.displayName = "Switch";
 
 // Tabs (Simplified)
-export const Tabs = ({ value, onValueChange, children, className }: { value: string, onValueChange: (v: string) => void, children?: React.ReactNode, className?: string }) => {
+export const Tabs = ({ value: _value, onValueChange: _onValueChange, children, className }: { value: string, onValueChange: (v: string) => void, children?: React.ReactNode, className?: string }) => {
   return <div className={cn("w-full", className)}>{children}</div>
 };
 

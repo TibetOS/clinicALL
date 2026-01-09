@@ -4,6 +4,16 @@ import react from '@vitejs/plugin-react';
 
 export default defineConfig(({ mode }) => {
     const env = loadEnv(mode, '.', '');
+    const isProduction = mode === 'production';
+
+    // SECURITY: Fail build if demo mode is enabled in production
+    if (isProduction && env.VITE_ALLOW_DEMO_MODE === 'true') {
+      throw new Error(
+        'SECURITY ERROR: VITE_ALLOW_DEMO_MODE must not be set in production builds. ' +
+        'Remove this environment variable before deploying.'
+      );
+    }
+
     return {
       server: {
         port: 3000,
@@ -20,6 +30,8 @@ export default defineConfig(({ mode }) => {
         }
       },
       build: {
+        // SECURITY: Disable source maps in production to prevent source code exposure
+        sourcemap: !isProduction,
         rollupOptions: {
           output: {
             manualChunks: {

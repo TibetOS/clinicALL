@@ -135,12 +135,12 @@ export function usePatients(): UsePatients {
         phone: patient.phone,
         riskLevel: patient.riskLevel || 'low',
         lastVisit: '',
-        memberSince: new Date().toISOString().split('T')[0],
-        birthDate: patient.birthDate,
-        age: patient.age,
-        gender: patient.gender,
-        aestheticInterests: patient.aestheticInterests,
-        skinType: patient.skinType,
+        memberSince: new Date().toISOString().split('T')[0] ?? '',
+        birthDate: patient.birthDate ?? undefined,
+        age: patient.age ?? undefined,
+        gender: patient.gender ?? undefined,
+        aestheticInterests: patient.aestheticInterests ?? undefined,
+        skinType: patient.skinType ?? undefined,
       };
       setPatients(prev => [newPatient, ...prev]);
       return newPatient;
@@ -152,14 +152,14 @@ export function usePatients(): UsePatients {
         .insert({
           clinic_id: profile?.clinic_id,
           name: patient.name,
-          email: patient.email,
+          email: patient.email ?? null,
           phone: patient.phone,
           risk_level: patient.riskLevel || 'low',
-          birth_date: patient.birthDate,
-          age: patient.age,
-          gender: patient.gender,
-          aesthetic_interests: patient.aestheticInterests,
-          skin_type: patient.skinType,
+          birth_date: patient.birthDate ?? null,
+          age: patient.age ?? null,
+          gender: patient.gender ?? null,
+          aesthetic_interests: patient.aestheticInterests ?? null,
+          skin_type: patient.skinType ?? null,
           member_since: new Date().toISOString().split('T')[0],
         })
         .select()

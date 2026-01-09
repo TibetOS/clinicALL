@@ -6,7 +6,8 @@ import { Patient, Appointment, Service, Declaration, ClinicalNote, InventoryItem
 const getRelativeDate = (daysOffset: number): string => {
   const date = new Date();
   date.setDate(date.getDate() + daysOffset);
-  return date.toISOString().split('T')[0];
+  const isoString = date.toISOString();
+  return isoString.split('T')[0] ?? isoString.substring(0, 10);
 };
 
 // Helper to create a birthDate that falls within N days from today (same month/day, any year)

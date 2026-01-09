@@ -117,9 +117,9 @@ export function useInvoices(): UseInvoices {
       const newInvoice: Invoice = {
         id: `mock-${Date.now()}`,
         invoiceNumber: invoice.invoiceNumber,
-        patientId: invoice.patientId,
+        patientId: invoice.patientId ?? undefined,
         patientName: invoice.patientName,
-        date: invoice.date || new Date().toISOString().split('T')[0],
+        date: invoice.date ?? new Date().toISOString().split('T')[0] ?? '',
         items: invoice.items,
         total: invoice.total,
         status: invoice.status || 'pending',
@@ -134,7 +134,7 @@ export function useInvoices(): UseInvoices {
         .insert({
           clinic_id: profile?.clinic_id,
           invoice_number: invoice.invoiceNumber,
-          patient_id: invoice.patientId,
+          patient_id: invoice.patientId ?? null,
           patient_name: invoice.patientName,
           date: invoice.date || new Date().toISOString().split('T')[0],
           items: invoice.items,
