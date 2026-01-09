@@ -55,10 +55,17 @@ export function useInventory(): UseInventory {
     setError(null);
 
     try {
-      const { data, error: fetchError } = await supabase
+      let query = supabase
         .from('inventory_items')
         .select('*')
         .order('name', { ascending: true });
+
+      // Filter by clinic_id for multi-tenant isolation
+      if (profile?.clinic_id) {
+        query = query.eq('clinic_id', profile.clinic_id);
+      }
+
+      const { data, error: fetchError } = await query;
 
       if (fetchError) throw fetchError;
 
@@ -82,7 +89,7 @@ export function useInventory(): UseInventory {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [profile?.clinic_id]);
 
   const getItem = useCallback(async (id: string): Promise<InventoryItem | null> => {
     if (!isSupabaseConfigured()) {
@@ -90,11 +97,17 @@ export function useInventory(): UseInventory {
     }
 
     try {
-      const { data, error: fetchError } = await supabase
+      let query = supabase
         .from('inventory_items')
         .select('*')
-        .eq('id', id)
-        .single();
+        .eq('id', id);
+
+      // Filter by clinic_id for multi-tenant isolation
+      if (profile?.clinic_id) {
+        query = query.eq('clinic_id', profile.clinic_id);
+      }
+
+      const { data, error: fetchError } = await query.single();
 
       if (fetchError) throw fetchError;
 
@@ -114,7 +127,7 @@ export function useInventory(): UseInventory {
       logger.error('Error fetching inventory item:', err);
       return null;
     }
-  }, []);
+  }, [profile?.clinic_id]);
 
   const addItem = useCallback(async (item: InventoryInput): Promise<InventoryItem | null> => {
     if (!isSupabaseConfigured()) {
@@ -212,12 +225,17 @@ export function useInventory(): UseInventory {
         dbUpdates.status = calculateStatus(newQuantity, newMinQuantity);
       }
 
-      const { data, error: updateError } = await supabase
+      let query = supabase
         .from('inventory_items')
         .update(dbUpdates)
-        .eq('id', id)
-        .select()
-        .single();
+        .eq('id', id);
+
+      // Filter by clinic_id for multi-tenant isolation
+      if (profile?.clinic_id) {
+        query = query.eq('clinic_id', profile.clinic_id);
+      }
+
+      const { data, error: updateError } = await query.select().single();
 
       if (updateError) throw updateError;
 
@@ -241,7 +259,7 @@ export function useInventory(): UseInventory {
       setError(getErrorMessage(err) || 'Failed to update inventory item');
       return null;
     }
-  }, [items]);
+  }, [items, profile?.clinic_id]);
 
   const updateQuantity = useCallback(async (id: string, quantity: number): Promise<boolean> => {
     const result = await updateItem(id, { quantity });
@@ -255,10 +273,17 @@ export function useInventory(): UseInventory {
     }
 
     try {
-      const { error: deleteError } = await supabase
+      let query = supabase
         .from('inventory_items')
         .delete()
         .eq('id', id);
+
+      // Filter by clinic_id for multi-tenant isolation
+      if (profile?.clinic_id) {
+        query = query.eq('clinic_id', profile.clinic_id);
+      }
+
+      const { error: deleteError } = await query;
 
       if (deleteError) throw deleteError;
 
@@ -269,7 +294,7 @@ export function useInventory(): UseInventory {
       setError(getErrorMessage(err) || 'Failed to delete inventory item');
       return false;
     }
-  }, []);
+  }, [profile?.clinic_id]);
 
   useEffect(() => {
     fetchItems();

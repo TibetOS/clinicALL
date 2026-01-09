@@ -50,7 +50,7 @@ export const InventoryPage = () => {
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
   // Use hook for data
-  const { inventory, loading, updateQuantity, addItem } = useInventory();
+  const { inventory, loading, error, updateQuantity, addItem } = useInventory();
 
   const showSuccess = (message: string) => {
     setSuccessMessage(message);
@@ -114,10 +114,15 @@ export const InventoryPage = () => {
     }
   };
 
-  const filteredItems = inventory.filter(item => 
+  const filteredItems = inventory.filter(item =>
     item.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
     item.sku.toLowerCase().includes(searchTerm.toLowerCase())
   );
+
+  // Calculate dynamic stats
+  const criticalCount = inventory.filter(i => i.status === 'critical').length;
+  const lowStockCount = inventory.filter(i => i.status === 'low').length;
+  const totalQuantity = inventory.reduce((sum, item) => sum + item.quantity, 0);
 
   const getStatusBadge = (status: InventoryItem['status']) => {
     switch (status) {
@@ -133,6 +138,17 @@ export const InventoryPage = () => {
       {successMessage && (
         <div className="fixed top-6 left-1/2 -translate-x-1/2 z-50 bg-green-600 text-white px-6 py-3 rounded-xl shadow-lg animate-in slide-in-from-top-2 duration-300">
           {successMessage}
+        </div>
+      )}
+
+      {/* Error Display */}
+      {error && (
+        <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-xl flex items-center gap-3">
+          <AlertTriangle size={20} />
+          <div>
+            <p className="font-medium">שגיאה בטעינת המלאי</p>
+            <p className="text-sm">{error}</p>
+          </div>
         </div>
       )}
 
@@ -152,34 +168,44 @@ export const InventoryPage = () => {
       {/* Status Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
          <Card className={`p-4 flex items-center gap-4 border-l-4 border-l-red-500 transition-all ${
-           inventory.filter(i => i.status === 'critical').length > 0
+           criticalCount > 0
              ? 'bg-red-50 ring-2 ring-red-200 shadow-lg'
              : 'bg-red-50/20'
          }`}>
             <div className={`p-3 bg-white rounded-full shadow-sm text-red-500 ${
-              inventory.filter(i => i.status === 'critical').length > 0 ? 'animate-pulse' : ''
+              criticalCount > 0 ? 'animate-pulse' : ''
             }`}>
-              <AlertTriangle size={24} className={inventory.filter(i => i.status === 'critical').length > 0 ? 'animate-bounce' : ''}/>
+              <AlertTriangle size={24} className={criticalCount > 0 ? 'animate-bounce' : ''}/>
             </div>
             <div>
                <p className="text-sm font-medium text-gray-600">פריטים במלאי קריטי</p>
                <h3 className={`text-2xl font-bold ${
-                 inventory.filter(i => i.status === 'critical').length > 0 ? 'text-red-600' : 'text-gray-900'
-               }`}>{inventory.filter(i => i.status === 'critical').length}</h3>
+                 criticalCount > 0 ? 'text-red-600' : 'text-gray-900'
+               }`}>{criticalCount}</h3>
             </div>
          </Card>
-         <Card className="p-4 flex items-center gap-4 border-l-4 border-l-yellow-500 bg-yellow-50/20">
-            <div className="p-3 bg-white rounded-full shadow-sm text-yellow-600"><Package size={24}/></div>
+         <Card className={`p-4 flex items-center gap-4 border-l-4 border-l-yellow-500 transition-all ${
+           lowStockCount > 0
+             ? 'bg-yellow-50 ring-2 ring-yellow-200 shadow-lg'
+             : 'bg-yellow-50/20'
+         }`}>
+            <div className={`p-3 bg-white rounded-full shadow-sm text-yellow-600 ${
+              lowStockCount > 0 ? 'animate-pulse' : ''
+            }`}>
+              <Package size={24}/>
+            </div>
             <div>
-               <p className="text-sm font-medium text-gray-600">שווי מלאי כולל</p>
-               <h3 className="text-2xl font-bold text-gray-900">₪42,500</h3>
+               <p className="text-sm font-medium text-gray-600">פריטים במלאי נמוך</p>
+               <h3 className={`text-2xl font-bold ${
+                 lowStockCount > 0 ? 'text-yellow-600' : 'text-gray-900'
+               }`}>{lowStockCount}</h3>
             </div>
          </Card>
          <Card className="p-4 flex items-center gap-4 border-l-4 border-l-blue-500 bg-blue-50/20">
             <div className="p-3 bg-white rounded-full shadow-sm text-blue-600"><History size={24}/></div>
             <div>
-               <p className="text-sm font-medium text-gray-600">תנועות החודש</p>
-               <h3 className="text-2xl font-bold text-gray-900">28</h3>
+               <p className="text-sm font-medium text-gray-600">סה״כ יחידות במלאי</p>
+               <h3 className="text-2xl font-bold text-gray-900">{totalQuantity.toLocaleString()}</h3>
             </div>
          </Card>
       </div>
