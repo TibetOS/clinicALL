@@ -82,7 +82,7 @@ export const MOCK_PATIENTS: Patient[] = [
     aestheticInterests: ['מיצוק עור', 'פיגמנטציה'],
     avatar: 'https://ui-avatars.com/api/?name=Demo+B&background=0D9488&color=fff',
     declarationStatus: 'pending',
-    pendingDeclarationToken: 'demo12345678'
+    pendingDeclarationToken: MOCK_TOKEN_1
   },
   {
     id: '3',

@@ -4,6 +4,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { Appointment, AppointmentStatus } from '../types';
 import { MOCK_APPOINTMENTS } from '../data';
 import { createLogger } from '../lib/logger';
+import { AppointmentRowUpdate, getErrorMessage } from '../lib/database.types';
 
 const logger = createLogger('useAppointments');
 
@@ -94,7 +95,20 @@ export function useAppointments(options?: UseAppointmentsOptions): UseAppointmen
       if (fetchError) throw fetchError;
 
       // Transform database format to app format
-      const transformedAppointments: Appointment[] = (data || []).map((a: any) => ({
+      // Note: The query joins with patients and services tables, so we use a custom type
+      interface AppointmentWithJoins {
+        id: string;
+        patient_id: string;
+        patients?: { name: string } | null;
+        service_id: string;
+        services?: { name: string } | null;
+        date: string;
+        time: string;
+        duration: number;
+        status: AppointmentStatus;
+        notes?: string | null;
+      }
+      const transformedAppointments: Appointment[] = (data as AppointmentWithJoins[] || []).map((a) => ({
         id: a.id,
         patientId: a.patient_id,
         patientName: a.patients?.name || '',
@@ -104,12 +118,12 @@ export function useAppointments(options?: UseAppointmentsOptions): UseAppointmen
         time: a.time,
         duration: a.duration,
         status: a.status || 'pending',
-        notes: a.notes,
+        notes: a.notes ?? undefined,
       }));
 
       setAppointments(transformedAppointments);
-    } catch (err: any) {
-      setError(err.message || 'Failed to fetch appointments');
+    } catch (err) {
+      setError(getErrorMessage(err) || 'Failed to fetch appointments');
       logger.error('Error fetching appointments:', err);
     } finally {
       setLoading(false);
@@ -144,9 +158,9 @@ export function useAppointments(options?: UseAppointmentsOptions): UseAppointmen
         time: data.time,
         duration: data.duration,
         status: data.status || 'pending',
-        notes: data.notes,
+        notes: data.notes ?? undefined,
       };
-    } catch (err: any) {
+    } catch (err) {
       logger.error('Error fetching appointment:', err);
       return null;
     }
@@ -196,14 +210,14 @@ export function useAppointments(options?: UseAppointmentsOptions): UseAppointmen
         time: data.time,
         duration: data.duration,
         status: data.status || 'pending',
-        notes: data.notes,
+        notes: data.notes ?? undefined,
       };
 
       setAppointments(prev => [...prev, newAppointment]);
       return newAppointment;
-    } catch (err: any) {
+    } catch (err) {
       logger.error('Error adding appointment:', err);
-      setError(err.message || 'Failed to add appointment');
+      setError(getErrorMessage(err) || 'Failed to add appointment');
       return null;
     }
   }, [profile?.clinic_id]);
@@ -218,7 +232,7 @@ export function useAppointments(options?: UseAppointmentsOptions): UseAppointmen
     }
 
     try {
-      const dbUpdates: any = {};
+      const dbUpdates: AppointmentRowUpdate = {};
       if (updates.patientId !== undefined) dbUpdates.patient_id = updates.patientId;
       if (updates.serviceId !== undefined) dbUpdates.service_id = updates.serviceId;
       if (updates.date !== undefined) dbUpdates.date = updates.date;
@@ -250,14 +264,14 @@ export function useAppointments(options?: UseAppointmentsOptions): UseAppointmen
         time: data.time,
         duration: data.duration,
         status: data.status || 'pending',
-        notes: data.notes,
+        notes: data.notes ?? undefined,
       };
 
       setAppointments(prev => prev.map(a => a.id === id ? updatedAppointment : a));
       return updatedAppointment;
-    } catch (err: any) {
+    } catch (err) {
       logger.error('Error updating appointment:', err);
-      setError(err.message || 'Failed to update appointment');
+      setError(getErrorMessage(err) || 'Failed to update appointment');
       return null;
     }
   }, [appointments]);
@@ -284,9 +298,9 @@ export function useAppointments(options?: UseAppointmentsOptions): UseAppointmen
 
       setAppointments(prev => prev.filter(a => a.id !== id));
       return true;
-    } catch (err: any) {
+    } catch (err) {
       logger.error('Error deleting appointment:', err);
-      setError(err.message || 'Failed to delete appointment');
+      setError(getErrorMessage(err) || 'Failed to delete appointment');
       return false;
     }
   }, []);

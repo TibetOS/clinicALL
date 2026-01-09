@@ -4,6 +4,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { Service } from '../types';
 import { MOCK_SERVICES } from '../data';
 import { createLogger } from '../lib/logger';
+import { ServiceRow, ServiceRowUpdate, getErrorMessage } from '../lib/database.types';
 
 const logger = createLogger('useServices');
 
@@ -57,19 +58,19 @@ export function useServices(): UseServices {
       if (fetchError) throw fetchError;
 
       // Transform database format to app format
-      const transformedServices: Service[] = (data || []).map((s: any) => ({
+      const transformedServices: Service[] = (data as ServiceRow[] || []).map((s) => ({
         id: s.id,
         name: s.name,
         description: s.description || '',
         duration: s.duration,
-        price: parseFloat(s.price) || 0,
+        price: s.price || 0,
         category: s.category,
-        image: s.image_url,
+        image: s.image ?? undefined,
       }));
 
       setServices(transformedServices);
-    } catch (err: any) {
-      setError(err.message || 'Failed to fetch services');
+    } catch (err) {
+      setError(getErrorMessage(err) || 'Failed to fetch services');
       logger.error('Error fetching services:', err);
     } finally {
       setLoading(false);
@@ -95,11 +96,11 @@ export function useServices(): UseServices {
         name: data.name,
         description: data.description || '',
         duration: data.duration,
-        price: parseFloat(data.price) || 0,
+        price: data.price || 0,
         category: data.category,
-        image: data.image_url,
+        image: data.image_url ?? undefined,
       };
-    } catch (err: any) {
+    } catch (err) {
       logger.error('Error fetching service:', err);
       return null;
     }
@@ -144,16 +145,16 @@ export function useServices(): UseServices {
         name: data.name,
         description: data.description || '',
         duration: data.duration,
-        price: parseFloat(data.price) || 0,
+        price: data.price || 0,
         category: data.category,
-        image: data.image_url,
+        image: data.image_url ?? undefined,
       };
 
       setServices(prev => [...prev, newService]);
       return newService;
-    } catch (err: any) {
+    } catch (err) {
       logger.error('Error adding service:', err);
-      setError(err.message || 'Failed to add service');
+      setError(getErrorMessage(err) || 'Failed to add service');
       return null;
     }
   }, [profile?.clinic_id]);
@@ -168,7 +169,7 @@ export function useServices(): UseServices {
     }
 
     try {
-      const dbUpdates: any = {};
+      const dbUpdates: ServiceRowUpdate & { is_active?: boolean; image_url?: string } = {};
       if (updates.name !== undefined) dbUpdates.name = updates.name;
       if (updates.description !== undefined) dbUpdates.description = updates.description;
       if (updates.duration !== undefined) dbUpdates.duration = updates.duration;
@@ -191,16 +192,16 @@ export function useServices(): UseServices {
         name: data.name,
         description: data.description || '',
         duration: data.duration,
-        price: parseFloat(data.price) || 0,
+        price: data.price || 0,
         category: data.category,
-        image: data.image_url,
+        image: data.image_url ?? undefined,
       };
 
       setServices(prev => prev.map(s => s.id === id ? updatedService : s));
       return updatedService;
-    } catch (err: any) {
+    } catch (err) {
       logger.error('Error updating service:', err);
-      setError(err.message || 'Failed to update service');
+      setError(getErrorMessage(err) || 'Failed to update service');
       return null;
     }
   }, [services]);
@@ -223,9 +224,9 @@ export function useServices(): UseServices {
 
       setServices(prev => prev.filter(s => s.id !== id));
       return true;
-    } catch (err: any) {
+    } catch (err) {
       logger.error('Error deleting service:', err);
-      setError(err.message || 'Failed to delete service');
+      setError(getErrorMessage(err) || 'Failed to delete service');
       return false;
     }
   }, []);

@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { supabase, isSupabaseConfigured } from '../lib/supabase';
 import { StaffMember } from '../types';
 import { createLogger } from '../lib/logger';
+import { UserRow, getErrorMessage } from '../lib/database.types';
 
 const logger = createLogger('useStaff');
 
@@ -45,7 +46,14 @@ export function useStaff(clinicId?: string): UseStaff {
       if (fetchError) throw fetchError;
 
       // Transform database format to app format
-      const transformedStaff: StaffMember[] = (data || []).map((user: any) => ({
+      interface StaffRow {
+        id: string;
+        full_name: string | null;
+        role: string;
+        avatar_url: string | null;
+        clinic_id: string;
+      }
+      const transformedStaff: StaffMember[] = (data as StaffRow[] || []).map((user) => ({
         id: user.id,
         name: user.full_name || 'צוות',
         role: getRoleLabel(user.role),
@@ -53,8 +61,8 @@ export function useStaff(clinicId?: string): UseStaff {
       }));
 
       setStaff(transformedStaff);
-    } catch (err: any) {
-      setError(err.message || 'Failed to fetch staff');
+    } catch (err) {
+      setError(getErrorMessage(err) || 'Failed to fetch staff');
       logger.error('Error fetching staff:', err);
     } finally {
       setLoading(false);

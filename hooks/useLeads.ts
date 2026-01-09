@@ -4,6 +4,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { Lead, LeadStage } from '../types';
 import { MOCK_LEADS } from '../data';
 import { createLogger } from '../lib/logger';
+import { LeadRow, LeadRowUpdate, getErrorMessage } from '../lib/database.types';
 
 const logger = createLogger('useLeads');
 
@@ -54,21 +55,21 @@ export function useLeads(): UseLeads {
 
       if (fetchError) throw fetchError;
 
-      const transformedLeads: Lead[] = (data || []).map((lead: any) => ({
+      const transformedLeads: Lead[] = (data as LeadRow[] || []).map((lead) => ({
         id: lead.id,
         name: lead.name,
         phone: lead.phone,
-        email: lead.email,
+        email: lead.email ?? undefined,
         source: lead.source || '',
         stage: lead.stage || 'new',
-        notes: lead.notes,
-        value: lead.value ? parseFloat(lead.value) : undefined,
+        notes: lead.notes ?? undefined,
+        value: lead.value ?? undefined,
         createdAt: lead.created_at,
       }));
 
       setLeads(transformedLeads);
-    } catch (err: any) {
-      setError(err.message || 'Failed to fetch leads');
+    } catch (err) {
+      setError(getErrorMessage(err) || 'Failed to fetch leads');
       logger.error('Error fetching leads:', err);
     } finally {
       setLoading(false);
@@ -97,10 +98,10 @@ export function useLeads(): UseLeads {
         source: data.source || '',
         stage: data.stage || 'new',
         notes: data.notes,
-        value: data.value ? parseFloat(data.value) : undefined,
+        value: data.value ?? undefined,
         createdAt: data.created_at,
       };
-    } catch (err: any) {
+    } catch (err) {
       logger.error('Error fetching lead:', err);
       return null;
     }
@@ -149,15 +150,15 @@ export function useLeads(): UseLeads {
         source: data.source || '',
         stage: data.stage || 'new',
         notes: data.notes,
-        value: data.value ? parseFloat(data.value) : undefined,
+        value: data.value ?? undefined,
         createdAt: data.created_at,
       };
 
       setLeads(prev => [newLead, ...prev]);
       return newLead;
-    } catch (err: any) {
+    } catch (err) {
       logger.error('Error adding lead:', err);
-      setError(err.message || 'Failed to add lead');
+      setError(getErrorMessage(err) || 'Failed to add lead');
       return null;
     }
   }, [profile?.clinic_id]);
@@ -171,7 +172,7 @@ export function useLeads(): UseLeads {
     }
 
     try {
-      const dbUpdates: any = {};
+      const dbUpdates: LeadRowUpdate = {};
       if (updates.name !== undefined) dbUpdates.name = updates.name;
       if (updates.phone !== undefined) dbUpdates.phone = updates.phone;
       if (updates.email !== undefined) dbUpdates.email = updates.email;
@@ -197,15 +198,15 @@ export function useLeads(): UseLeads {
         source: data.source || '',
         stage: data.stage || 'new',
         notes: data.notes,
-        value: data.value ? parseFloat(data.value) : undefined,
+        value: data.value ?? undefined,
         createdAt: data.created_at,
       };
 
       setLeads(prev => prev.map(lead => lead.id === id ? updatedLead : lead));
       return updatedLead;
-    } catch (err: any) {
+    } catch (err) {
       logger.error('Error updating lead:', err);
-      setError(err.message || 'Failed to update lead');
+      setError(getErrorMessage(err) || 'Failed to update lead');
       return null;
     }
   }, [leads]);
@@ -231,9 +232,9 @@ export function useLeads(): UseLeads {
 
       setLeads(prev => prev.filter(lead => lead.id !== id));
       return true;
-    } catch (err: any) {
+    } catch (err) {
       logger.error('Error deleting lead:', err);
-      setError(err.message || 'Failed to delete lead');
+      setError(getErrorMessage(err) || 'Failed to delete lead');
       return false;
     }
   }, []);

@@ -4,6 +4,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { ClinicalNote, InjectionPoint } from '../types';
 import { MOCK_CLINICAL_NOTES } from '../data';
 import { createLogger } from '../lib/logger';
+import { ClinicalNoteRow, ClinicalNoteRowUpdate, getErrorMessage } from '../lib/database.types';
 
 const logger = createLogger('useClinicalNotes');
 
@@ -69,7 +70,7 @@ export function useClinicalNotes(options?: UseClinicalNotesOptions): UseClinical
 
       if (fetchError) throw fetchError;
 
-      const transformedNotes: ClinicalNote[] = (data || []).map((note: any) => ({
+      const transformedNotes: ClinicalNote[] = (data as ClinicalNoteRow[] || []).map((note) => ({
         id: note.id,
         patientId: note.patient_id,
         date: note.date,
@@ -81,8 +82,8 @@ export function useClinicalNotes(options?: UseClinicalNotesOptions): UseClinical
       }));
 
       setClinicalNotes(transformedNotes);
-    } catch (err: any) {
-      setError(err.message || 'Failed to fetch clinical notes');
+    } catch (err) {
+      setError(getErrorMessage(err) || 'Failed to fetch clinical notes');
       logger.error('Error fetching clinical notes:', err);
     } finally {
       setLoading(false);
@@ -113,7 +114,7 @@ export function useClinicalNotes(options?: UseClinicalNotesOptions): UseClinical
         injectionPoints: data.injection_points || [],
         images: data.images || [],
       };
-    } catch (err: any) {
+    } catch (err) {
       logger.error('Error fetching clinical note:', err);
       return null;
     }
@@ -166,9 +167,9 @@ export function useClinicalNotes(options?: UseClinicalNotesOptions): UseClinical
 
       setClinicalNotes(prev => [newNote, ...prev]);
       return newNote;
-    } catch (err: any) {
+    } catch (err) {
       logger.error('Error adding clinical note:', err);
-      setError(err.message || 'Failed to add clinical note');
+      setError(getErrorMessage(err) || 'Failed to add clinical note');
       return null;
     }
   }, [profile?.clinic_id]);
@@ -182,7 +183,7 @@ export function useClinicalNotes(options?: UseClinicalNotesOptions): UseClinical
     }
 
     try {
-      const dbUpdates: any = {};
+      const dbUpdates: ClinicalNoteRowUpdate = {};
       if (updates.patientId !== undefined) dbUpdates.patient_id = updates.patientId;
       if (updates.date !== undefined) dbUpdates.date = updates.date;
       if (updates.providerName !== undefined) dbUpdates.provider_name = updates.providerName;
@@ -213,9 +214,9 @@ export function useClinicalNotes(options?: UseClinicalNotesOptions): UseClinical
 
       setClinicalNotes(prev => prev.map(note => note.id === id ? updatedNote : note));
       return updatedNote;
-    } catch (err: any) {
+    } catch (err) {
       logger.error('Error updating clinical note:', err);
-      setError(err.message || 'Failed to update clinical note');
+      setError(getErrorMessage(err) || 'Failed to update clinical note');
       return null;
     }
   }, [clinicalNotes]);
@@ -236,9 +237,9 @@ export function useClinicalNotes(options?: UseClinicalNotesOptions): UseClinical
 
       setClinicalNotes(prev => prev.filter(note => note.id !== id));
       return true;
-    } catch (err: any) {
+    } catch (err) {
       logger.error('Error deleting clinical note:', err);
-      setError(err.message || 'Failed to delete clinical note');
+      setError(getErrorMessage(err) || 'Failed to delete clinical note');
       return false;
     }
   }, []);

@@ -4,6 +4,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { Invoice, InvoiceItem } from '../types';
 import { MOCK_INVOICES } from '../data';
 import { createLogger } from '../lib/logger';
+import { InvoiceRow, InvoiceRowUpdate, getErrorMessage } from '../lib/database.types';
 
 const logger = createLogger('useInvoices');
 
@@ -62,20 +63,20 @@ export function useInvoices(): UseInvoices {
 
       if (fetchError) throw fetchError;
 
-      const transformedInvoices: Invoice[] = (data || []).map((inv: any) => ({
+      const transformedInvoices: Invoice[] = (data as InvoiceRow[] || []).map((inv) => ({
         id: inv.id,
         invoiceNumber: inv.invoice_number,
-        patientId: inv.patient_id,
+        patientId: inv.patient_id ?? undefined,
         patientName: inv.patient_name,
         date: inv.date,
         items: inv.items || [],
-        total: parseFloat(inv.total) || 0,
+        total: inv.total || 0,
         status: inv.status || 'pending',
       }));
 
       setInvoices(transformedInvoices);
-    } catch (err: any) {
-      setError(err.message || 'Failed to fetch invoices');
+    } catch (err) {
+      setError(getErrorMessage(err) || 'Failed to fetch invoices');
       logger.error('Error fetching invoices:', err);
     } finally {
       setLoading(false);
@@ -103,10 +104,10 @@ export function useInvoices(): UseInvoices {
         patientName: data.patient_name,
         date: data.date,
         items: data.items || [],
-        total: parseFloat(data.total) || 0,
+        total: data.total || 0,
         status: data.status || 'pending',
       };
-    } catch (err: any) {
+    } catch (err) {
       logger.error('Error fetching invoice:', err);
       return null;
     }
@@ -153,15 +154,15 @@ export function useInvoices(): UseInvoices {
         patientName: data.patient_name,
         date: data.date,
         items: data.items || [],
-        total: parseFloat(data.total) || 0,
+        total: data.total || 0,
         status: data.status || 'pending',
       };
 
       setInvoices(prev => [newInvoice, ...prev]);
       return newInvoice;
-    } catch (err: any) {
+    } catch (err) {
       logger.error('Error adding invoice:', err);
-      setError(err.message || 'Failed to add invoice');
+      setError(getErrorMessage(err) || 'Failed to add invoice');
       return null;
     }
   }, [profile?.clinic_id]);
@@ -175,7 +176,7 @@ export function useInvoices(): UseInvoices {
     }
 
     try {
-      const dbUpdates: any = {};
+      const dbUpdates: InvoiceRowUpdate = {};
       if (updates.invoiceNumber !== undefined) dbUpdates.invoice_number = updates.invoiceNumber;
       if (updates.patientId !== undefined) dbUpdates.patient_id = updates.patientId;
       if (updates.patientName !== undefined) dbUpdates.patient_name = updates.patientName;
@@ -200,15 +201,15 @@ export function useInvoices(): UseInvoices {
         patientName: data.patient_name,
         date: data.date,
         items: data.items || [],
-        total: parseFloat(data.total) || 0,
+        total: data.total || 0,
         status: data.status || 'pending',
       };
 
       setInvoices(prev => prev.map(inv => inv.id === id ? updatedInvoice : inv));
       return updatedInvoice;
-    } catch (err: any) {
+    } catch (err) {
       logger.error('Error updating invoice:', err);
-      setError(err.message || 'Failed to update invoice');
+      setError(getErrorMessage(err) || 'Failed to update invoice');
       return null;
     }
   }, [invoices]);
@@ -234,9 +235,9 @@ export function useInvoices(): UseInvoices {
 
       setInvoices(prev => prev.filter(inv => inv.id !== id));
       return true;
-    } catch (err: any) {
+    } catch (err) {
       logger.error('Error deleting invoice:', err);
-      setError(err.message || 'Failed to delete invoice');
+      setError(getErrorMessage(err) || 'Failed to delete invoice');
       return false;
     }
   }, []);

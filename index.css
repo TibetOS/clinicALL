@@ -94,3 +94,43 @@ input[type="time"]::-webkit-calendar-picker-indicator {
   -ms-overflow-style: none;
   scrollbar-width: none;
 }
+
+/* Accessibility: Focus indicators for keyboard navigation */
+:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+}
+
+/* Remove default focus for mouse users, keep for keyboard */
+:focus:not(:focus-visible) {
+  outline: none;
+}
+
+/* Enhanced focus for interactive elements */
+button:focus-visible,
+a:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible,
+[role="button"]:focus-visible,
+[tabindex]:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+  box-shadow: 0 0 0 4px rgba(13, 148, 136, 0.15);
+}
+
+/* Skip to content link for screen readers */
+.skip-link {
+  position: absolute;
+  top: -40px;
+  left: 0;
+  background: var(--color-primary);
+  color: white;
+  padding: 8px 16px;
+  z-index: 100;
+  border-radius: 0 0 4px 0;
+}
+
+.skip-link:focus {
+  top: 0;
+}
