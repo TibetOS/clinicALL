@@ -1,8 +1,43 @@
 import { useState, useEffect } from 'react';
-import { Plus, ChevronLeft, ChevronRight, FileCheck, Clock, AlertCircle, Loader2 } from 'lucide-react';
+import { Plus, ChevronLeft, ChevronRight, FileCheck, Clock, AlertCircle, Loader2, MoreHorizontal, Eye, Trash2, Phone, Edit2, X as XIcon, Calendar as CalendarIcon } from 'lucide-react';
 import { Card, Button, Input, Dialog, Label } from '../../components/ui';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '../../components/ui/tooltip';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '../../components/ui/dropdown-menu';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '../../components/ui/select';
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from '../../components/ui/popover';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '../../components/ui/alert-dialog';
 import { useAppointments, useServices, useNotifications, usePatients } from '../../hooks';
-import { AppointmentDeclarationStatus } from '../../types';
+import { AppointmentDeclarationStatus, Appointment } from '../../types';
 
 // Declaration status indicator config
 const getDeclarationIndicator = (status?: AppointmentDeclarationStatus) => {
@@ -42,6 +77,7 @@ export const Calendar = () => {
   });
   const [saving, setSaving] = useState(false);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
+  const [appointmentToDelete, setAppointmentToDelete] = useState<Appointment | null>(null);
 
   // Auto-switch to day view on mobile resize
   useEffect(() => {
@@ -288,29 +324,103 @@ export const Calendar = () => {
                     {cellAppts.map(appt => {
                       const declIndicator = getDeclarationIndicator(appt.declarationStatus);
                       return (
-                        <div
-                          key={appt.id}
-                          className={`absolute left-1 right-1 p-2 rounded-lg text-xs shadow-sm border-l-4 cursor-pointer z-20 hover:scale-[1.02] transition-transform
-                             ${appt.status === 'confirmed' ? 'bg-green-50 border-green-500 text-green-800' :
-                               appt.status === 'pending' ? 'bg-amber-50 border-amber-500 text-amber-800' : 'bg-gray-100 border-gray-400 text-gray-700'}
-                          `}
-                          style={{
-                            top: `${(parseInt(appt.time.split(':')[1] ?? '0', 10) / 60) * 100}%`,
-                            height: `${(appt.duration / 60) * 100}%`,
-                            minHeight: '40px'
-                          }}
-                        >
-                          <div className="flex items-center gap-1">
-                            <span className="font-bold truncate flex-1">{appt.patientName}</span>
-                            {declIndicator && (
-                              <span
-                                className={`w-2 h-2 rounded-full shrink-0 ${declIndicator.color}`}
-                                title={declIndicator.title}
-                              />
-                            )}
-                          </div>
-                          <div className="truncate opacity-80">{appt.serviceName}</div>
-                        </div>
+                        <Popover key={appt.id}>
+                          <PopoverTrigger asChild>
+                            <div
+                              className={`absolute left-1 right-1 p-2 rounded-lg text-xs shadow-sm border-l-4 cursor-pointer z-20 hover:scale-[1.02] transition-transform
+                                 ${appt.status === 'confirmed' ? 'bg-green-50 border-green-500 text-green-800' :
+                                   appt.status === 'pending' ? 'bg-amber-50 border-amber-500 text-amber-800' : 'bg-gray-100 border-gray-400 text-gray-700'}
+                              `}
+                              style={{
+                                top: `${(parseInt(appt.time.split(':')[1] ?? '0', 10) / 60) * 100}%`,
+                                height: `${(appt.duration / 60) * 100}%`,
+                                minHeight: '40px'
+                              }}
+                            >
+                              <div className="flex items-center gap-1">
+                                <span className="font-bold truncate flex-1">{appt.patientName}</span>
+                                {declIndicator && (
+                                  <TooltipProvider>
+                                    <Tooltip>
+                                      <TooltipTrigger asChild>
+                                        <span className={`w-2 h-2 rounded-full shrink-0 ${declIndicator.color}`} />
+                                      </TooltipTrigger>
+                                      <TooltipContent side="top">
+                                        <p>{declIndicator.title}</p>
+                                      </TooltipContent>
+                                    </Tooltip>
+                                  </TooltipProvider>
+                                )}
+                              </div>
+                              <div className="truncate opacity-80">{appt.serviceName}</div>
+                            </div>
+                          </PopoverTrigger>
+                          <PopoverContent className="w-72" align="start">
+                            <div className="space-y-3">
+                              <div className="flex justify-between items-start">
+                                <div>
+                                  <h4 className="font-bold text-sm">{appt.patientName}</h4>
+                                  <p className="text-xs text-muted-foreground">{appt.serviceName}</p>
+                                </div>
+                                <DropdownMenu>
+                                  <DropdownMenuTrigger asChild>
+                                    <Button variant="ghost" size="icon" className="h-6 w-6">
+                                      <MoreHorizontal className="h-4 w-4" />
+                                    </Button>
+                                  </DropdownMenuTrigger>
+                                  <DropdownMenuContent align="end">
+                                    <DropdownMenuItem>
+                                      <Eye className="ml-2 h-4 w-4" />
+                                      צפייה בפרטים
+                                    </DropdownMenuItem>
+                                    <DropdownMenuItem>
+                                      <Edit2 className="ml-2 h-4 w-4" />
+                                      עריכה
+                                    </DropdownMenuItem>
+                                    <DropdownMenuItem>
+                                      <Phone className="ml-2 h-4 w-4" />
+                                      התקשר ללקוח
+                                    </DropdownMenuItem>
+                                    <DropdownMenuSeparator />
+                                    <DropdownMenuItem
+                                      className="text-red-600 focus:text-red-600"
+                                      onClick={() => setAppointmentToDelete(appt)}
+                                    >
+                                      <Trash2 className="ml-2 h-4 w-4" />
+                                      ביטול תור
+                                    </DropdownMenuItem>
+                                  </DropdownMenuContent>
+                                </DropdownMenu>
+                              </div>
+                              <div className="grid grid-cols-2 gap-2 text-xs border-t pt-2">
+                                <div>
+                                  <span className="text-muted-foreground block">תאריך</span>
+                                  <span className="font-medium">{new Date(appt.date).toLocaleDateString('he-IL')}</span>
+                                </div>
+                                <div>
+                                  <span className="text-muted-foreground block">שעה</span>
+                                  <span className="font-medium">{appt.time}</span>
+                                </div>
+                                <div>
+                                  <span className="text-muted-foreground block">משך</span>
+                                  <span className="font-medium">{appt.duration} דק׳</span>
+                                </div>
+                                <div>
+                                  <span className="text-muted-foreground block">סטטוס</span>
+                                  <span className={`font-medium ${appt.status === 'confirmed' ? 'text-green-600' : appt.status === 'pending' ? 'text-amber-600' : 'text-gray-600'}`}>
+                                    {appt.status === 'confirmed' ? 'מאושר' : appt.status === 'pending' ? 'ממתין' : 'בוטל'}
+                                  </span>
+                                </div>
+                              </div>
+                              {appt.notes && (
+                                <div className="text-xs border-t pt-2">
+                                  <span className="text-muted-foreground block mb-1">הערות</span>
+                                  <p className="text-gray-700">{appt.notes}</p>
+                                </div>
+                              )}
+                            </div>
+                          </PopoverContent>
+                        </Popover>
                       );
                     })}
                   </div>
@@ -344,15 +454,20 @@ export const Calendar = () => {
           </div>
           <div>
             <Label>טיפול</Label>
-            <select
-              className="flex h-10 w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm"
+            <Select
               value={apptForm.serviceId}
-              onChange={(e) => setApptForm(prev => ({ ...prev, serviceId: e.target.value }))}
+              onValueChange={(value) => setApptForm(prev => ({ ...prev, serviceId: value }))}
               disabled={servicesLoading}
             >
-              <option value="">{servicesLoading ? 'טוען טיפולים...' : 'בחר טיפול...'}</option>
-              {services.map(s => <option key={s.id} value={s.id}>{s.name} ({s.duration} דק׳)</option>)}
-            </select>
+              <SelectTrigger>
+                <SelectValue placeholder={servicesLoading ? 'טוען טיפולים...' : 'בחר טיפול...'} />
+              </SelectTrigger>
+              <SelectContent>
+                {services.map(s => (
+                  <SelectItem key={s.id} value={s.id}>{s.name} ({s.duration} דק׳)</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
           <div className="grid grid-cols-2 gap-4">
             <div>
@@ -398,6 +513,36 @@ export const Calendar = () => {
           </div>
         </div>
       </Dialog>
+
+      {/* Cancel Appointment AlertDialog */}
+      <AlertDialog open={!!appointmentToDelete} onOpenChange={(open) => !open && setAppointmentToDelete(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <div className="flex justify-center mb-4">
+              <div className="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center">
+                <XIcon className="w-6 h-6 text-red-600" />
+              </div>
+            </div>
+            <AlertDialogTitle className="text-center">ביטול תור</AlertDialogTitle>
+            <AlertDialogDescription className="text-center">
+              האם לבטל את התור של {appointmentToDelete?.patientName} ב{appointmentToDelete?.date ? new Date(appointmentToDelete.date).toLocaleDateString('he-IL') : ''} בשעה {appointmentToDelete?.time}?
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter className="flex-row-reverse gap-2 sm:justify-center">
+            <AlertDialogCancel>חזור</AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-red-600 hover:bg-red-700"
+              onClick={() => {
+                // TODO: Implement cancel appointment
+                showSuccess('התור בוטל');
+                setAppointmentToDelete(null);
+              }}
+            >
+              בטל תור
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };

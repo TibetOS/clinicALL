@@ -2,9 +2,36 @@ import React, { useState, useMemo } from 'react';
 import {
   Search, Filter, UserPlus, ChevronLeft, Download,
   X, CheckSquare, Square, MessageSquare, Trash2, FileDown, FileHeart, Copy,
-  Check, Send, Mail, Phone, Clock, AlertCircle, FileCheck
+  Check, Send, Mail, Phone, Clock, AlertCircle, FileCheck, MoreHorizontal,
+  Eye, Edit2, Calendar, Users
 } from 'lucide-react';
 import { Card, Button, Input, Badge, Dialog, Label, Skeleton } from '../../components/ui';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '../../components/ui/alert-dialog';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '../../components/ui/dropdown-menu';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '../../components/ui/select';
+import { Avatar, AvatarFallback, AvatarImage } from '../../components/ui/avatar';
+import { Empty } from '../../components/ui/empty';
 import { usePatients, useHealthTokens } from '../../hooks';
 import { useNavigate } from 'react-router-dom';
 import { Patient, RiskLevel, HealthDeclarationToken, DeclarationStatus } from '../../types';
@@ -446,7 +473,32 @@ export const PatientList = () => {
                 ))}
               </>
             )}
-            {!patientsLoading && filteredPatients.map(patient => (
+            {/* Empty state */}
+            {!patientsLoading && filteredPatients.length === 0 && (
+              <tr>
+                <td colSpan={isSelectionMode ? 7 : 6} className="py-12">
+                  <Empty
+                    icon={hasActiveFilters ? Search : Users}
+                    title={hasActiveFilters ? 'לא נמצאו תוצאות' : 'אין מטופלים'}
+                    description={hasActiveFilters ? 'נסה לשנות את מסנני החיפוש' : 'הוסף מטופל חדש כדי להתחיל'}
+                    action={
+                      hasActiveFilters ? (
+                        <Button variant="outline" onClick={() => setFilters(INITIAL_FILTERS)}>
+                          <X className="ml-2 h-4 w-4" />
+                          נקה סינון
+                        </Button>
+                      ) : (
+                        <Button onClick={() => setIsAddPatientOpen(true)}>
+                          <UserPlus className="ml-2 h-4 w-4" />
+                          הוסף מטופל
+                        </Button>
+                      )
+                    }
+                  />
+                </td>
+              </tr>
+            )}
+            {!patientsLoading && filteredPatients.length > 0 && filteredPatients.map(patient => (
               <tr
                 key={patient.id}
                 className={`hover:bg-primary/5 transition-all cursor-pointer group border-r-2 border-r-transparent hover:border-r-primary ${
@@ -471,7 +523,10 @@ export const PatientList = () => {
                 )}
                 <td className="px-6 py-4">
                   <div className="flex items-center gap-3">
-                    <img src={patient.avatar} alt={`תמונת פרופיל של ${patient.name}`} loading="lazy" className="w-8 h-8 rounded-full bg-gray-200 object-cover ring-2 ring-transparent group-hover:ring-primary/20 transition-all" />
+                    <Avatar className="h-8 w-8 ring-2 ring-transparent group-hover:ring-primary/20 transition-all">
+                      <AvatarImage src={patient.avatar} alt={patient.name} />
+                      <AvatarFallback>{patient.name.split(' ').map(n => n[0]).join('')}</AvatarFallback>
+                    </Avatar>
                     <div>
                       <div className="font-medium text-gray-900">{patient.name}</div>
                       <div className="text-xs text-gray-500">{patient.email}</div>
@@ -514,9 +569,40 @@ export const PatientList = () => {
                   </Badge>
                 </td>
                 <td className="px-6 py-4">
-                  <Button variant="ghost" size="icon" aria-label="פרטי מטופל">
-                    <ChevronLeft size={16} />
-                  </Button>
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button variant="ghost" size="icon" aria-label="פעולות" onClick={(e) => e.stopPropagation()}>
+                        <MoreHorizontal size={16} />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="start">
+                      <DropdownMenuItem onClick={() => navigate(`/admin/patients/${patient.id}`)}>
+                        <Eye className="ml-2 h-4 w-4" />
+                        צפייה בפרופיל
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => navigate(`/admin/patients/${patient.id}?tab=appointments`)}>
+                        <Calendar className="ml-2 h-4 w-4" />
+                        קביעת תור
+                      </DropdownMenuItem>
+                      {(patient.declarationStatus === 'none' || patient.declarationStatus === 'expired') && (
+                        <DropdownMenuItem onClick={() => openHealthDeclarationDialog(patient)}>
+                          <FileHeart className="ml-2 h-4 w-4" />
+                          שלח הצהרת בריאות
+                        </DropdownMenuItem>
+                      )}
+                      <DropdownMenuSeparator />
+                      <DropdownMenuItem
+                        className="text-red-600 focus:text-red-600"
+                        onClick={() => {
+                          setSelectedIds(new Set([patient.id]));
+                          setIsDeleteConfirmOpen(true);
+                        }}
+                      >
+                        <Trash2 className="ml-2 h-4 w-4" />
+                        מחיקה
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
                 </td>
               </tr>
             ))}
@@ -555,7 +641,30 @@ export const PatientList = () => {
             ))}
           </>
         )}
-        {!patientsLoading && filteredPatients.map(patient => (
+        {/* Mobile Empty state */}
+        {!patientsLoading && filteredPatients.length === 0 && (
+          <Card className="p-8">
+            <Empty
+              icon={hasActiveFilters ? Search : Users}
+              title={hasActiveFilters ? 'לא נמצאו תוצאות' : 'אין מטופלים'}
+              description={hasActiveFilters ? 'נסה לשנות את מסנני החיפוש' : 'הוסף מטופל חדש כדי להתחיל'}
+              action={
+                hasActiveFilters ? (
+                  <Button variant="outline" onClick={() => setFilters(INITIAL_FILTERS)}>
+                    <X className="ml-2 h-4 w-4" />
+                    נקה סינון
+                  </Button>
+                ) : (
+                  <Button onClick={() => setIsAddPatientOpen(true)}>
+                    <UserPlus className="ml-2 h-4 w-4" />
+                    הוסף מטופל
+                  </Button>
+                )
+              }
+            />
+          </Card>
+        )}
+        {!patientsLoading && filteredPatients.length > 0 && filteredPatients.map(patient => (
           <Card
             key={patient.id}
             className={`p-5 flex flex-col gap-4 cursor-pointer active:scale-[0.98] transition-all touch-manipulation hover:shadow-lg border-r-2 border-r-transparent hover:border-r-primary ${
@@ -578,7 +687,10 @@ export const PatientList = () => {
                     )}
                   </button>
                 )}
-                <img src={patient.avatar} alt={`תמונת פרופיל של ${patient.name}`} loading="lazy" className="w-12 h-12 rounded-full bg-gray-200 object-cover" />
+                <Avatar className="w-12 h-12">
+                  <AvatarImage src={patient.avatar} alt={patient.name} />
+                  <AvatarFallback>{patient.name.split(' ').map(n => n[0]).join('')}</AvatarFallback>
+                </Avatar>
                 <div>
                   <div className="font-bold text-gray-900">{patient.name}</div>
                   <div className="text-sm text-gray-600">{patient.phone}</div>
@@ -690,15 +802,19 @@ export const PatientList = () => {
             </div>
             <div>
               <Label>מגדר</Label>
-              <select
-                className="flex h-10 w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm"
+              <Select
                 value={formData.gender}
-                onChange={(e) => setFormData(prev => ({ ...prev, gender: e.target.value }))}
+                onValueChange={(value) => setFormData(prev => ({ ...prev, gender: value }))}
               >
-                <option>נקבה</option>
-                <option>זכר</option>
-                <option>אחר</option>
-              </select>
+                <SelectTrigger>
+                  <SelectValue placeholder="בחר מגדר" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="נקבה">נקבה</SelectItem>
+                  <SelectItem value="זכר">זכר</SelectItem>
+                  <SelectItem value="אחר">אחר</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
           </div>
 
@@ -721,29 +837,37 @@ export const PatientList = () => {
         <div className="space-y-4">
           <div>
             <Label>רמת סיכון</Label>
-            <select
-              className="flex h-10 w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm"
+            <Select
               value={filters.riskLevel}
-              onChange={(e) => setFilters(prev => ({ ...prev, riskLevel: e.target.value as RiskLevel | 'all' }))}
+              onValueChange={(value) => setFilters(prev => ({ ...prev, riskLevel: value as RiskLevel | 'all' }))}
             >
-              <option value="all">הכל</option>
-              <option value="low">נמוך</option>
-              <option value="medium">בינוני</option>
-              <option value="high">גבוה</option>
-            </select>
+              <SelectTrigger>
+                <SelectValue placeholder="בחר רמת סיכון" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">הכל</SelectItem>
+                <SelectItem value="low">נמוך</SelectItem>
+                <SelectItem value="medium">בינוני</SelectItem>
+                <SelectItem value="high">גבוה</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
 
           <div>
             <Label>תור קרוב</Label>
-            <select
-              className="flex h-10 w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm"
+            <Select
               value={filters.hasUpcomingAppointment}
-              onChange={(e) => setFilters(prev => ({ ...prev, hasUpcomingAppointment: e.target.value as 'all' | 'yes' | 'no' }))}
+              onValueChange={(value) => setFilters(prev => ({ ...prev, hasUpcomingAppointment: value as 'all' | 'yes' | 'no' }))}
             >
-              <option value="all">הכל</option>
-              <option value="yes">יש תור קרוב</option>
-              <option value="no">אין תור קרוב</option>
-            </select>
+              <SelectTrigger>
+                <SelectValue placeholder="בחר סטטוס תור" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">הכל</SelectItem>
+                <SelectItem value="yes">יש תור קרוב</SelectItem>
+                <SelectItem value="no">אין תור קרוב</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
 
           <div>
@@ -912,43 +1036,34 @@ export const PatientList = () => {
         </div>
       </Dialog>
 
-      {/* Delete Confirmation Dialog */}
-      <Dialog
-        open={isDeleteConfirmOpen}
-        onClose={() => !isDeleting && setIsDeleteConfirmOpen(false)}
-        title="אישור מחיקה"
-      >
-        <div className="space-y-4">
-          <div className="bg-red-50 p-4 rounded-xl border border-red-100 text-center">
-            <div className="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-3">
-              <Trash2 size={24} className="text-red-600" />
+      {/* Delete Confirmation AlertDialog */}
+      <AlertDialog open={isDeleteConfirmOpen} onOpenChange={(open) => !isDeleting && setIsDeleteConfirmOpen(open)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <div className="flex justify-center mb-4">
+              <div className="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center">
+                <Trash2 size={24} className="text-red-600" />
+              </div>
             </div>
-            <h3 className="font-bold text-red-800 mb-1">האם אתה בטוח?</h3>
-            <p className="text-sm text-red-700">
+            <AlertDialogTitle className="text-center">האם אתה בטוח?</AlertDialogTitle>
+            <AlertDialogDescription className="text-center">
               פעולה זו תמחק {selectedIds.size} מטופלים לצמיתות.
               <br />
               לא ניתן לבטל פעולה זו.
-            </p>
-          </div>
-
-          <div className="flex justify-end gap-3 pt-4 border-t mt-4">
-            <Button
-              variant="ghost"
-              onClick={() => setIsDeleteConfirmOpen(false)}
-              disabled={isDeleting}
-            >
-              ביטול
-            </Button>
-            <Button
-              variant="destructive"
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter className="flex-row-reverse gap-2 sm:justify-center">
+            <AlertDialogCancel disabled={isDeleting}>ביטול</AlertDialogCancel>
+            <AlertDialogAction
               onClick={handleBulkDelete}
               disabled={isDeleting}
+              className="bg-red-600 hover:bg-red-700 focus:ring-red-600"
             >
               {isDeleting ? 'מוחק...' : `מחק ${selectedIds.size} מטופלים`}
-            </Button>
-          </div>
-        </div>
-      </Dialog>
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };

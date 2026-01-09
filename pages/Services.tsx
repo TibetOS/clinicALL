@@ -1,9 +1,34 @@
 import React, { useState } from 'react';
 import {
   Plus, Search, Pencil, Trash2, Clock, Banknote,
-  Syringe, Sparkles, Heart, Zap
+  Syringe, Sparkles, Heart, Zap, MoreHorizontal, Eye
 } from 'lucide-react';
 import { Card, Button, Input, Badge, Dialog, Label, Skeleton } from '../components/ui';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '../components/ui/alert-dialog';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '../components/ui/dropdown-menu';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '../components/ui/select';
+import { Empty } from '../components/ui/empty';
 import { useServices } from '../hooks';
 import { Service } from '../types';
 
@@ -232,24 +257,36 @@ export const ServicesPage = () => {
                     <div className={`p-2.5 rounded-xl ${config.bg}`}>
                       <Icon size={20} className={config.color} />
                     </div>
-                    <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="h-8 w-8"
-                        onClick={(e) => { e.stopPropagation(); openEditDialog(service); }}
-                      >
-                        <Pencil size={14} />
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="h-8 w-8 text-red-500 hover:text-red-600 hover:bg-red-50"
-                        onClick={(e) => { e.stopPropagation(); openDeleteDialog(service); }}
-                      >
-                        <Trash2 size={14} />
-                      </Button>
-                    </div>
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity"
+                          onClick={(e) => e.stopPropagation()}
+                        >
+                          <MoreHorizontal size={16} />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="start">
+                        <DropdownMenuItem onClick={() => openEditDialog(service)}>
+                          <Pencil className="ml-2 h-4 w-4" />
+                          עריכה
+                        </DropdownMenuItem>
+                        <DropdownMenuItem>
+                          <Eye className="ml-2 h-4 w-4" />
+                          צפייה בנתונים
+                        </DropdownMenuItem>
+                        <DropdownMenuSeparator />
+                        <DropdownMenuItem
+                          className="text-red-600 focus:text-red-600"
+                          onClick={() => openDeleteDialog(service)}
+                        >
+                          <Trash2 className="ml-2 h-4 w-4" />
+                          מחיקה
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
                   </div>
 
                   <h3 className="font-bold text-gray-900 mb-1">{service.name}</h3>
@@ -274,19 +311,19 @@ export const ServicesPage = () => {
 
       {/* Empty State */}
       {!loading && filteredServices.length === 0 && (
-        <Card className="p-12 text-center">
-          <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
-            <Syringe size={32} className="text-gray-400" />
-          </div>
-          <h3 className="text-lg font-bold text-gray-900 mb-2">לא נמצאו טיפולים</h3>
-          <p className="text-gray-500 mb-4">
-            {searchTerm ? 'נסה לשנות את מילות החיפוש' : 'התחל להוסיף טיפולים למרפאה'}
-          </p>
-          {!searchTerm && (
-            <Button onClick={() => setIsAddOpen(true)}>
-              <Plus size={16} className="ml-2" /> הוסף טיפול ראשון
-            </Button>
-          )}
+        <Card className="p-12">
+          <Empty
+            icon={searchTerm ? Search : Syringe}
+            title={searchTerm ? 'לא נמצאו תוצאות' : 'לא נמצאו טיפולים'}
+            description={searchTerm ? 'נסה לשנות את מילות החיפוש' : 'התחל להוסיף טיפולים למרפאה'}
+            action={
+              !searchTerm ? (
+                <Button onClick={() => setIsAddOpen(true)}>
+                  <Plus size={16} className="ml-2" /> הוסף טיפול ראשון
+                </Button>
+              ) : undefined
+            }
+          />
         </Card>
       )}
 
@@ -320,16 +357,20 @@ export const ServicesPage = () => {
 
           <div>
             <Label>קטגוריה</Label>
-            <select
-              className="flex h-10 w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm"
+            <Select
               value={formData.category}
-              onChange={(e) => setFormData(prev => ({ ...prev, category: e.target.value }))}
+              onValueChange={(value) => setFormData(prev => ({ ...prev, category: value }))}
             >
-              <option value="הזרקות">הזרקות</option>
-              <option value="קוסמטיקה">קוסמטיקה</option>
-              <option value="טיפולי פנים">טיפולי פנים</option>
-              <option value="לייזר">לייזר</option>
-            </select>
+              <SelectTrigger>
+                <SelectValue placeholder="בחר קטגוריה" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="הזרקות">הזרקות</SelectItem>
+                <SelectItem value="קוסמטיקה">קוסמטיקה</SelectItem>
+                <SelectItem value="טיפולי פנים">טיפולי פנים</SelectItem>
+                <SelectItem value="לייזר">לייזר</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
 
           <div className="grid grid-cols-2 gap-4">
@@ -376,38 +417,35 @@ export const ServicesPage = () => {
         </div>
       </Dialog>
 
-      {/* Delete Confirmation Dialog */}
-      <Dialog
-        open={isDeleteOpen}
-        onClose={() => { setIsDeleteOpen(false); setSelectedService(null); }}
-        title="מחיקת טיפול"
-      >
-        <div className="space-y-4">
-          <p className="text-gray-600">
-            האם אתה בטוח שברצונך למחוק את הטיפול <strong>"{selectedService?.name}"</strong>?
-          </p>
-          <p className="text-sm text-amber-600 bg-amber-50 p-3 rounded-lg">
-            פעולה זו לא ניתנת לביטול. תורים קיימים לטיפול זה לא יימחקו.
-          </p>
-
-          <div className="flex justify-end gap-3 pt-4 border-t">
-            <Button
-              variant="ghost"
-              onClick={() => { setIsDeleteOpen(false); setSelectedService(null); }}
-              disabled={saving}
-            >
-              ביטול
-            </Button>
-            <Button
-              variant="destructive"
+      {/* Delete Confirmation AlertDialog */}
+      <AlertDialog open={isDeleteOpen} onOpenChange={(open) => { if (!open && !saving) { setIsDeleteOpen(false); setSelectedService(null); } }}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <div className="flex justify-center mb-4">
+              <div className="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center">
+                <Trash2 className="w-6 h-6 text-red-600" />
+              </div>
+            </div>
+            <AlertDialogTitle className="text-center">מחיקת טיפול</AlertDialogTitle>
+            <AlertDialogDescription className="text-center">
+              האם אתה בטוח שברצונך למחוק את הטיפול "{selectedService?.name}"?
+              <span className="block mt-2 text-amber-600">
+                פעולה זו לא ניתנת לביטול. תורים קיימים לטיפול זה לא יימחקו.
+              </span>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter className="flex-row-reverse gap-2 sm:justify-center">
+            <AlertDialogCancel disabled={saving}>ביטול</AlertDialogCancel>
+            <AlertDialogAction
               onClick={handleDelete}
               disabled={saving}
+              className="bg-red-600 hover:bg-red-700"
             >
               {saving ? 'מוחק...' : 'מחק טיפול'}
-            </Button>
-          </div>
-        </div>
-      </Dialog>
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };

@@ -1,13 +1,46 @@
-
 import { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import {
   Phone, Mail, AlertTriangle, FileText, Image as ImageIcon,
   Activity, Save, Plus, MoreHorizontal, X, ZoomIn,
   FileSignature, Send, Eye, CheckCircle2, Sparkles, Smile,
-  SplitSquareHorizontal, ShieldCheck, Download
+  SplitSquareHorizontal, ShieldCheck, Download, Trash2, Edit2,
+  Calendar, MessageSquare
 } from 'lucide-react';
 import { Button, Card, Badge, Dialog, Tabs, Breadcrumb } from '../components/ui';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '../components/ui/dropdown-menu';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '../components/ui/select';
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from '../components/ui/accordion';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '../components/ui/alert-dialog';
+import { Avatar, AvatarFallback, AvatarImage } from '../components/ui/avatar';
+import { Separator } from '../components/ui/separator';
 import { FaceMap } from '../components/FaceMap';
 import { ImageSlider } from '../components/ImageSlider';
 import { usePatients, useAppointments, useClinicalNotes, useDeclarations } from '../hooks';
@@ -123,7 +156,10 @@ export const PatientDetails = () => {
       <div className="bg-white rounded-xl p-6 border border-gray-200 shadow-sm flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
         <div className="flex items-center gap-4">
           <div className="relative">
-             <img src={patient.avatar} alt={`תמונת פרופיל של ${patient.name}`} loading="lazy" className="h-20 w-20 rounded-full object-cover border-4 border-gray-50 shadow-sm" />
+             <Avatar className="h-20 w-20 border-4 border-gray-50 shadow-sm">
+               <AvatarImage src={patient.avatar} alt={patient.name} />
+               <AvatarFallback className="text-xl">{patient.name.split(' ').map(n => n[0]).join('')}</AvatarFallback>
+             </Avatar>
              <div className={`absolute bottom-0 right-0 h-5 w-5 rounded-full border-2 border-white ${patient.riskLevel === 'high' ? 'bg-red-500' : 'bg-green-500'}`}></div>
           </div>
           <div>
@@ -142,7 +178,46 @@ export const PatientDetails = () => {
         <div className="flex flex-col sm:flex-row gap-3 w-full md:w-auto">
           <Button variant="outline" className="flex-1 sm:flex-none"><Phone size={16} className="ml-2"/> התקשר</Button>
           <Button variant="primary" className="flex-1 sm:flex-none"><Plus size={16} className="ml-2"/> טיפול חדש</Button>
-          <Button variant="ghost" size="icon" className="hidden sm:flex"><MoreHorizontal size={20}/></Button>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" size="icon" className="hidden sm:flex"><MoreHorizontal size={20}/></Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="start">
+              <DropdownMenuItem>
+                <Edit2 className="ml-2 h-4 w-4" />
+                עריכת פרופיל
+              </DropdownMenuItem>
+              <DropdownMenuItem>
+                <Calendar className="ml-2 h-4 w-4" />
+                קביעת תור
+              </DropdownMenuItem>
+              <DropdownMenuItem>
+                <MessageSquare className="ml-2 h-4 w-4" />
+                שלח הודעה
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <AlertDialog>
+                <AlertDialogTrigger asChild>
+                  <DropdownMenuItem onSelect={(e) => e.preventDefault()} className="text-red-600 focus:text-red-600">
+                    <Trash2 className="ml-2 h-4 w-4" />
+                    מחק מטופל
+                  </DropdownMenuItem>
+                </AlertDialogTrigger>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>מחיקת מטופל</AlertDialogTitle>
+                    <AlertDialogDescription>
+                      האם אתה בטוח שברצונך למחוק את {patient.name}? פעולה זו תמחק את כל המידע הקשור למטופל ולא ניתן לבטלה.
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter className="flex-row-reverse gap-2">
+                    <AlertDialogCancel>ביטול</AlertDialogCancel>
+                    <AlertDialogAction className="bg-red-600 hover:bg-red-700">מחק</AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
       </div>
 
@@ -195,24 +270,50 @@ export const PatientDetails = () => {
                         </div>
                      </div>
 
+                     <Separator className="my-4" />
+
                      <h4 className="text-sm font-medium text-gray-500 mb-2">היסטוריית טיפולים</h4>
-                     <div className="space-y-4">
-                     {appointments.length > 0 ? appointments.map(apt => (
-                        <div key={apt.id} className="flex items-center justify-between p-4 bg-gray-50 rounded-lg border border-gray-100">
-                           <div className="flex items-center gap-4">
-                           <div className="bg-white p-2 rounded-lg shadow-sm text-center min-w-[50px] border border-gray-100">
-                              <div className="text-xs text-gray-500">{new Date(apt.date).toLocaleDateString('he-IL', { month: 'short' })}</div>
-                              <div className="font-bold text-lg text-gray-900">{new Date(apt.date).getDate()}</div>
-                           </div>
-                           <div>
-                              <div className="font-medium text-gray-900">{apt.serviceName}</div>
-                              <div className="text-sm text-gray-500">{apt.time} • {apt.duration} דק׳</div>
-                           </div>
-                           </div>
-                           <Badge variant={apt.status === 'completed' ? 'success' : 'secondary'}>{apt.status}</Badge>
-                        </div>
-                     )) : <p className="text-gray-500 text-center py-8">אין היסטוריית טיפולים</p>}
-                     </div>
+                     {appointments.length > 0 ? (
+                        <Accordion type="single" collapsible className="space-y-2">
+                           {appointments.map(apt => (
+                              <AccordionItem key={apt.id} value={apt.id} className="border rounded-lg bg-gray-50/50 px-4">
+                                 <AccordionTrigger className="hover:no-underline py-3">
+                                    <div className="flex items-center gap-4 text-right w-full">
+                                       <div className="bg-white p-2 rounded-lg shadow-sm text-center min-w-[50px] border border-gray-100">
+                                          <div className="text-xs text-gray-500">{new Date(apt.date).toLocaleDateString('he-IL', { month: 'short' })}</div>
+                                          <div className="font-bold text-lg text-gray-900">{new Date(apt.date).getDate()}</div>
+                                       </div>
+                                       <div className="flex-1">
+                                          <div className="font-medium text-gray-900">{apt.serviceName}</div>
+                                          <div className="text-sm text-gray-500">{apt.time} • {apt.duration} דק׳</div>
+                                       </div>
+                                       <Badge variant={apt.status === 'completed' ? 'success' : 'secondary'}>{apt.status}</Badge>
+                                    </div>
+                                 </AccordionTrigger>
+                                 <AccordionContent className="pb-4 pt-2">
+                                    <div className="bg-white p-4 rounded-lg border space-y-2">
+                                       <div className="flex justify-between text-sm">
+                                          <span className="text-gray-500">מטפל/ת:</span>
+                                          <span className="font-medium">{apt.providerName || 'לא צוין'}</span>
+                                       </div>
+                                       <div className="flex justify-between text-sm">
+                                          <span className="text-gray-500">משך הטיפול:</span>
+                                          <span className="font-medium">{apt.duration} דקות</span>
+                                       </div>
+                                       {apt.notes && (
+                                          <div className="pt-2 border-t mt-2">
+                                             <span className="text-gray-500 text-xs block mb-1">הערות:</span>
+                                             <p className="text-sm">{apt.notes}</p>
+                                          </div>
+                                       )}
+                                    </div>
+                                 </AccordionContent>
+                              </AccordionItem>
+                           ))}
+                        </Accordion>
+                     ) : (
+                        <p className="text-gray-500 text-center py-8">אין היסטוריית טיפולים</p>
+                     )}
                   </Card>
                </div>
                
@@ -275,22 +376,32 @@ export const PatientDetails = () => {
                         <div className="space-y-4 animate-in fade-in zoom-in-95">
                            <div className="grid grid-cols-2 gap-4">
                               <div>
-                                 <label className="text-xs font-semibold text-gray-500 uppercase">אזור טיפול</label>
-                                 <select className="w-full mt-1 border border-gray-200 rounded-lg p-2 text-sm bg-white outline-none focus:ring-2 focus:ring-primary">
-                                    <option>פנים עליונות</option>
-                                    <option>פיסול אף</option>
-                                    <option>שפתיים</option>
-                                    <option>קו לסת</option>
-                                 </select>
+                                 <label className="text-xs font-semibold text-gray-500 uppercase mb-1 block">אזור טיפול</label>
+                                 <Select defaultValue="פנים עליונות">
+                                    <SelectTrigger>
+                                       <SelectValue placeholder="בחר אזור" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                       <SelectItem value="פנים עליונות">פנים עליונות</SelectItem>
+                                       <SelectItem value="פיסול אף">פיסול אף</SelectItem>
+                                       <SelectItem value="שפתיים">שפתיים</SelectItem>
+                                       <SelectItem value="קו לסת">קו לסת</SelectItem>
+                                    </SelectContent>
+                                 </Select>
                               </div>
                               <div>
-                                 <label className="text-xs font-semibold text-gray-500 uppercase">חומר</label>
-                                 <select className="w-full mt-1 border border-gray-200 rounded-lg p-2 text-sm bg-white outline-none focus:ring-2 focus:ring-primary">
-                                    <option>Dysport</option>
-                                    <option>Botox Allergan</option>
-                                    <option>Juvederm Voluma</option>
-                                    <option>Restylane</option>
-                                 </select>
+                                 <label className="text-xs font-semibold text-gray-500 uppercase mb-1 block">חומר</label>
+                                 <Select defaultValue="Dysport">
+                                    <SelectTrigger>
+                                       <SelectValue placeholder="בחר חומר" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                       <SelectItem value="Dysport">Dysport</SelectItem>
+                                       <SelectItem value="Botox Allergan">Botox Allergan</SelectItem>
+                                       <SelectItem value="Juvederm Voluma">Juvederm Voluma</SelectItem>
+                                       <SelectItem value="Restylane">Restylane</SelectItem>
+                                    </SelectContent>
+                                 </Select>
                               </div>
                            </div>
                            
@@ -403,12 +514,17 @@ export const PatientDetails = () => {
                            שלח למטופל קישור מאובטח לחתימה על טפסים (SMS/Email)
                         </p>
                         <div className="space-y-3">
-                           <select className="w-full text-sm border-gray-200 rounded-lg p-2.5 bg-white">
-                              <option>הצהרת בריאות שנתית</option>
-                              <option>טופס הסכמה - הזרקות</option>
-                              <option>טופס הסכמה - לייזר</option>
-                              <option>הסכם טיפול ונהלים</option>
-                           </select>
+                           <Select defaultValue="הצהרת בריאות שנתית">
+                              <SelectTrigger className="text-sm">
+                                 <SelectValue placeholder="בחר מסמך" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                 <SelectItem value="הצהרת בריאות שנתית">הצהרת בריאות שנתית</SelectItem>
+                                 <SelectItem value="טופס הסכמה - הזרקות">טופס הסכמה - הזרקות</SelectItem>
+                                 <SelectItem value="טופס הסכמה - לייזר">טופס הסכמה - לייזר</SelectItem>
+                                 <SelectItem value="הסכם טיפול ונהלים">הסכם טיפול ונהלים</SelectItem>
+                              </SelectContent>
+                           </Select>
                            <Button className="w-full shadow-sm">
                              <Send size={14} className="ml-2"/> שלח לחתימה
                            </Button>

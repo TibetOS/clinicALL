@@ -3,9 +3,32 @@ import {
   Calendar as CalendarIcon, FileText, AlertTriangle,
   Plus, ChevronLeft, Clock, CheckCircle,
   User, Phone, Gift, Send, Heart, Sparkles,
-  Sun, Moon, Coffee, UserCheck, MessageCircle
+  Sun, Moon, Coffee, UserCheck, MessageCircle,
+  MoreHorizontal, Eye, PhoneCall, HelpCircle, Info
 } from 'lucide-react';
 import { Card, Button, Input, Badge, Dialog, Label, Skeleton } from '../../components/ui';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '../../components/ui/tooltip';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '../../components/ui/dropdown-menu';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '../../components/ui/select';
+import { Avatar, AvatarFallback, AvatarImage } from '../../components/ui/avatar';
+import { Empty } from '../../components/ui/empty';
 import { usePatients, useAppointments, useServices, useInvoices, useDeclarations, useHealthTokens } from '../../hooks';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
@@ -291,39 +314,73 @@ export const Dashboard = () => {
       </div>
 
       {/* ========== DAILY SUMMARY STRIP ========== */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-        <div className="bg-white rounded-2xl p-4 shadow-sm border border-slate-100 hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 cursor-pointer group card-animate stagger-1">
-          <div className="flex items-center gap-2 mb-1">
-            <CalendarIcon size={16} className="text-slate-400 group-hover:text-rose-500 transition-colors duration-200" />
-            <span className="text-xs font-medium text-slate-500">תורים היום</span>
-          </div>
-          <p className="text-2xl font-bold text-slate-800 counter-animate">{todaysAppointments.length}</p>
-        </div>
+      <TooltipProvider>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <div className="bg-white rounded-2xl p-4 shadow-sm border border-slate-100 hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 cursor-pointer group card-animate stagger-1">
+                <div className="flex items-center gap-2 mb-1">
+                  <CalendarIcon size={16} className="text-slate-400 group-hover:text-rose-500 transition-colors duration-200" />
+                  <span className="text-xs font-medium text-slate-500">תורים היום</span>
+                  <Info size={12} className="text-slate-300 opacity-0 group-hover:opacity-100 transition-opacity" />
+                </div>
+                <p className="text-2xl font-bold text-slate-800 counter-animate">{todaysAppointments.length}</p>
+              </div>
+            </TooltipTrigger>
+            <TooltipContent>
+              <p>כל התורים שנקבעו להיום</p>
+            </TooltipContent>
+          </Tooltip>
 
-        <div className="bg-white rounded-2xl p-4 shadow-sm border border-slate-100 hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 cursor-pointer group card-animate stagger-2">
-          <div className="flex items-center gap-2 mb-1">
-            <CheckCircle size={16} className="text-slate-400 group-hover:text-green-500 transition-colors duration-200" />
-            <span className="text-xs font-medium text-slate-500">הושלמו</span>
-          </div>
-          <p className="text-2xl font-bold text-slate-800 counter-animate">{completedToday}</p>
-        </div>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <div className="bg-white rounded-2xl p-4 shadow-sm border border-slate-100 hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 cursor-pointer group card-animate stagger-2">
+                <div className="flex items-center gap-2 mb-1">
+                  <CheckCircle size={16} className="text-slate-400 group-hover:text-green-500 transition-colors duration-200" />
+                  <span className="text-xs font-medium text-slate-500">הושלמו</span>
+                  <Info size={12} className="text-slate-300 opacity-0 group-hover:opacity-100 transition-opacity" />
+                </div>
+                <p className="text-2xl font-bold text-slate-800 counter-animate">{completedToday}</p>
+              </div>
+            </TooltipTrigger>
+            <TooltipContent>
+              <p>תורים שהושלמו היום</p>
+            </TooltipContent>
+          </Tooltip>
 
-        <div className="bg-white rounded-2xl p-4 shadow-sm border border-slate-100 hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 cursor-pointer group card-animate stagger-3">
-          <div className="flex items-center gap-2 mb-1">
-            <Heart size={16} className="text-rose-500 group-hover:scale-110 transition-transform duration-200" />
-            <span className="text-xs font-medium text-slate-500">הכנסות היום</span>
-          </div>
-          <p className="text-2xl font-bold text-slate-800 counter-animate">₪{todaysRevenue.toLocaleString()}</p>
-        </div>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <div className="bg-white rounded-2xl p-4 shadow-sm border border-slate-100 hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 cursor-pointer group card-animate stagger-3">
+                <div className="flex items-center gap-2 mb-1">
+                  <Heart size={16} className="text-rose-500 group-hover:scale-110 transition-transform duration-200" />
+                  <span className="text-xs font-medium text-slate-500">הכנסות היום</span>
+                  <Info size={12} className="text-slate-300 opacity-0 group-hover:opacity-100 transition-opacity" />
+                </div>
+                <p className="text-2xl font-bold text-slate-800 counter-animate">₪{todaysRevenue.toLocaleString()}</p>
+              </div>
+            </TooltipTrigger>
+            <TooltipContent>
+              <p>סך כל התשלומים ששולמו היום</p>
+            </TooltipContent>
+          </Tooltip>
 
-        <div className="bg-white rounded-2xl p-4 shadow-sm border border-slate-100 hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 cursor-pointer group card-animate stagger-4">
-          <div className="flex items-center gap-2 mb-1">
-            <FileText size={16} className="text-slate-400 group-hover:text-amber-500 transition-colors duration-200" />
-            <span className="text-xs font-medium text-slate-500">הצהרות ממתינות</span>
-          </div>
-          <p className="text-2xl font-bold text-slate-800 counter-animate">{pendingDeclarations.length}</p>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <div className="bg-white rounded-2xl p-4 shadow-sm border border-slate-100 hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 cursor-pointer group card-animate stagger-4">
+                <div className="flex items-center gap-2 mb-1">
+                  <FileText size={16} className="text-slate-400 group-hover:text-amber-500 transition-colors duration-200" />
+                  <span className="text-xs font-medium text-slate-500">הצהרות ממתינות</span>
+                  <Info size={12} className="text-slate-300 opacity-0 group-hover:opacity-100 transition-opacity" />
+                </div>
+                <p className="text-2xl font-bold text-slate-800 counter-animate">{pendingDeclarations.length}</p>
+              </div>
+            </TooltipTrigger>
+            <TooltipContent>
+              <p>לקוחות שטרם חתמו על הצהרת בריאות</p>
+            </TooltipContent>
+          </Tooltip>
         </div>
-      </div>
+      </TooltipProvider>
 
       {/* ========== MAIN GRID ========== */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -347,22 +404,26 @@ export const Dashboard = () => {
                 </div>
               </div>
             ) : nextAppointment ? (
-              <div
-                className="flex items-center gap-4 p-4 rounded-2xl cursor-pointer transition-all hover:shadow-md bg-slate-50"
-                onClick={() => navigate(`/admin/patients/${nextAppointment.patientId}`)}
-              >
-                <div className="relative">
-                  <img
-                    src={nextAppointment.avatar}
-                    alt={nextAppointment.patientName}
-                    className="w-16 h-16 rounded-full object-cover ring-4 ring-white shadow-md"
-                  />
+              <div className="flex items-center gap-4 p-4 rounded-2xl transition-all hover:shadow-md bg-slate-50">
+                <div
+                  className="relative cursor-pointer"
+                  onClick={() => navigate(`/admin/patients/${nextAppointment.patientId}`)}
+                >
+                  <Avatar className="w-16 h-16 ring-4 ring-white shadow-md">
+                    <AvatarImage src={nextAppointment.avatar} alt={nextAppointment.patientName} />
+                    <AvatarFallback className="bg-rose-100 text-rose-700 text-lg">
+                      {nextAppointment.patientName.split(' ').map(n => n[0]).join('')}
+                    </AvatarFallback>
+                  </Avatar>
                   <div className="absolute -bottom-1 -right-1 w-6 h-6 rounded-full flex items-center justify-center text-white text-xs font-bold shadow-lg bg-rose-500">
                     {nextAppointment.time.split(':')[0]}
                   </div>
                 </div>
 
-                <div className="flex-1 min-w-0">
+                <div
+                  className="flex-1 min-w-0 cursor-pointer"
+                  onClick={() => navigate(`/admin/patients/${nextAppointment.patientId}`)}
+                >
                   <p className="font-bold text-lg text-slate-800">{nextAppointment.patientName}</p>
                   <p className="text-sm text-slate-600">{nextAppointment.serviceName}</p>
                   <div className="flex items-center gap-3 mt-2">
@@ -375,27 +436,49 @@ export const Dashboard = () => {
                   </div>
                 </div>
 
-                <ChevronLeft size={24} className="text-slate-400" />
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="ghost" size="icon" className="h-10 w-10">
+                      <MoreHorizontal size={20} className="text-slate-400" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="w-48">
+                    <DropdownMenuItem onClick={() => navigate(`/admin/patients/${nextAppointment.patientId}`)}>
+                      <Eye size={16} className="ml-2" />
+                      צפייה בכרטיס
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => navigate('/admin/calendar')}>
+                      <CalendarIcon size={16} className="ml-2" />
+                      פתח ביומן
+                    </DropdownMenuItem>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem onClick={() => {
+                      const patient = patients.find(p => p.id === nextAppointment.patientId);
+                      if (patient?.phone) window.open(`tel:${patient.phone}`);
+                    }}>
+                      <PhoneCall size={16} className="ml-2" />
+                      התקשר
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
               </div>
             ) : (
-              /* Empty State - Illustrated */
-              <div className="flex flex-col items-center justify-center py-10 text-center">
-                <div className="w-24 h-24 rounded-full flex items-center justify-center mb-4 relative bg-rose-50">
-                  <Coffee size={40} className="text-rose-500" />
-                  <div className="absolute -top-1 -right-1 w-8 h-8 rounded-full flex items-center justify-center bg-rose-500">
-                    <Sparkles size={16} className="text-white" />
-                  </div>
-                </div>
-                <p className="font-bold text-lg mb-1 text-slate-800">אין תורים כרגע</p>
-                <p className="text-sm mb-4 text-slate-600">יום מושלם לפנות ללקוחות ותיקות!</p>
-                <Button
-                  variant="outline"
-                  className="gap-2 border-2 border-rose-200 text-rose-600 hover:bg-rose-50"
-                  onClick={() => navigate('/admin/patients')}
-                >
-                  <Phone size={16} /> צפייה בלקוחות
-                </Button>
-              </div>
+              /* Empty State - Using Empty component */
+              <Empty
+                icon={<Coffee size={32} className="text-rose-500" />}
+                title="אין תורים כרגע"
+                description="יום מושלם לפנות ללקוחות ותיקות!"
+                action={
+                  <Button
+                    variant="outline"
+                    className="gap-2 border-2 border-rose-200 text-rose-600 hover:bg-rose-50"
+                    onClick={() => navigate('/admin/patients')}
+                  >
+                    <Phone size={16} /> צפייה בלקוחות
+                  </Button>
+                }
+                className="py-10 border-none min-h-0"
+              />
             )}
           </Card>
 
@@ -420,13 +503,12 @@ export const Dashboard = () => {
                 ))}
               </div>
             ) : patientsNeedingDeclaration.length === 0 ? (
-              <div className="flex flex-col items-center justify-center py-8 text-center">
-                <div className="w-20 h-20 rounded-full flex items-center justify-center mb-4 bg-green-50">
-                  <CheckCircle size={36} className="text-green-600" />
-                </div>
-                <p className="font-bold mb-1 text-slate-800">הכל מסודר!</p>
-                <p className="text-sm text-slate-600">כל הלקוחות חתמו על הצהרות</p>
-              </div>
+              <Empty
+                icon={<CheckCircle size={28} className="text-green-600" />}
+                title="הכל מסודר!"
+                description="כל הלקוחות חתמו על הצהרות"
+                className="py-8 border-none min-h-0"
+              />
             ) : (
               <div className="space-y-3">
                 {patientsNeedingDeclaration.map((item, index) => (
@@ -486,13 +568,12 @@ export const Dashboard = () => {
                 ))}
               </div>
             ) : dueForFollowUp.length === 0 ? (
-              <div className="flex flex-col items-center justify-center py-8 text-center">
-                <div className="w-20 h-20 rounded-full flex items-center justify-center mb-4 bg-green-50">
-                  <UserCheck size={36} className="text-green-600" />
-                </div>
-                <p className="font-bold mb-1 text-slate-800">אין מעקבים ממתינים</p>
-                <p className="text-sm text-slate-600">כל הלקוחות מטופלות</p>
-              </div>
+              <Empty
+                icon={<UserCheck size={28} className="text-green-600" />}
+                title="אין מעקבים ממתינים"
+                description="כל הלקוחות מטופלות"
+                className="py-8 border-none min-h-0"
+              />
             ) : (
               <div className="space-y-3">
                 {dueForFollowUp.map((item, index) => (
@@ -692,16 +773,21 @@ export const Dashboard = () => {
           </div>
           <div>
             <Label>טיפול</Label>
-            <select
-              className="flex h-10 w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm"
+            <Select
               value={apptForm.serviceId}
-              onChange={(e) => setApptForm(prev => ({ ...prev, serviceId: e.target.value }))}
+              onValueChange={(value) => setApptForm(prev => ({ ...prev, serviceId: value }))}
             >
-              <option value="">בחרי טיפול...</option>
-              {services.map(s => (
-                <option key={s.id} value={s.id}>{s.name} ({s.duration} דק׳)</option>
-              ))}
-            </select>
+              <SelectTrigger>
+                <SelectValue placeholder="בחרי טיפול..." />
+              </SelectTrigger>
+              <SelectContent>
+                {services.map(s => (
+                  <SelectItem key={s.id} value={s.id}>
+                    {s.name} ({s.duration} דק׳)
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
           <div className="grid grid-cols-2 gap-4">
             <div>
