@@ -1,10 +1,18 @@
-
 import { useState } from 'react';
 import {
   Search, Filter, Plus, Package, AlertTriangle,
   ArrowDown, ArrowUp, History, Download
 } from 'lucide-react';
 import { Card, Button, Input, Badge, Dialog, Label } from '../components/ui';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '../components/ui/select';
+import { Progress } from '../components/ui/progress';
+import { Empty } from '../components/ui/empty';
 import { useInventory } from '../hooks';
 import { InventoryItem } from '../types';
 import { createLogger } from '../lib/logger';
@@ -167,46 +175,55 @@ export const InventoryPage = () => {
 
       {/* Status Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-         <Card className={`p-4 flex items-center gap-4 border-l-4 border-l-red-500 transition-all ${
+         <Card className={`p-4 border-l-4 border-l-red-500 transition-all ${
            criticalCount > 0
              ? 'bg-red-50 ring-2 ring-red-200 shadow-lg'
              : 'bg-red-50/20'
          }`}>
-            <div className={`p-3 bg-white rounded-full shadow-sm text-red-500 ${
-              criticalCount > 0 ? 'animate-pulse' : ''
-            }`}>
-              <AlertTriangle size={24} className={criticalCount > 0 ? 'animate-bounce' : ''}/>
+            <div className="flex items-center gap-4 mb-3">
+              <div className={`p-3 bg-white rounded-full shadow-sm text-red-500 ${
+                criticalCount > 0 ? 'animate-pulse' : ''
+              }`}>
+                <AlertTriangle size={24} className={criticalCount > 0 ? 'animate-bounce' : ''}/>
+              </div>
+              <div>
+                 <p className="text-sm font-medium text-gray-600">פריטים במלאי קריטי</p>
+                 <h3 className={`text-2xl font-bold ${
+                   criticalCount > 0 ? 'text-red-600' : 'text-gray-900'
+                 }`}>{criticalCount}</h3>
+              </div>
             </div>
-            <div>
-               <p className="text-sm font-medium text-gray-600">פריטים במלאי קריטי</p>
-               <h3 className={`text-2xl font-bold ${
-                 criticalCount > 0 ? 'text-red-600' : 'text-gray-900'
-               }`}>{criticalCount}</h3>
-            </div>
+            <Progress value={inventory.length > 0 ? (criticalCount / inventory.length) * 100 : 0} className="h-2" indicatorClassName="bg-red-500" />
          </Card>
-         <Card className={`p-4 flex items-center gap-4 border-l-4 border-l-yellow-500 transition-all ${
+         <Card className={`p-4 border-l-4 border-l-yellow-500 transition-all ${
            lowStockCount > 0
              ? 'bg-yellow-50 ring-2 ring-yellow-200 shadow-lg'
              : 'bg-yellow-50/20'
          }`}>
-            <div className={`p-3 bg-white rounded-full shadow-sm text-yellow-600 ${
-              lowStockCount > 0 ? 'animate-pulse' : ''
-            }`}>
-              <Package size={24}/>
+            <div className="flex items-center gap-4 mb-3">
+              <div className={`p-3 bg-white rounded-full shadow-sm text-yellow-600 ${
+                lowStockCount > 0 ? 'animate-pulse' : ''
+              }`}>
+                <Package size={24}/>
+              </div>
+              <div>
+                 <p className="text-sm font-medium text-gray-600">פריטים במלאי נמוך</p>
+                 <h3 className={`text-2xl font-bold ${
+                   lowStockCount > 0 ? 'text-yellow-600' : 'text-gray-900'
+                 }`}>{lowStockCount}</h3>
+              </div>
             </div>
-            <div>
-               <p className="text-sm font-medium text-gray-600">פריטים במלאי נמוך</p>
-               <h3 className={`text-2xl font-bold ${
-                 lowStockCount > 0 ? 'text-yellow-600' : 'text-gray-900'
-               }`}>{lowStockCount}</h3>
-            </div>
+            <Progress value={inventory.length > 0 ? (lowStockCount / inventory.length) * 100 : 0} className="h-2" indicatorClassName="bg-yellow-500" />
          </Card>
-         <Card className="p-4 flex items-center gap-4 border-l-4 border-l-blue-500 bg-blue-50/20">
-            <div className="p-3 bg-white rounded-full shadow-sm text-blue-600"><History size={24}/></div>
-            <div>
-               <p className="text-sm font-medium text-gray-600">סה״כ יחידות במלאי</p>
-               <h3 className="text-2xl font-bold text-gray-900">{totalQuantity.toLocaleString()}</h3>
+         <Card className="p-4 border-l-4 border-l-blue-500 bg-blue-50/20">
+            <div className="flex items-center gap-4 mb-3">
+              <div className="p-3 bg-white rounded-full shadow-sm text-blue-600"><History size={24}/></div>
+              <div>
+                 <p className="text-sm font-medium text-gray-600">סה״כ יחידות במלאי</p>
+                 <h3 className="text-2xl font-bold text-gray-900">{totalQuantity.toLocaleString()}</h3>
+              </div>
             </div>
+            <Progress value={100} className="h-2" indicatorClassName="bg-blue-500" />
          </Card>
       </div>
 
@@ -253,10 +270,19 @@ export const InventoryPage = () => {
                     </tr>
                   ) : filteredItems.length === 0 ? (
                     <tr>
-                      <td colSpan={7} className="px-6 py-12 text-center text-gray-500">
-                        <Package size={48} className="mx-auto mb-4 text-gray-300" />
-                        <p className="font-medium">לא נמצאו פריטים</p>
-                        <p className="text-sm">נסה לשנות את מונחי החיפוש או הוסף פריט חדש</p>
+                      <td colSpan={7} className="px-6 py-12">
+                        <Empty
+                          icon={searchTerm ? Search : Package}
+                          title={searchTerm ? 'לא נמצאו תוצאות' : 'אין פריטים במלאי'}
+                          description={searchTerm ? 'נסה לשנות את מונחי החיפוש' : 'הוסף פריט חדש כדי להתחיל'}
+                          action={
+                            !searchTerm ? (
+                              <Button onClick={() => setIsAddOpen(true)}>
+                                <Plus size={16} className="ml-2" /> קליטת סחורה
+                              </Button>
+                            ) : undefined
+                          }
+                        />
                       </td>
                     </tr>
                   ) : filteredItems.map(item => (
@@ -394,15 +420,19 @@ export const InventoryPage = () => {
                </div>
                <div>
                   <Label>קטגוריה</Label>
-                  <select
-                    className="flex h-10 w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm"
+                  <Select
                     value={newItem.category}
-                    onChange={(e) => setNewItem(prev => ({ ...prev, category: e.target.value }))}
+                    onValueChange={(value) => setNewItem(prev => ({ ...prev, category: value }))}
                   >
-                     <option>רעלנים (Toxins)</option>
-                     <option>חומרי מילוי (Fillers)</option>
-                     <option>ציוד מתכלה</option>
-                  </select>
+                    <SelectTrigger>
+                      <SelectValue placeholder="בחר קטגוריה" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="רעלנים (Toxins)">רעלנים (Toxins)</SelectItem>
+                      <SelectItem value="חומרי מילוי (Fillers)">חומרי מילוי (Fillers)</SelectItem>
+                      <SelectItem value="ציוד מתכלה">ציוד מתכלה</SelectItem>
+                    </SelectContent>
+                  </Select>
                </div>
                <div>
                   <Label>כמות התחלתית</Label>

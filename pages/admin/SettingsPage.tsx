@@ -2,9 +2,30 @@ import { useState, useEffect } from 'react';
 import {
   Settings as SettingsIcon, UserPlus, MoreVertical, Crown,
   CreditCard, ArrowUpRight, Download, Check, XCircle, Sparkles,
-  Globe, Image as ImageIcon, Loader2
+  Globe, Image as ImageIcon, Loader2, Trash2, Edit2
 } from 'lucide-react';
 import { Card, Button, Input, Badge, Tabs, TabsList, TabsTrigger, Label, Skeleton } from '../../components/ui';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '../../components/ui/alert-dialog';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '../../components/ui/dropdown-menu';
+import { Separator } from '../../components/ui/separator';
+import { Avatar, AvatarFallback, AvatarImage } from '../../components/ui/avatar';
+import { Progress } from '../../components/ui/progress';
 import { useSearchParams } from 'react-router-dom';
 import { useMyClinic, useStaff, usePatients, useAppointments, useInvoices } from '../../hooks';
 import { useAuth } from '../../contexts/AuthContext';
@@ -365,11 +386,10 @@ export const SettingsPage = () => {
                     staff.map((member) => (
                       <div key={member.id} className="flex items-center justify-between p-4 bg-stone-50 rounded-xl">
                         <div className="flex items-center gap-3">
-                          <img
-                            src={member.avatar}
-                            alt={member.name}
-                            className="w-10 h-10 rounded-full object-cover"
-                          />
+                          <Avatar className="w-10 h-10">
+                            <AvatarImage src={member.avatar} alt={member.name} />
+                            <AvatarFallback>{member.name.split(' ').map(n => n[0]).join('')}</AvatarFallback>
+                          </Avatar>
                           <div>
                             <p className="font-bold text-gray-900">{member.name}</p>
                             <p className="text-sm text-gray-500">{member.role}</p>
@@ -377,7 +397,22 @@ export const SettingsPage = () => {
                         </div>
                         <div className="flex items-center gap-2">
                           <Badge variant="success">פעיל</Badge>
-                          <Button variant="ghost" size="icon"><MoreVertical size={16} /></Button>
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button variant="ghost" size="icon"><MoreVertical size={16} /></Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="start">
+                              <DropdownMenuItem>
+                                <Edit2 className="ml-2 h-4 w-4" />
+                                עריכת פרטים
+                              </DropdownMenuItem>
+                              <DropdownMenuSeparator />
+                              <DropdownMenuItem className="text-red-600 focus:text-red-600">
+                                <Trash2 className="ml-2 h-4 w-4" />
+                                הסרה מהצוות
+                              </DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
                         </div>
                       </div>
                     ))
@@ -419,30 +454,22 @@ export const SettingsPage = () => {
                       <div>
                         <p className="text-xs text-gray-500 mb-1">מטופלים פעילים</p>
                         <p className="text-lg font-bold text-gray-900">{activePatients} <span className="text-sm font-normal text-gray-400">/ 500</span></p>
-                        <div className="w-full bg-gray-200 rounded-full h-1.5 mt-1">
-                          <div className="bg-primary h-1.5 rounded-full" style={{ width: `${Math.min((activePatients / 500) * 100, 100)}%` }}></div>
-                        </div>
+                        <Progress value={Math.min((activePatients / 500) * 100, 100)} className="h-1.5 mt-1" />
                       </div>
                       <div>
                         <p className="text-xs text-gray-500 mb-1">תורים החודש</p>
                         <p className="text-lg font-bold text-gray-900">{monthlyAppointments} <span className="text-sm font-normal text-gray-400">/ ללא הגבלה</span></p>
-                        <div className="w-full bg-gray-200 rounded-full h-1.5 mt-1">
-                          <div className="bg-green-500 h-1.5 rounded-full" style={{ width: '100%' }}></div>
-                        </div>
+                        <Progress value={100} className="h-1.5 mt-1" indicatorClassName="bg-green-500" />
                       </div>
                       <div>
                         <p className="text-xs text-gray-500 mb-1">SMS שנשלחו</p>
                         <p className="text-lg font-bold text-gray-900">-- <span className="text-sm font-normal text-gray-400">/ 500</span></p>
-                        <div className="w-full bg-gray-200 rounded-full h-1.5 mt-1">
-                          <div className="bg-amber-500 h-1.5 rounded-full" style={{ width: '0%' }}></div>
-                        </div>
+                        <Progress value={0} className="h-1.5 mt-1" indicatorClassName="bg-amber-500" />
                       </div>
                       <div>
                         <p className="text-xs text-gray-500 mb-1">שאילתות AI</p>
                         <p className="text-lg font-bold text-gray-900">-- <span className="text-sm font-normal text-gray-400">/ 200</span></p>
-                        <div className="w-full bg-gray-200 rounded-full h-1.5 mt-1">
-                          <div className="bg-purple-500 h-1.5 rounded-full" style={{ width: '0%' }}></div>
-                        </div>
+                        <Progress value={0} className="h-1.5 mt-1" indicatorClassName="bg-purple-500" />
                       </div>
                     </div>
 
@@ -450,9 +477,28 @@ export const SettingsPage = () => {
                       <Button variant="outline" size="sm">
                         <ArrowUpRight size={14} className="ml-2" /> שדרג חבילה
                       </Button>
-                      <Button variant="ghost" size="sm" className="text-red-500 hover:text-red-600 hover:bg-red-50">
-                        בטל מנוי
-                      </Button>
+                      <AlertDialog>
+                        <AlertDialogTrigger asChild>
+                          <Button variant="ghost" size="sm" className="text-red-500 hover:text-red-600 hover:bg-red-50">
+                            בטל מנוי
+                          </Button>
+                        </AlertDialogTrigger>
+                        <AlertDialogContent>
+                          <AlertDialogHeader>
+                            <AlertDialogTitle>ביטול מנוי</AlertDialogTitle>
+                            <AlertDialogDescription>
+                              האם אתה בטוח שברצונך לבטל את המנוי?
+                              תאבד גישה לכל התכונות המתקדמות בסוף תקופת החיוב הנוכחית.
+                            </AlertDialogDescription>
+                          </AlertDialogHeader>
+                          <AlertDialogFooter className="flex-row-reverse gap-2">
+                            <AlertDialogCancel>חזור</AlertDialogCancel>
+                            <AlertDialogAction className="bg-red-600 hover:bg-red-700">
+                              בטל מנוי
+                            </AlertDialogAction>
+                          </AlertDialogFooter>
+                        </AlertDialogContent>
+                      </AlertDialog>
                     </div>
                   </Card>
                 </div>
