@@ -427,8 +427,8 @@ export const Dashboard = () => {
                   <p className="font-bold text-lg text-slate-800">{nextAppointment.patientName}</p>
                   <p className="text-sm text-slate-600">{nextAppointment.serviceName}</p>
                   <div className="flex items-center gap-3 mt-2">
-                    <Badge className="border-none bg-rose-100 text-rose-700">
-                      <Clock size={12} className="ml-1" /> {nextAppointment.time}
+                    <Badge className="border-none bg-rose-100 text-rose-700 gap-1">
+                      <Clock size={12} /> {nextAppointment.time}
                     </Badge>
                     <Badge className="border-none bg-slate-100 text-slate-600">
                       {nextAppointment.duration} דק׳
@@ -443,20 +443,20 @@ export const Dashboard = () => {
                     </Button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end" className="w-48">
-                    <DropdownMenuItem onClick={() => navigate(`/admin/patients/${nextAppointment.patientId}`)}>
-                      <Eye size={16} className="ml-2" />
+                    <DropdownMenuItem className="gap-2" onClick={() => navigate(`/admin/patients/${nextAppointment.patientId}`)}>
+                      <Eye size={16} />
                       צפייה בכרטיס
                     </DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => navigate('/admin/calendar')}>
-                      <CalendarIcon size={16} className="ml-2" />
+                    <DropdownMenuItem className="gap-2" onClick={() => navigate('/admin/calendar')}>
+                      <CalendarIcon size={16} />
                       פתח ביומן
                     </DropdownMenuItem>
                     <DropdownMenuSeparator />
-                    <DropdownMenuItem onClick={() => {
+                    <DropdownMenuItem className="gap-2" onClick={() => {
                       const patient = patients.find(p => p.id === nextAppointment.patientId);
                       if (patient?.phone) window.open(`tel:${patient.phone}`);
                     }}>
-                      <PhoneCall size={16} className="ml-2" />
+                      <PhoneCall size={16} />
                       התקשר
                     </DropdownMenuItem>
                   </DropdownMenuContent>

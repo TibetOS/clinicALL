@@ -343,19 +343,20 @@ export const PatientList = () => {
         <div className="flex gap-2">
           <Button
             variant="outline"
+            className="gap-2"
             onClick={() => {
               setIsSelectionMode(!isSelectionMode);
               setSelectedIds(new Set());
             }}
           >
-            <CheckSquare className="ml-2 h-4 w-4" />
+            <CheckSquare className="h-4 w-4" />
             {isSelectionMode ? 'בטל בחירה' : 'בחירה מרובה'}
           </Button>
-          <Button variant="outline" onClick={() => openHealthDeclarationDialog()}>
-            <FileHeart className="ml-2 h-4 w-4" /> הצהרת בריאות
+          <Button variant="outline" className="gap-2" onClick={() => openHealthDeclarationDialog()}>
+            <FileHeart className="h-4 w-4" /> הצהרת בריאות
           </Button>
-          <Button className="shadow-sm" onClick={() => setIsAddPatientOpen(true)}>
-            <UserPlus className="ml-2 h-4 w-4" /> מטופל חדש
+          <Button className="shadow-sm gap-2" onClick={() => setIsAddPatientOpen(true)}>
+            <UserPlus className="h-4 w-4" /> מטופל חדש
           </Button>
         </div>
       </div>
@@ -367,14 +368,14 @@ export const PatientList = () => {
             {selectedIds.size} מטופלים נבחרו
           </span>
           <div className="flex gap-2">
-            <Button variant="outline" size="sm" onClick={handleExportSelected}>
-              <FileDown size={16} className="ml-2" /> ייצוא ל-CSV
+            <Button variant="outline" size="sm" className="gap-1.5" onClick={handleExportSelected}>
+              <FileDown size={16} /> ייצוא ל-CSV
             </Button>
-            <Button variant="outline" size="sm">
-              <MessageSquare size={16} className="ml-2" /> שלח SMS
+            <Button variant="outline" size="sm" className="gap-1.5">
+              <MessageSquare size={16} /> שלח SMS
             </Button>
-            <Button variant="destructive" size="sm" onClick={() => setIsDeleteConfirmOpen(true)}>
-              <Trash2 size={16} className="ml-2" /> מחק
+            <Button variant="destructive" size="sm" className="gap-1.5" onClick={() => setIsDeleteConfirmOpen(true)}>
+              <Trash2 size={16} /> מחק
             </Button>
           </div>
         </div>
@@ -396,10 +397,10 @@ export const PatientList = () => {
           <Button
             variant={hasActiveFilters ? "primary" : "outline"}
             size="sm"
-            className="flex-1 relative"
+            className="flex-1 relative gap-1.5"
             onClick={() => setIsFilterOpen(true)}
           >
-            <Filter className="ml-2 h-3 w-3" /> סינון
+            <Filter className="h-3 w-3" /> סינון
             {hasActiveFilters && (
               <span className="absolute -top-1 -left-1 w-4 h-4 bg-red-500 text-white text-[10px] rounded-full flex items-center justify-center">
                 !
@@ -409,13 +410,13 @@ export const PatientList = () => {
           <Button
             variant="outline"
             size="sm"
-            className="flex-1"
+            className="flex-1 gap-1.5"
             onClick={() => {
               exportToCSV(filteredPatients, 'patients');
               showSuccess('הקובץ הורד בהצלחה');
             }}
           >
-            <Download className="ml-2 h-3 w-3" /> ייצוא
+            <Download className="h-3 w-3" /> ייצוא
           </Button>
         </div>
       </div>
@@ -483,13 +484,13 @@ export const PatientList = () => {
                     description={hasActiveFilters ? 'נסה לשנות את מסנני החיפוש' : 'הוסף מטופל חדש כדי להתחיל'}
                     action={
                       hasActiveFilters ? (
-                        <Button variant="outline" onClick={() => setFilters(INITIAL_FILTERS)}>
-                          <X className="ml-2 h-4 w-4" />
+                        <Button variant="outline" className="gap-2" onClick={() => setFilters(INITIAL_FILTERS)}>
+                          <X className="h-4 w-4" />
                           נקה סינון
                         </Button>
                       ) : (
-                        <Button onClick={() => setIsAddPatientOpen(true)}>
-                          <UserPlus className="ml-2 h-4 w-4" />
+                        <Button className="gap-2" onClick={() => setIsAddPatientOpen(true)}>
+                          <UserPlus className="h-4 w-4" />
                           הוסף מטופל
                         </Button>
                       )
@@ -549,13 +550,13 @@ export const PatientList = () => {
                           <Button
                             variant="ghost"
                             size="sm"
-                            className="h-7 px-2 text-xs"
+                            className="h-7 px-2 text-xs gap-1"
                             onClick={(e) => {
                               e.stopPropagation();
                               openHealthDeclarationDialog(patient);
                             }}
                           >
-                            <Send size={12} className="ml-1" />
+                            <Send size={12} />
                             שלח
                           </Button>
                         )}
@@ -576,29 +577,29 @@ export const PatientList = () => {
                       </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="start">
-                      <DropdownMenuItem onClick={() => navigate(`/admin/patients/${patient.id}`)}>
-                        <Eye className="ml-2 h-4 w-4" />
+                      <DropdownMenuItem className="gap-2" onClick={() => navigate(`/admin/patients/${patient.id}`)}>
+                        <Eye className="h-4 w-4" />
                         צפייה בפרופיל
                       </DropdownMenuItem>
-                      <DropdownMenuItem onClick={() => navigate(`/admin/patients/${patient.id}?tab=appointments`)}>
-                        <Calendar className="ml-2 h-4 w-4" />
+                      <DropdownMenuItem className="gap-2" onClick={() => navigate(`/admin/patients/${patient.id}?tab=appointments`)}>
+                        <Calendar className="h-4 w-4" />
                         קביעת תור
                       </DropdownMenuItem>
                       {(patient.declarationStatus === 'none' || patient.declarationStatus === 'expired') && (
-                        <DropdownMenuItem onClick={() => openHealthDeclarationDialog(patient)}>
-                          <FileHeart className="ml-2 h-4 w-4" />
+                        <DropdownMenuItem className="gap-2" onClick={() => openHealthDeclarationDialog(patient)}>
+                          <FileHeart className="h-4 w-4" />
                           שלח הצהרת בריאות
                         </DropdownMenuItem>
                       )}
                       <DropdownMenuSeparator />
                       <DropdownMenuItem
-                        className="text-red-600 focus:text-red-600"
+                        className="text-red-600 focus:text-red-600 gap-2"
                         onClick={() => {
                           setSelectedIds(new Set([patient.id]));
                           setIsDeleteConfirmOpen(true);
                         }}
                       >
-                        <Trash2 className="ml-2 h-4 w-4" />
+                        <Trash2 className="h-4 w-4" />
                         מחיקה
                       </DropdownMenuItem>
                     </DropdownMenuContent>
@@ -650,13 +651,13 @@ export const PatientList = () => {
               description={hasActiveFilters ? 'נסה לשנות את מסנני החיפוש' : 'הוסף מטופל חדש כדי להתחיל'}
               action={
                 hasActiveFilters ? (
-                  <Button variant="outline" onClick={() => setFilters(INITIAL_FILTERS)}>
-                    <X className="ml-2 h-4 w-4" />
+                  <Button variant="outline" className="gap-2" onClick={() => setFilters(INITIAL_FILTERS)}>
+                    <X className="h-4 w-4" />
                     נקה סינון
                   </Button>
                 ) : (
-                  <Button onClick={() => setIsAddPatientOpen(true)}>
-                    <UserPlus className="ml-2 h-4 w-4" />
+                  <Button className="gap-2" onClick={() => setIsAddPatientOpen(true)}>
+                    <UserPlus className="h-4 w-4" />
                     הוסף מטופל
                   </Button>
                 )
@@ -726,13 +727,13 @@ export const PatientList = () => {
               <Button
                 variant="outline"
                 size="sm"
-                className="w-full mt-2"
+                className="w-full mt-2 gap-2"
                 onClick={(e) => {
                   e.stopPropagation();
                   openHealthDeclarationDialog(patient);
                 }}
               >
-                <Send size={14} className="ml-2" />
+                <Send size={14} />
                 שלח הצהרת בריאות
               </Button>
             )}
@@ -895,10 +896,11 @@ export const PatientList = () => {
           <div className="flex justify-between gap-3 pt-4 border-t mt-4">
             <Button
               variant="ghost"
+              className="gap-2"
               onClick={() => setFilters(INITIAL_FILTERS)}
               disabled={!hasActiveFilters}
             >
-              <X size={16} className="ml-2" /> נקה סינון
+              <X size={16} /> נקה סינון
             </Button>
             <Button onClick={() => setIsFilterOpen(false)}>
               החל סינון ({filteredPatients.length} תוצאות)
