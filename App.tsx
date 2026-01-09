@@ -172,27 +172,27 @@ const AdminLayout = ({ children }: { children?: React.ReactNode }) => {
   ];
 
   return (
-    <div className="min-h-screen flex overflow-hidden bg-gray-50" dir="rtl">
-      {/* Sidebar */}
+    <div className="min-h-screen flex overflow-hidden bg-slate-50" dir="rtl">
+      {/* Sidebar - Dark Slate */}
       <aside
         className={`
-          fixed inset-y-0 right-0 z-50 w-72 bg-white border-l border-gray-100 shadow-xl lg:shadow-sm transform transition-transform duration-300 ease-in-out flex flex-col
+          fixed inset-y-0 right-0 z-50 w-72 bg-slate-800 shadow-xl lg:shadow-lg transform transition-transform duration-300 ease-in-out flex flex-col
           ${sidebarOpen ? 'translate-x-0' : 'translate-x-full'}
           lg:relative lg:translate-x-0
         `}
       >
-        <div className="h-16 lg:h-20 flex items-center px-6 lg:px-8 border-b border-gray-100 shrink-0 justify-between lg:justify-start">
+        <div className="h-16 lg:h-20 flex items-center px-6 lg:px-8 border-b border-slate-700/50 shrink-0 justify-between lg:justify-start">
           <div className="flex items-center">
             <Link to="/">
-               <div className="h-10 w-10 rounded-2xl flex items-center justify-center text-white font-bold text-lg ml-3 shadow-lg bg-gradient-to-br from-teal-500 to-teal-700" style={{ boxShadow: '0 4px 14px rgba(13, 148, 136, 0.3)' }}>C</div>
+               <div className="h-10 w-10 rounded-2xl flex items-center justify-center text-white font-bold text-lg ml-3 shadow-lg bg-gradient-to-br from-rose-500 to-rose-600" style={{ boxShadow: '0 4px 14px rgba(244, 63, 94, 0.3)' }}>C</div>
             </Link>
             <div>
-               <span className="font-bold text-xl tracking-tight block leading-tight text-gray-900">ClinicALL</span>
-               <span className="text-[10px] font-medium tracking-widest uppercase text-gray-400">Medical System</span>
+               <span className="font-bold text-xl tracking-tight block leading-tight text-white">ClinicALL</span>
+               <span className="text-[10px] font-medium tracking-widest uppercase text-slate-400">Beauty System</span>
             </div>
           </div>
           {/* Close button for mobile */}
-          <button onClick={() => setSidebarOpen(false)} className="lg:hidden p-1 text-gray-500" aria-label="סגור תפריט">
+          <button onClick={() => setSidebarOpen(false)} className="lg:hidden p-1 text-slate-400 hover:text-white" aria-label="סגור תפריט">
             <X size={24} />
           </button>
         </div>
@@ -208,50 +208,50 @@ const AdminLayout = ({ children }: { children?: React.ReactNode }) => {
                 className={`
                   flex items-center gap-3 px-4 py-3 text-sm font-medium rounded-xl transition-all duration-200 group relative
                   ${isActive
-                    ? 'bg-teal-50 text-teal-700 shadow-sm ring-1 ring-teal-100'
-                    : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'}
+                    ? 'bg-rose-500 text-white shadow-lg'
+                    : 'text-slate-300 hover:bg-slate-700/50 hover:text-white'}
                 `}
               >
                 {/* Active indicator bar on right */}
                 {isActive && (
-                  <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-8 rounded-l-full bg-teal-500" />
+                  <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-8 rounded-l-full bg-rose-300" />
                 )}
-                <Icon size={20} className={isActive ? 'text-teal-600' : 'text-gray-400 group-hover:text-gray-600'} />
+                <Icon size={20} className={isActive ? 'text-white' : 'text-slate-400 group-hover:text-slate-200'} />
                 {item.label}
-                {isActive && <ChevronLeft className="mr-auto h-4 w-4 opacity-50" />}
+                {isActive && <ChevronLeft className="mr-auto h-4 w-4 text-rose-200" />}
               </Link>
             )
           })}
         </nav>
 
         {/* Subscription Widget & Logout */}
-        <div className="p-4 mt-auto border-t border-gray-100 bg-gray-50/50">
+        <div className="p-4 mt-auto border-t border-slate-700/50 bg-slate-900/30">
            {/* Plan Widget - Clickable Link to Settings */}
            <Link to="/admin/settings?tab=billing">
-             <div className="bg-gradient-to-br from-gray-900 to-gray-800 rounded-xl p-4 text-white mb-4 shadow-lg relative overflow-hidden group cursor-pointer hover:shadow-xl transition-all transform hover:-translate-y-0.5">
-                <div className="absolute -top-6 -right-6 w-20 h-20 bg-teal-500/20 rounded-full blur-xl group-hover:bg-teal-500/30 transition-colors"></div>
+             <div className="bg-gradient-to-br from-slate-700 to-slate-800 rounded-xl p-4 text-white mb-4 shadow-lg relative overflow-hidden group cursor-pointer hover:shadow-xl transition-all transform hover:-translate-y-0.5 ring-1 ring-slate-600/50">
+                <div className="absolute -top-6 -right-6 w-20 h-20 bg-rose-500/20 rounded-full blur-xl group-hover:bg-rose-500/30 transition-colors"></div>
 
                 <div className="flex justify-between items-start mb-2 relative z-10">
                    <div>
-                      <p className="text-[10px] text-gray-400 uppercase tracking-wider font-semibold">התוכנית שלך</p>
+                      <p className="text-[10px] text-slate-400 uppercase tracking-wider font-semibold">התוכנית שלך</p>
                       <div className="flex items-center gap-2 mt-0.5">
                          <Crown size={14} className="text-yellow-400" />
                          <span className="font-bold text-sm">Professional</span>
                       </div>
                    </div>
-                   <Badge variant="success" className="text-[10px] h-5 bg-teal-500 text-white border-none">פעיל</Badge>
+                   <Badge variant="success" className="text-[10px] h-5 bg-rose-500 text-white border-none">פעיל</Badge>
                 </div>
 
-                <div className="w-full bg-gray-700/50 rounded-full h-1.5 mb-2 relative z-10">
-                   <div className="bg-teal-500 h-1.5 rounded-full" style={{ width: '65%' }}></div>
+                <div className="w-full bg-slate-600/50 rounded-full h-1.5 mb-2 relative z-10">
+                   <div className="bg-rose-500 h-1.5 rounded-full" style={{ width: '65%' }}></div>
                 </div>
-                <p className="text-[10px] text-gray-400 relative z-10">65% ניצולת חבילה החודש</p>
+                <p className="text-[10px] text-slate-400 relative z-10">65% ניצולת חבילה החודש</p>
              </div>
            </Link>
 
            <Button
              variant="ghost"
-             className="w-full justify-start text-red-500 hover:text-red-600 hover:bg-red-50 rounded-xl"
+             className="w-full justify-start text-slate-400 hover:text-red-400 hover:bg-slate-700/50 rounded-xl"
              onClick={async () => {
                await signOut();
                navigate('/login');
@@ -263,10 +263,10 @@ const AdminLayout = ({ children }: { children?: React.ReactNode }) => {
       </aside>
 
       {/* Main Content */}
-      <div className="flex-1 flex flex-col h-screen overflow-hidden bg-gray-50">
+      <div className="flex-1 flex flex-col h-screen overflow-hidden bg-slate-50">
         {/* Header */}
-        <header className="h-16 lg:h-20 bg-white/90 backdrop-blur-md border-b border-gray-100 flex items-center justify-between px-4 lg:px-10 z-40 sticky top-0 transition-all duration-200">
-          <button onClick={() => setSidebarOpen(!sidebarOpen)} className="lg:hidden p-2 -mr-2 text-gray-600 hover:bg-gray-100 rounded-lg" aria-label={sidebarOpen ? 'סגור תפריט' : 'פתח תפריט'} aria-expanded={sidebarOpen}>
+        <header className="h-16 lg:h-20 bg-white/90 backdrop-blur-md border-b border-slate-200 flex items-center justify-between px-4 lg:px-10 z-40 sticky top-0 transition-all duration-200">
+          <button onClick={() => setSidebarOpen(!sidebarOpen)} className="lg:hidden p-2 -mr-2 text-slate-600 hover:bg-slate-100 rounded-lg" aria-label={sidebarOpen ? 'סגור תפריט' : 'פתח תפריט'} aria-expanded={sidebarOpen}>
             <Menu />
           </button>
 
@@ -374,16 +374,16 @@ const AdminLayout = ({ children }: { children?: React.ReactNode }) => {
               )}
             </div>
 
-            <div className="flex items-center gap-3 pl-2 border-r border-gray-100 pr-4">
+            <div className="flex items-center gap-3 pl-2 border-r border-slate-200 pr-4">
                <div className="text-left hidden md:block">
-                  <div className="text-sm font-bold text-gray-900">{profile?.full_name || 'ד״ר שרה כהן'}</div>
-                  <div className="text-xs text-gray-500">
+                  <div className="text-sm font-bold text-slate-800">{profile?.full_name || 'ד״ר שרה כהן'}</div>
+                  <div className="text-xs text-slate-500">
                     {profile?.role === 'owner' ? 'בעלים' :
                      profile?.role === 'admin' ? 'מנהל/ת' :
                      profile?.role === 'staff' ? 'צוות' : 'מנהלת רפואית'}
                   </div>
                </div>
-               <div className="h-9 w-9 rounded-full bg-teal-100 text-teal-700 flex items-center justify-center font-bold text-sm ring-2 ring-white shadow-sm">
+               <div className="h-9 w-9 rounded-full bg-rose-100 text-rose-600 flex items-center justify-center font-bold text-sm ring-2 ring-white shadow-sm">
                  {profile?.full_name?.charAt(0) || 'ש'}
                </div>
             </div>
