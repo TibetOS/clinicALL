@@ -20,39 +20,40 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Heebo:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
       :root {
-        /* SC Beauty Color Palette */
-        --color-taupe: #8B7355;
-        --color-taupe-dark: #6B5A47;
-        --color-taupe-light: #A89080;
-        --color-rose: #D4A5A5;
-        --color-rose-dark: #C49090;
-        --color-rose-light: #E4C5C5;
-        --color-cream: #FAF8F5;
-        --color-cream-dark: #F0EDE8;
+        /* Professional Medical Color Palette */
+        --color-primary: #0D9488;
+        --color-primary-dark: #0F766E;
+        --color-primary-light: #14B8A6;
+        --color-gray-50: #F9FAFB;
+        --color-gray-100: #F3F4F6;
+        --color-gray-200: #E5E7EB;
+        --color-gray-500: #6B7280;
+        --color-gray-700: #374151;
+        --color-gray-900: #111827;
 
         /* Override primary colors */
-        --primary: var(--color-taupe);
+        --primary: var(--color-primary);
         --primary-foreground: #FFFFFF;
-        --ring: var(--color-rose);
+        --ring: var(--color-primary);
       }
 
       body {
         font-family: 'Heebo', 'Inter', sans-serif;
       }
 
-      /* Custom scrollbar for beauty theme */
+      /* Custom scrollbar */
       .custom-scrollbar::-webkit-scrollbar {
         width: 6px;
       }
       .custom-scrollbar::-webkit-scrollbar-track {
-        background: var(--color-cream);
+        background: var(--color-gray-100);
       }
       .custom-scrollbar::-webkit-scrollbar-thumb {
-        background: var(--color-taupe-light);
+        background: var(--color-gray-300);
         border-radius: 3px;
       }
       .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-        background: var(--color-taupe);
+        background: var(--color-gray-400);
       }
     </style>
   <script type="importmap">

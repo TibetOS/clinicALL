@@ -172,28 +172,27 @@ const AdminLayout = ({ children }: { children?: React.ReactNode }) => {
   ];
 
   return (
-    <div className="min-h-screen flex overflow-hidden" dir="rtl" style={{ backgroundColor: '#FAF8F5' }}>
+    <div className="min-h-screen flex overflow-hidden bg-gray-50" dir="rtl">
       {/* Sidebar */}
       <aside
         className={`
-          fixed inset-y-0 right-0 z-50 w-72 border-l shadow-xl lg:shadow-sm transform transition-transform duration-300 ease-in-out flex flex-col
+          fixed inset-y-0 right-0 z-50 w-72 bg-white border-l border-gray-100 shadow-xl lg:shadow-sm transform transition-transform duration-300 ease-in-out flex flex-col
           ${sidebarOpen ? 'translate-x-0' : 'translate-x-full'}
           lg:relative lg:translate-x-0
         `}
-        style={{ backgroundColor: '#8B7355', borderColor: '#6B5A47' }}
       >
-        <div className="h-16 lg:h-20 flex items-center px-6 lg:px-8 border-b shrink-0 justify-between lg:justify-start" style={{ borderColor: 'rgba(255,255,255,0.1)' }}>
+        <div className="h-16 lg:h-20 flex items-center px-6 lg:px-8 border-b border-gray-100 shrink-0 justify-between lg:justify-start">
           <div className="flex items-center">
             <Link to="/">
-               <div className="h-10 w-10 rounded-2xl flex items-center justify-center font-bold text-lg ml-3 shadow-lg" style={{ backgroundColor: '#FAF8F5', color: '#8B7355', boxShadow: '0 4px 14px rgba(0, 0, 0, 0.15)' }}>C</div>
+               <div className="h-10 w-10 rounded-2xl flex items-center justify-center text-white font-bold text-lg ml-3 shadow-lg bg-gradient-to-br from-teal-500 to-teal-700" style={{ boxShadow: '0 4px 14px rgba(13, 148, 136, 0.3)' }}>C</div>
             </Link>
             <div>
-               <span className="font-bold text-xl tracking-tight block leading-tight" style={{ color: '#FAF8F5' }}>ClinicALL</span>
-               <span className="text-[10px] font-medium tracking-widest uppercase" style={{ color: '#D4A5A5' }}>Medical System</span>
+               <span className="font-bold text-xl tracking-tight block leading-tight text-gray-900">ClinicALL</span>
+               <span className="text-[10px] font-medium tracking-widest uppercase text-gray-400">Medical System</span>
             </div>
           </div>
           {/* Close button for mobile */}
-          <button onClick={() => setSidebarOpen(false)} className="lg:hidden p-1" style={{ color: '#FAF8F5' }} aria-label="סגור תפריט">
+          <button onClick={() => setSidebarOpen(false)} className="lg:hidden p-1 text-gray-500" aria-label="סגור תפריט">
             <X size={24} />
           </button>
         </div>
@@ -209,55 +208,50 @@ const AdminLayout = ({ children }: { children?: React.ReactNode }) => {
                 className={`
                   flex items-center gap-3 px-4 py-3 text-sm font-medium rounded-xl transition-all duration-200 group relative
                   ${isActive
-                    ? 'shadow-md'
-                    : 'hover:bg-white/10'}
+                    ? 'bg-teal-50 text-teal-700 shadow-sm ring-1 ring-teal-100'
+                    : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'}
                 `}
-                style={isActive
-                  ? { backgroundColor: '#D4A5A5', color: '#6B5A47' }
-                  : { color: '#FAF8F5' }
-                }
               >
                 {/* Active indicator bar on right */}
                 {isActive && (
-                  <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-8 rounded-l-full" style={{ backgroundColor: '#FAF8F5' }} />
+                  <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-8 rounded-l-full bg-teal-500" />
                 )}
-                <Icon size={20} style={isActive ? { color: '#6B5A47' } : { color: '#E4C5C5' }} />
+                <Icon size={20} className={isActive ? 'text-teal-600' : 'text-gray-400 group-hover:text-gray-600'} />
                 {item.label}
-                {isActive && <ChevronLeft className="mr-auto h-4 w-4 opacity-70" />}
+                {isActive && <ChevronLeft className="mr-auto h-4 w-4 opacity-50" />}
               </Link>
             )
           })}
         </nav>
 
         {/* Subscription Widget & Logout */}
-        <div className="p-4 mt-auto border-t" style={{ backgroundColor: 'rgba(0,0,0,0.1)', borderColor: 'rgba(255,255,255,0.1)' }}>
+        <div className="p-4 mt-auto border-t border-gray-100 bg-gray-50/50">
            {/* Plan Widget - Clickable Link to Settings */}
            <Link to="/admin/settings?tab=billing">
-             <div className="rounded-2xl p-4 mb-4 shadow-lg relative overflow-hidden group cursor-pointer hover:shadow-xl transition-all transform hover:-translate-y-0.5" style={{ backgroundColor: '#FAF8F5' }}>
-                <div className="absolute -top-6 -right-6 w-20 h-20 rounded-full blur-xl group-hover:opacity-40 transition-opacity opacity-20" style={{ backgroundColor: '#D4A5A5' }}></div>
+             <div className="bg-gradient-to-br from-gray-900 to-gray-800 rounded-xl p-4 text-white mb-4 shadow-lg relative overflow-hidden group cursor-pointer hover:shadow-xl transition-all transform hover:-translate-y-0.5">
+                <div className="absolute -top-6 -right-6 w-20 h-20 bg-teal-500/20 rounded-full blur-xl group-hover:bg-teal-500/30 transition-colors"></div>
 
                 <div className="flex justify-between items-start mb-2 relative z-10">
                    <div>
-                      <p className="text-[10px] uppercase tracking-wider font-semibold" style={{ color: '#A89080' }}>התוכנית שלך</p>
+                      <p className="text-[10px] text-gray-400 uppercase tracking-wider font-semibold">התוכנית שלך</p>
                       <div className="flex items-center gap-2 mt-0.5">
-                         <Crown size={14} style={{ color: '#D4A5A5' }} />
-                         <span className="font-bold text-sm" style={{ color: '#6B5A47' }}>Professional</span>
+                         <Crown size={14} className="text-yellow-400" />
+                         <span className="font-bold text-sm">Professional</span>
                       </div>
                    </div>
-                   <Badge className="text-[10px] h-5 border-none" style={{ backgroundColor: '#D4A5A5', color: '#6B5A47' }}>פעיל</Badge>
+                   <Badge variant="success" className="text-[10px] h-5 bg-teal-500 text-white border-none">פעיל</Badge>
                 </div>
 
-                <div className="w-full rounded-full h-1.5 mb-2 relative z-10" style={{ backgroundColor: '#F0EDE8' }}>
-                   <div className="h-1.5 rounded-full" style={{ width: '65%', backgroundColor: '#D4A5A5' }}></div>
+                <div className="w-full bg-gray-700/50 rounded-full h-1.5 mb-2 relative z-10">
+                   <div className="bg-teal-500 h-1.5 rounded-full" style={{ width: '65%' }}></div>
                 </div>
-                <p className="text-[10px] relative z-10" style={{ color: '#A89080' }}>65% ניצולת חבילה החודש</p>
+                <p className="text-[10px] text-gray-400 relative z-10">65% ניצולת חבילה החודש</p>
              </div>
            </Link>
 
            <Button
              variant="ghost"
-             className="w-full justify-start rounded-xl hover:bg-white/10"
-             style={{ color: '#E4C5C5' }}
+             className="w-full justify-start text-red-500 hover:text-red-600 hover:bg-red-50 rounded-xl"
              onClick={async () => {
                await signOut();
                navigate('/login');
@@ -269,10 +263,10 @@ const AdminLayout = ({ children }: { children?: React.ReactNode }) => {
       </aside>
 
       {/* Main Content */}
-      <div className="flex-1 flex flex-col h-screen overflow-hidden" style={{ backgroundColor: '#FAF8F5' }}>
+      <div className="flex-1 flex flex-col h-screen overflow-hidden bg-gray-50">
         {/* Header */}
-        <header className="h-16 lg:h-20 backdrop-blur-md border-b flex items-center justify-between px-4 lg:px-10 z-40 sticky top-0 transition-all duration-200" style={{ backgroundColor: 'rgba(255,255,255,0.9)', borderColor: '#F0EDE8' }}>
-          <button onClick={() => setSidebarOpen(!sidebarOpen)} className="lg:hidden p-2 -mr-2 rounded-lg hover:bg-white/60" style={{ color: '#8B7355' }} aria-label={sidebarOpen ? 'סגור תפריט' : 'פתח תפריט'} aria-expanded={sidebarOpen}>
+        <header className="h-16 lg:h-20 bg-white/90 backdrop-blur-md border-b border-gray-100 flex items-center justify-between px-4 lg:px-10 z-40 sticky top-0 transition-all duration-200">
+          <button onClick={() => setSidebarOpen(!sidebarOpen)} className="lg:hidden p-2 -mr-2 text-gray-600 hover:bg-gray-100 rounded-lg" aria-label={sidebarOpen ? 'סגור תפריט' : 'פתח תפריט'} aria-expanded={sidebarOpen}>
             <Menu />
           </button>
 
@@ -281,7 +275,7 @@ const AdminLayout = ({ children }: { children?: React.ReactNode }) => {
           <div className="flex items-center gap-2 lg:gap-4">
              {/* Public Site Link */}
              <a href="/c/dr-sarah" target="_blank" rel="noopener noreferrer" className="hidden md:flex">
-                <Button size="sm" variant="outline" className="gap-2 border-none shadow-sm" style={{ backgroundColor: 'white', color: '#8B7355' }}>
+                <Button size="sm" variant="outline" className="gap-2">
                    <Sparkles size={14}/> הצג אתר חי
                 </Button>
              </a>
@@ -289,8 +283,7 @@ const AdminLayout = ({ children }: { children?: React.ReactNode }) => {
             {/* Notifications Dropdown */}
             <div className="relative" ref={notifRef}>
               <button
-                className="relative p-2 rounded-full transition-colors hover:bg-white/60"
-                style={{ color: '#8B7355' }}
+                className="relative p-2 text-gray-500 hover:bg-gray-100 rounded-full transition-colors"
                 onClick={() => setIsNotifOpen(!isNotifOpen)}
                 aria-label={`התראות${unreadCount > 0 ? ` (${unreadCount} חדשות)` : ''}`}
                 aria-expanded={isNotifOpen}
@@ -298,7 +291,7 @@ const AdminLayout = ({ children }: { children?: React.ReactNode }) => {
               >
                 <Bell size={20} />
                 {unreadCount > 0 && (
-                  <span className="absolute top-2 left-2 h-2.5 w-2.5 rounded-full border-2 border-white animate-pulse" style={{ backgroundColor: '#D4A5A5' }}></span>
+                  <span className="absolute top-2 left-2 h-2.5 w-2.5 bg-red-500 rounded-full border-2 border-white animate-pulse"></span>
                 )}
               </button>
 
@@ -381,16 +374,16 @@ const AdminLayout = ({ children }: { children?: React.ReactNode }) => {
               )}
             </div>
 
-            <div className="flex items-center gap-3 pl-2 border-r pr-4" style={{ borderColor: '#F0EDE8' }}>
+            <div className="flex items-center gap-3 pl-2 border-r border-gray-100 pr-4">
                <div className="text-left hidden md:block">
-                  <div className="text-sm font-bold" style={{ color: '#6B5A47' }}>{profile?.full_name || 'ד״ר שרה כהן'}</div>
-                  <div className="text-xs" style={{ color: '#A89080' }}>
+                  <div className="text-sm font-bold text-gray-900">{profile?.full_name || 'ד״ר שרה כהן'}</div>
+                  <div className="text-xs text-gray-500">
                     {profile?.role === 'owner' ? 'בעלים' :
                      profile?.role === 'admin' ? 'מנהל/ת' :
                      profile?.role === 'staff' ? 'צוות' : 'מנהלת רפואית'}
                   </div>
                </div>
-               <div className="h-9 w-9 rounded-full flex items-center justify-center font-bold text-sm ring-2 ring-white shadow-sm" style={{ backgroundColor: '#D4A5A5', color: '#6B5A47' }}>
+               <div className="h-9 w-9 rounded-full bg-teal-100 text-teal-700 flex items-center justify-center font-bold text-sm ring-2 ring-white shadow-sm">
                  {profile?.full_name?.charAt(0) || 'ש'}
                </div>
             </div>

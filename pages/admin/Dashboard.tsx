@@ -9,16 +9,18 @@ import { Card, Button, Input, Badge, Dialog, Label, Skeleton } from '../../compo
 import { usePatients, useAppointments, useServices, useInvoices, useDeclarations, useHealthTokens } from '../../hooks';
 import { useNavigate } from 'react-router-dom';
 
-// Color constants for the beauty theme
+// Professional medical theme colors
 const COLORS = {
-  taupe: '#8B7355',
-  taupeDark: '#6B5A47',
-  taupeLight: '#A89080',
-  rose: '#D4A5A5',
-  roseDark: '#C49090',
-  roseLight: '#E4C5C5',
-  cream: '#FAF8F5',
-  creamDark: '#F0EDE8',
+  primary: '#0D9488',
+  primaryDark: '#0F766E',
+  primaryLight: '#14B8A6',
+  gray50: '#F9FAFB',
+  gray100: '#F3F4F6',
+  gray200: '#E5E7EB',
+  gray400: '#9CA3AF',
+  gray500: '#6B7280',
+  gray700: '#374151',
+  gray900: '#111827',
 };
 
 export const Dashboard = () => {
@@ -67,7 +69,7 @@ export const Dashboard = () => {
     .sort((a, b) => a.time.localeCompare(b.time))
     .map(a => ({
       ...a,
-      avatar: `https://ui-avatars.com/api/?name=${encodeURIComponent(a.patientName)}&background=D4A5A5&color=6B5A47`
+      avatar: `https://ui-avatars.com/api/?name=${encodeURIComponent(a.patientName)}&background=CCFBF1&color=0F766E`
     })), [appointments, today]);
 
   // Next appointment (first pending or confirmed)
@@ -253,8 +255,7 @@ export const Dashboard = () => {
     <div className="space-y-6 pb-24 md:pb-12 animate-in fade-in duration-700">
       {/* Success Toast */}
       {successMessage && (
-        <div className="fixed top-6 left-1/2 -translate-x-1/2 z-50 px-6 py-3 rounded-2xl shadow-lg animate-in slide-in-from-top-2 duration-300 text-white font-medium"
-          style={{ backgroundColor: COLORS.rose }}>
+        <div className="fixed top-6 left-1/2 -translate-x-1/2 z-50 px-6 py-3 rounded-2xl shadow-lg animate-in slide-in-from-top-2 duration-300 text-white font-medium bg-teal-600">
           <div className="flex items-center gap-2">
             <CheckCircle size={18} />
             {successMessage}
@@ -265,19 +266,18 @@ export const Dashboard = () => {
       {/* ========== HEADER: GREETING ========== */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div className="flex items-center gap-3">
-          <div className="flex items-center gap-2 font-medium" style={{ color: COLORS.taupeLight }}>
+          <div className="flex items-center gap-2 font-medium text-teal-600">
             <GreetingIcon size={20} />
             <span>{greeting.text},</span>
           </div>
-          <h1 className="text-2xl md:text-3xl font-bold" style={{ color: COLORS.taupeDark }}>ד״ר שרה</h1>
+          <h1 className="text-2xl md:text-3xl font-bold text-gray-900">ד״ר שרה</h1>
         </div>
 
         {/* Desktop Quick Actions - Now just the main CTA */}
         <div className="hidden md:flex">
           <Button
             onClick={() => setIsNewApptOpen(true)}
-            className="gap-2 shadow-lg hover:shadow-xl transition-all"
-            style={{ backgroundColor: COLORS.taupe, color: 'white' }}
+            className="gap-2 shadow-lg hover:shadow-xl transition-all bg-teal-600 hover:bg-teal-700 text-white"
           >
             <Plus size={18} /> תור חדש
           </Button>
@@ -286,36 +286,36 @@ export const Dashboard = () => {
 
       {/* ========== DAILY SUMMARY STRIP ========== */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-        <div className="bg-white rounded-2xl p-4 shadow-sm border" style={{ borderColor: COLORS.creamDark }}>
+        <div className="bg-white rounded-2xl p-4 shadow-sm border border-gray-100">
           <div className="flex items-center gap-2 mb-1">
-            <CalendarIcon size={16} style={{ color: COLORS.taupe }} />
-            <span className="text-xs font-medium" style={{ color: COLORS.taupeLight }}>תורים היום</span>
+            <CalendarIcon size={16} className="text-teal-600" />
+            <span className="text-xs font-medium text-gray-500">תורים היום</span>
           </div>
-          <p className="text-2xl font-bold" style={{ color: COLORS.taupeDark }}>{todaysAppointments.length}</p>
+          <p className="text-2xl font-bold text-gray-900">{todaysAppointments.length}</p>
         </div>
 
-        <div className="bg-white rounded-2xl p-4 shadow-sm border" style={{ borderColor: COLORS.creamDark }}>
+        <div className="bg-white rounded-2xl p-4 shadow-sm border border-gray-100">
           <div className="flex items-center gap-2 mb-1">
-            <CheckCircle size={16} style={{ color: COLORS.taupe }} />
-            <span className="text-xs font-medium" style={{ color: COLORS.taupeLight }}>הושלמו</span>
+            <CheckCircle size={16} className="text-teal-600" />
+            <span className="text-xs font-medium text-gray-500">הושלמו</span>
           </div>
-          <p className="text-2xl font-bold" style={{ color: COLORS.taupeDark }}>{completedToday}</p>
+          <p className="text-2xl font-bold text-gray-900">{completedToday}</p>
         </div>
 
-        <div className="bg-white rounded-2xl p-4 shadow-sm border" style={{ borderColor: COLORS.creamDark }}>
+        <div className="bg-white rounded-2xl p-4 shadow-sm border border-gray-100">
           <div className="flex items-center gap-2 mb-1">
-            <Heart size={16} style={{ color: COLORS.taupe }} />
-            <span className="text-xs font-medium" style={{ color: COLORS.taupeLight }}>הכנסות היום</span>
+            <Heart size={16} className="text-teal-600" />
+            <span className="text-xs font-medium text-gray-500">הכנסות היום</span>
           </div>
-          <p className="text-2xl font-bold" style={{ color: COLORS.taupeDark }}>₪{todaysRevenue.toLocaleString()}</p>
+          <p className="text-2xl font-bold text-gray-900">₪{todaysRevenue.toLocaleString()}</p>
         </div>
 
-        <div className="bg-white rounded-2xl p-4 shadow-sm border" style={{ borderColor: COLORS.creamDark }}>
+        <div className="bg-white rounded-2xl p-4 shadow-sm border border-gray-100">
           <div className="flex items-center gap-2 mb-1">
-            <FileText size={16} style={{ color: COLORS.taupe }} />
-            <span className="text-xs font-medium" style={{ color: COLORS.taupeLight }}>הצהרות ממתינות</span>
+            <FileText size={16} className="text-teal-600" />
+            <span className="text-xs font-medium text-gray-500">הצהרות ממתינות</span>
           </div>
-          <p className="text-2xl font-bold" style={{ color: COLORS.taupeDark }}>{pendingDeclarations.length}</p>
+          <p className="text-2xl font-bold text-gray-900">{pendingDeclarations.length}</p>
         </div>
       </div>
 
@@ -326,10 +326,10 @@ export const Dashboard = () => {
         <div className="lg:col-span-2 space-y-6">
 
           {/* ========== NEXT APPOINTMENT (הטיפול הבא) ========== */}
-          <Card className="p-6 rounded-3xl border shadow-sm overflow-hidden relative" style={{ borderColor: COLORS.creamDark }}>
+          <Card className="p-6 rounded-3xl border border-gray-100 shadow-sm overflow-hidden relative">
             <div className="flex items-center gap-2 mb-4">
-              <Sparkles size={20} style={{ color: COLORS.rose }} />
-              <h2 className="text-lg font-bold" style={{ color: COLORS.taupeDark }}>הטיפול הבא</h2>
+              <Sparkles size={20} className="text-teal-500" />
+              <h2 className="text-lg font-bold text-gray-900">הטיפול הבא</h2>
             </div>
 
             {isLoading ? (
@@ -342,8 +342,7 @@ export const Dashboard = () => {
               </div>
             ) : nextAppointment ? (
               <div
-                className="flex items-center gap-4 p-4 rounded-2xl cursor-pointer transition-all hover:shadow-md"
-                style={{ backgroundColor: COLORS.cream }}
+                className="flex items-center gap-4 p-4 rounded-2xl cursor-pointer transition-all hover:shadow-md bg-gray-50"
                 onClick={() => navigate(`/admin/patients/${nextAppointment.patientId}`)}
               >
                 <div className="relative">
@@ -352,42 +351,40 @@ export const Dashboard = () => {
                     alt={nextAppointment.patientName}
                     className="w-16 h-16 rounded-full object-cover ring-4 ring-white shadow-md"
                   />
-                  <div className="absolute -bottom-1 -right-1 w-6 h-6 rounded-full flex items-center justify-center text-white text-xs font-bold shadow-lg"
-                    style={{ backgroundColor: COLORS.rose }}>
+                  <div className="absolute -bottom-1 -right-1 w-6 h-6 rounded-full flex items-center justify-center text-white text-xs font-bold shadow-lg bg-teal-500">
                     {nextAppointment.time.split(':')[0]}
                   </div>
                 </div>
 
                 <div className="flex-1 min-w-0">
-                  <p className="font-bold text-lg" style={{ color: COLORS.taupeDark }}>{nextAppointment.patientName}</p>
-                  <p className="text-sm" style={{ color: COLORS.taupeLight }}>{nextAppointment.serviceName}</p>
+                  <p className="font-bold text-lg text-gray-900">{nextAppointment.patientName}</p>
+                  <p className="text-sm text-gray-500">{nextAppointment.serviceName}</p>
                   <div className="flex items-center gap-3 mt-2">
-                    <Badge style={{ backgroundColor: COLORS.roseLight, color: COLORS.taupeDark }} className="border-none">
+                    <Badge className="border-none bg-teal-100 text-teal-700">
                       <Clock size={12} className="ml-1" /> {nextAppointment.time}
                     </Badge>
-                    <Badge style={{ backgroundColor: COLORS.creamDark, color: COLORS.taupe }} className="border-none">
+                    <Badge className="border-none bg-gray-100 text-gray-600">
                       {nextAppointment.duration} דק׳
                     </Badge>
                   </div>
                 </div>
 
-                <ChevronLeft size={24} style={{ color: COLORS.taupeLight }} />
+                <ChevronLeft size={24} className="text-gray-400" />
               </div>
             ) : (
               /* Empty State - Illustrated */
               <div className="flex flex-col items-center justify-center py-10 text-center">
-                <div className="w-24 h-24 rounded-full flex items-center justify-center mb-4 relative" style={{ backgroundColor: COLORS.roseLight }}>
-                  <Coffee size={40} style={{ color: COLORS.taupeDark }} />
-                  <div className="absolute -top-1 -right-1 w-8 h-8 rounded-full flex items-center justify-center" style={{ backgroundColor: COLORS.rose }}>
+                <div className="w-24 h-24 rounded-full flex items-center justify-center mb-4 relative bg-teal-50">
+                  <Coffee size={40} className="text-teal-600" />
+                  <div className="absolute -top-1 -right-1 w-8 h-8 rounded-full flex items-center justify-center bg-teal-500">
                     <Sparkles size={16} className="text-white" />
                   </div>
                 </div>
-                <p className="font-bold text-lg mb-1" style={{ color: COLORS.taupeDark }}>אין תורים כרגע</p>
-                <p className="text-sm mb-4" style={{ color: COLORS.taupeLight }}>יום מושלם לפנות ללקוחות ותיקות!</p>
+                <p className="font-bold text-lg mb-1 text-gray-900">אין תורים כרגע</p>
+                <p className="text-sm mb-4 text-gray-500">יום מושלם לפנות ללקוחות ותיקות!</p>
                 <Button
                   variant="outline"
-                  className="gap-2 border-2"
-                  style={{ borderColor: COLORS.rose, color: COLORS.taupeDark }}
+                  className="gap-2 border-2 border-teal-200 text-teal-700 hover:bg-teal-50"
                   onClick={() => navigate('/admin/patients')}
                 >
                   <Phone size={16} /> צפייה בלקוחות
@@ -397,14 +394,14 @@ export const Dashboard = () => {
           </Card>
 
           {/* ========== PENDING HEALTH DECLARATIONS (טפסים ממתינים לחתימה) ========== */}
-          <Card className="p-6 rounded-3xl border shadow-sm" style={{ borderColor: COLORS.creamDark }}>
+          <Card className="p-6 rounded-3xl border border-gray-100 shadow-sm">
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center gap-2">
-                <FileText size={20} style={{ color: COLORS.taupe }} />
-                <h2 className="text-lg font-bold" style={{ color: COLORS.taupeDark }}>הצהרות בריאות ממתינות</h2>
+                <FileText size={20} className="text-teal-600" />
+                <h2 className="text-lg font-bold text-gray-900">הצהרות בריאות ממתינות</h2>
               </div>
               {patientsNeedingDeclaration.length > 0 && (
-                <Badge style={{ backgroundColor: COLORS.rose, color: 'white' }} className="border-none">
+                <Badge className="border-none bg-amber-100 text-amber-700">
                   {patientsNeedingDeclaration.length}
                 </Badge>
               )}
@@ -418,35 +415,33 @@ export const Dashboard = () => {
               </div>
             ) : patientsNeedingDeclaration.length === 0 ? (
               <div className="flex flex-col items-center justify-center py-8 text-center">
-                <div className="w-20 h-20 rounded-full flex items-center justify-center mb-4" style={{ backgroundColor: COLORS.roseLight }}>
-                  <CheckCircle size={36} style={{ color: COLORS.taupeDark }} />
+                <div className="w-20 h-20 rounded-full flex items-center justify-center mb-4 bg-green-50">
+                  <CheckCircle size={36} className="text-green-600" />
                 </div>
-                <p className="font-bold mb-1" style={{ color: COLORS.taupeDark }}>הכל מסודר!</p>
-                <p className="text-sm" style={{ color: COLORS.taupeLight }}>כל הלקוחות חתמו על הצהרות</p>
+                <p className="font-bold mb-1 text-gray-900">הכל מסודר!</p>
+                <p className="text-sm text-gray-500">כל הלקוחות חתמו על הצהרות</p>
               </div>
             ) : (
               <div className="space-y-3">
                 {patientsNeedingDeclaration.map((item) => (
                   <div
                     key={item.id}
-                    className="flex items-center gap-3 p-3 rounded-xl transition-all hover:shadow-sm"
-                    style={{ backgroundColor: COLORS.cream }}
+                    className="flex items-center gap-3 p-3 rounded-xl transition-all hover:shadow-sm bg-gray-50"
                   >
                     <img
-                      src={`https://ui-avatars.com/api/?name=${encodeURIComponent(item.patientName)}&background=D4A5A5&color=6B5A47`}
+                      src={`https://ui-avatars.com/api/?name=${encodeURIComponent(item.patientName)}&background=CCFBF1&color=0F766E`}
                       alt={item.patientName}
                       className="w-10 h-10 rounded-full object-cover"
                     />
                     <div className="flex-1 min-w-0">
-                      <p className="font-medium truncate" style={{ color: COLORS.taupeDark }}>{item.patientName}</p>
-                      <p className="text-xs" style={{ color: COLORS.taupeLight }}>
+                      <p className="font-medium truncate text-gray-900">{item.patientName}</p>
+                      <p className="text-xs text-gray-500">
                         תור: {new Date(item.date).toLocaleDateString('he-IL')} {item.time}
                       </p>
                     </div>
                     <Button
                       size="sm"
-                      className="gap-1 shadow-sm"
-                      style={{ backgroundColor: COLORS.taupe, color: 'white' }}
+                      className="gap-1 shadow-sm bg-teal-600 hover:bg-teal-700 text-white"
                       disabled={sendingDeclaration === item.patientId}
                       onClick={() => handleSendDeclaration(item.patientId, item.patientName, item.patient?.phone)}
                     >
@@ -465,11 +460,11 @@ export const Dashboard = () => {
           </Card>
 
           {/* ========== FOLLOW-UP LIST (לקוחות להתקשר אליהן) ========== */}
-          <Card className="p-6 rounded-3xl border shadow-sm" style={{ borderColor: COLORS.creamDark }}>
+          <Card className="p-6 rounded-3xl border border-gray-100 shadow-sm">
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center gap-2">
-                <Phone size={20} style={{ color: COLORS.rose }} />
-                <h2 className="text-lg font-bold" style={{ color: COLORS.taupeDark }}>לקוחות להתקשר אליהן</h2>
+                <Phone size={20} className="text-teal-600" />
+                <h2 className="text-lg font-bold text-gray-900">לקוחות להתקשר אליהן</h2>
               </div>
             </div>
 
@@ -481,36 +476,35 @@ export const Dashboard = () => {
               </div>
             ) : dueForFollowUp.length === 0 ? (
               <div className="flex flex-col items-center justify-center py-8 text-center">
-                <div className="w-20 h-20 rounded-full flex items-center justify-center mb-4" style={{ backgroundColor: COLORS.roseLight }}>
-                  <UserCheck size={36} style={{ color: COLORS.taupeDark }} />
+                <div className="w-20 h-20 rounded-full flex items-center justify-center mb-4 bg-green-50">
+                  <UserCheck size={36} className="text-green-600" />
                 </div>
-                <p className="font-bold mb-1" style={{ color: COLORS.taupeDark }}>אין מעקבים ממתינים</p>
-                <p className="text-sm" style={{ color: COLORS.taupeLight }}>כל הלקוחות מטופלות</p>
+                <p className="font-bold mb-1 text-gray-900">אין מעקבים ממתינים</p>
+                <p className="text-sm text-gray-500">כל הלקוחות מטופלות</p>
               </div>
             ) : (
               <div className="space-y-3">
                 {dueForFollowUp.map((item) => (
                   <div
                     key={item.id}
-                    className="flex items-center gap-3 p-3 rounded-xl cursor-pointer transition-all hover:shadow-sm"
-                    style={{ backgroundColor: COLORS.cream }}
+                    className="flex items-center gap-3 p-3 rounded-xl cursor-pointer transition-all hover:shadow-sm bg-gray-50"
                     onClick={() => navigate(`/admin/patients/${item.patientId}`)}
                   >
                     <img
-                      src={`https://ui-avatars.com/api/?name=${encodeURIComponent(item.patientName)}&background=D4A5A5&color=6B5A47`}
+                      src={`https://ui-avatars.com/api/?name=${encodeURIComponent(item.patientName)}&background=CCFBF1&color=0F766E`}
                       alt={item.patientName}
                       className="w-10 h-10 rounded-full object-cover"
                     />
                     <div className="flex-1 min-w-0">
-                      <p className="font-medium truncate" style={{ color: COLORS.taupeDark }}>{item.patientName}</p>
-                      <p className="text-xs" style={{ color: COLORS.taupeLight }}>
+                      <p className="font-medium truncate text-gray-900">{item.patientName}</p>
+                      <p className="text-xs text-gray-500">
                         {item.serviceName} • לפני {Math.floor((today.getTime() - new Date(item.date).getTime()) / (1000 * 60 * 60 * 24))} ימים
                       </p>
                     </div>
-                    <Badge style={{ backgroundColor: COLORS.roseLight, color: COLORS.taupeDark }} className="border-none text-xs">
+                    <Badge className="border-none text-xs bg-purple-100 text-purple-700">
                       מעקב בוטוקס
                     </Badge>
-                    <ChevronLeft size={16} style={{ color: COLORS.taupeLight }} />
+                    <ChevronLeft size={16} className="text-gray-400" />
                   </div>
                 ))}
               </div>
@@ -520,29 +514,28 @@ export const Dashboard = () => {
 
         {/* ========== RIGHT COLUMN - Retention Metrics ========== */}
         <div className="space-y-4">
-          <h3 className="text-sm font-bold uppercase tracking-wider" style={{ color: COLORS.taupeLight }}>שימור לקוחות</h3>
+          <h3 className="text-sm font-bold uppercase tracking-wider text-gray-400">שימור לקוחות</h3>
 
           {/* Lapsed Clients */}
           <Card
-            className="p-5 rounded-2xl border cursor-pointer transition-all hover:shadow-md"
-            style={{ borderColor: COLORS.creamDark }}
+            className="p-5 rounded-2xl border border-gray-100 cursor-pointer transition-all hover:shadow-md"
             onClick={() => navigate('/admin/patients')}
           >
             <div className="flex items-center gap-3">
-              <div className="w-12 h-12 rounded-xl flex items-center justify-center" style={{ backgroundColor: lapsedClients.length > 0 ? COLORS.roseLight : COLORS.cream }}>
-                <Clock size={24} style={{ color: COLORS.taupeDark }} />
+              <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${lapsedClients.length > 0 ? 'bg-amber-50' : 'bg-gray-50'}`}>
+                <Clock size={24} className={lapsedClients.length > 0 ? 'text-amber-600' : 'text-gray-500'} />
               </div>
               <div className="flex-1">
-                <p className="text-sm font-medium" style={{ color: COLORS.taupeLight }}>לקוחות רדומות</p>
+                <p className="text-sm font-medium text-gray-500">לקוחות רדומות</p>
                 {lapsedClients.length > 0 ? (
                   <>
-                    <p className="text-2xl font-bold" style={{ color: COLORS.taupeDark }}>{lapsedClients.length}</p>
-                    <p className="text-xs" style={{ color: COLORS.taupeLight }}>לא ביקרו 60+ יום</p>
+                    <p className="text-2xl font-bold text-gray-900">{lapsedClients.length}</p>
+                    <p className="text-xs text-gray-500">לא ביקרו 60+ יום</p>
                   </>
                 ) : (
                   <>
-                    <p className="text-lg font-bold" style={{ color: COLORS.rose }}>מעולה! 🎉</p>
-                    <p className="text-xs" style={{ color: COLORS.taupeLight }}>כל הלקוחות פעילות</p>
+                    <p className="text-lg font-bold text-green-600">מעולה! 🎉</p>
+                    <p className="text-xs text-gray-500">כל הלקוחות פעילות</p>
                   </>
                 )}
               </div>
@@ -551,25 +544,24 @@ export const Dashboard = () => {
 
           {/* Due for Follow-up */}
           <Card
-            className="p-5 rounded-2xl border cursor-pointer transition-all hover:shadow-md"
-            style={{ borderColor: COLORS.creamDark }}
+            className="p-5 rounded-2xl border border-gray-100 cursor-pointer transition-all hover:shadow-md"
             onClick={() => navigate('/admin/patients')}
           >
             <div className="flex items-center gap-3">
-              <div className="w-12 h-12 rounded-xl flex items-center justify-center" style={{ backgroundColor: COLORS.cream }}>
-                <Phone size={24} style={{ color: COLORS.taupe }} />
+              <div className="w-12 h-12 rounded-xl flex items-center justify-center bg-teal-50">
+                <Phone size={24} className="text-teal-600" />
               </div>
               <div className="flex-1">
-                <p className="text-sm font-medium" style={{ color: COLORS.taupeLight }}>לביקורת מעקב</p>
+                <p className="text-sm font-medium text-gray-500">לביקורת מעקב</p>
                 {dueForFollowUp.length > 0 ? (
                   <>
-                    <p className="text-2xl font-bold" style={{ color: COLORS.taupeDark }}>{dueForFollowUp.length}</p>
-                    <p className="text-xs" style={{ color: COLORS.taupeLight }}>בוטוקס 2 שבועות</p>
+                    <p className="text-2xl font-bold text-gray-900">{dueForFollowUp.length}</p>
+                    <p className="text-xs text-gray-500">בוטוקס 2 שבועות</p>
                   </>
                 ) : (
                   <>
-                    <p className="text-lg font-bold" style={{ color: COLORS.rose }}>הכל מטופל ✓</p>
-                    <p className="text-xs" style={{ color: COLORS.taupeLight }}>אין מעקבים ממתינים</p>
+                    <p className="text-lg font-bold text-green-600">הכל מטופל ✓</p>
+                    <p className="text-xs text-gray-500">אין מעקבים ממתינים</p>
                   </>
                 )}
               </div>
@@ -578,25 +570,24 @@ export const Dashboard = () => {
 
           {/* Upcoming Birthdays */}
           <Card
-            className="p-5 rounded-2xl border cursor-pointer transition-all hover:shadow-md"
-            style={{ borderColor: COLORS.creamDark }}
+            className="p-5 rounded-2xl border border-gray-100 cursor-pointer transition-all hover:shadow-md"
             onClick={() => navigate('/admin/patients')}
           >
             <div className="flex items-center gap-3">
-              <div className="w-12 h-12 rounded-xl flex items-center justify-center" style={{ backgroundColor: COLORS.roseLight }}>
-                <Gift size={24} style={{ color: COLORS.roseDark }} />
+              <div className="w-12 h-12 rounded-xl flex items-center justify-center bg-pink-50">
+                <Gift size={24} className="text-pink-500" />
               </div>
               <div className="flex-1">
-                <p className="text-sm font-medium" style={{ color: COLORS.taupeLight }}>ימי הולדת</p>
+                <p className="text-sm font-medium text-gray-500">ימי הולדת</p>
                 {upcomingBirthdays.length > 0 ? (
                   <>
-                    <p className="text-2xl font-bold" style={{ color: COLORS.taupeDark }}>{upcomingBirthdays.length}</p>
-                    <p className="text-xs" style={{ color: COLORS.taupeLight }}>השבוע</p>
+                    <p className="text-2xl font-bold text-gray-900">{upcomingBirthdays.length}</p>
+                    <p className="text-xs text-gray-500">השבוע</p>
                   </>
                 ) : (
                   <>
-                    <p className="text-lg font-bold" style={{ color: COLORS.taupeLight }}>אין השבוע</p>
-                    <p className="text-xs" style={{ color: COLORS.taupeLight }}>שבוע שקט</p>
+                    <p className="text-lg font-bold text-gray-400">אין השבוע</p>
+                    <p className="text-xs text-gray-500">שבוע שקט</p>
                   </>
                 )}
               </div>
@@ -605,20 +596,19 @@ export const Dashboard = () => {
 
           {/* Active Patients */}
           <Card
-            className="p-5 rounded-2xl border cursor-pointer transition-all hover:shadow-md"
-            style={{ borderColor: COLORS.creamDark }}
+            className="p-5 rounded-2xl border border-gray-100 cursor-pointer transition-all hover:shadow-md"
             onClick={() => navigate('/admin/patients')}
           >
             <div className="flex items-center gap-3">
-              <div className="w-12 h-12 rounded-xl flex items-center justify-center" style={{ backgroundColor: COLORS.cream }}>
-                <UserCheck size={24} style={{ color: COLORS.taupe }} />
+              <div className="w-12 h-12 rounded-xl flex items-center justify-center bg-green-50">
+                <UserCheck size={24} className="text-green-600" />
               </div>
               <div className="flex-1">
-                <p className="text-sm font-medium" style={{ color: COLORS.taupeLight }}>לקוחות פעילות</p>
-                <p className="text-2xl font-bold" style={{ color: COLORS.taupeDark }}>
+                <p className="text-sm font-medium text-gray-500">לקוחות פעילות</p>
+                <p className="text-2xl font-bold text-gray-900">
                   {patients.length - lapsedClients.length}
                 </p>
-                <p className="text-xs" style={{ color: COLORS.taupeLight }}>ביקרו ב-60 יום</p>
+                <p className="text-xs text-gray-500">ביקרו ב-60 יום</p>
               </div>
             </div>
           </Card>
@@ -631,27 +621,24 @@ export const Dashboard = () => {
         {isFabOpen && (
           <div className="absolute bottom-16 left-0 space-y-2 animate-in slide-in-from-bottom-2 duration-200">
             <button
-              className="flex items-center gap-2 bg-white shadow-lg rounded-full py-2 px-4 text-sm font-medium transition-colors min-h-[44px]"
-              style={{ color: COLORS.taupeDark }}
+              className="flex items-center gap-2 bg-white shadow-lg rounded-full py-2 px-4 text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors min-h-[44px]"
               onClick={() => { setIsNewApptOpen(true); setIsFabOpen(false); }}
             >
-              <Plus size={18} style={{ color: COLORS.taupe }} />
+              <Plus size={18} className="text-teal-600" />
               תור חדש
             </button>
             <button
-              className="flex items-center gap-2 bg-white shadow-lg rounded-full py-2 px-4 text-sm font-medium transition-colors min-h-[44px]"
-              style={{ color: COLORS.taupeDark }}
+              className="flex items-center gap-2 bg-white shadow-lg rounded-full py-2 px-4 text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors min-h-[44px]"
               onClick={() => { setIsWalkInOpen(true); setIsFabOpen(false); }}
             >
-              <User size={18} style={{ color: COLORS.rose }} />
+              <User size={18} className="text-blue-500" />
               קבלת לקוחה
             </button>
             <button
-              className="flex items-center gap-2 bg-white shadow-lg rounded-full py-2 px-4 text-sm font-medium transition-colors min-h-[44px]"
-              style={{ color: COLORS.taupeDark }}
+              className="flex items-center gap-2 bg-white shadow-lg rounded-full py-2 px-4 text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors min-h-[44px]"
               onClick={() => { navigate('/admin/patients'); setIsFabOpen(false); }}
             >
-              <MessageCircle size={18} style={{ color: COLORS.taupe }} />
+              <MessageCircle size={18} className="text-green-500" />
               שלח תזכורת
             </button>
           </div>
@@ -660,9 +647,8 @@ export const Dashboard = () => {
         {/* FAB Button */}
         <button
           className={`w-14 h-14 rounded-full shadow-lg flex items-center justify-center transition-all duration-300 ${
-            isFabOpen ? 'rotate-45' : ''
+            isFabOpen ? 'bg-gray-800 rotate-45' : 'bg-teal-600 hover:bg-teal-700'
           }`}
-          style={{ backgroundColor: isFabOpen ? COLORS.taupeDark : COLORS.taupe }}
           onClick={() => setIsFabOpen(!isFabOpen)}
         >
           <Plus size={24} className="text-white" />
@@ -725,7 +711,7 @@ export const Dashboard = () => {
             <Button
               onClick={handleAddAppointment}
               disabled={saving || !apptForm.patientName || !apptForm.serviceId}
-              style={{ backgroundColor: COLORS.taupe }}
+              className="bg-teal-600 hover:bg-teal-700 text-white"
             >
               {saving ? 'שומר...' : 'שמור ביומן'}
             </Button>
@@ -777,7 +763,7 @@ export const Dashboard = () => {
             <Button
               onClick={handleWalkIn}
               disabled={saving || !walkInForm.firstName || !walkInForm.phone}
-              style={{ backgroundColor: COLORS.taupe }}
+              className="bg-teal-600 hover:bg-teal-700 text-white"
             >
               {saving ? 'שומר...' : 'קלוט לקוחה'}
             </Button>
