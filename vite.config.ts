@@ -14,6 +14,16 @@ export default defineConfig(({ mode }) => {
       );
     }
 
+    // SECURITY: Warn if Gemini API key is set in production (it will be exposed in client bundle)
+    if (isProduction && env.VITE_GEMINI_API_KEY) {
+      console.warn(
+        '\n⚠️  SECURITY WARNING: VITE_GEMINI_API_KEY is set in production!\n' +
+        '   This API key will be exposed in the client bundle and can be stolen.\n' +
+        '   For production, use Supabase Edge Functions to proxy API calls.\n' +
+        '   See .env.example for secure configuration patterns.\n'
+      );
+    }
+
     return {
       server: {
         port: 3000,

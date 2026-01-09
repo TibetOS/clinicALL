@@ -4,6 +4,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { Declaration } from '../types';
 import { MOCK_DECLARATIONS } from '../data';
 import { createLogger } from '../lib/logger';
+import { DeclarationRow, DeclarationRowUpdate, getErrorMessage } from '../lib/database.types';
 
 const logger = createLogger('useDeclarations');
 
@@ -29,6 +30,22 @@ interface UseDeclarations {
   deleteDeclaration: (id: string) => Promise<boolean>;
   updateStatus: (id: string, status: Declaration['status']) => Promise<boolean>;
   getDeclarationsByPatient: (patientId: string) => Declaration[];
+}
+
+// Transform database row to app format
+function transformDeclarationRow(dec: DeclarationRow): Declaration {
+  return {
+    id: dec.id,
+    patientId: dec.patient_id,
+    patientName: dec.patient_name,
+    submittedAt: dec.submitted_at,
+    status: dec.status || 'pending',
+    formData: dec.form_data || {
+      personalInfo: { firstName: '', lastName: '', phone: '', gender: '' },
+      medicalHistory: { conditions: [], medications: '' },
+      signature: ''
+    },
+  };
 }
 
 export function useDeclarations(options?: UseDeclarationsOptions): UseDeclarations {
@@ -59,6 +76,11 @@ export function useDeclarations(options?: UseDeclarationsOptions): UseDeclaratio
         .select('*')
         .order('submitted_at', { ascending: false });
 
+      // SECURITY: Filter by clinic_id for multi-tenant isolation
+      if (profile?.clinic_id) {
+        query = query.eq('clinic_id', profile.clinic_id);
+      }
+
       if (opts.patientId) {
         query = query.eq('patient_id', opts.patientId);
       }
@@ -67,23 +89,16 @@ export function useDeclarations(options?: UseDeclarationsOptions): UseDeclaratio
 
       if (fetchError) throw fetchError;
 
-      const transformedDeclarations: Declaration[] = (data || []).map((dec: any) => ({
-        id: dec.id,
-        patientId: dec.patient_id,
-        patientName: dec.patient_name,
-        submittedAt: dec.submitted_at,
-        status: dec.status || 'pending',
-        formData: dec.form_data || {},
-      }));
+      const transformedDeclarations: Declaration[] = (data as DeclarationRow[] || []).map(transformDeclarationRow);
 
       setDeclarations(transformedDeclarations);
-    } catch (err: any) {
-      setError(err.message || 'Failed to fetch declarations');
+    } catch (err) {
+      setError(getErrorMessage(err) || 'Failed to fetch declarations');
       logger.error('Error fetching declarations:', err);
     } finally {
       setLoading(false);
     }
-  }, [options?.patientId]);
+  }, [options?.patientId, profile?.clinic_id]);
 
   const getDeclaration = useCallback(async (id: string): Promise<Declaration | null> => {
     if (!isSupabaseConfigured()) {
@@ -99,15 +114,8 @@ export function useDeclarations(options?: UseDeclarationsOptions): UseDeclaratio
 
       if (fetchError) throw fetchError;
 
-      return {
-        id: data.id,
-        patientId: data.patient_id,
-        patientName: data.patient_name,
-        submittedAt: data.submitted_at,
-        status: data.status || 'pending',
-        formData: data.form_data || {},
-      };
-    } catch (err: any) {
+      return transformDeclarationRow(data as DeclarationRow);
+    } catch (err) {
       logger.error('Error fetching declaration:', err);
       return null;
     }
@@ -142,20 +150,12 @@ export function useDeclarations(options?: UseDeclarationsOptions): UseDeclaratio
 
       if (insertError) throw insertError;
 
-      const newDeclaration: Declaration = {
-        id: data.id,
-        patientId: data.patient_id,
-        patientName: data.patient_name,
-        submittedAt: data.submitted_at,
-        status: data.status || 'pending',
-        formData: data.form_data || {},
-      };
-
+      const newDeclaration = transformDeclarationRow(data as DeclarationRow);
       setDeclarations(prev => [newDeclaration, ...prev]);
       return newDeclaration;
-    } catch (err: any) {
+    } catch (err) {
       logger.error('Error adding declaration:', err);
-      setError(err.message || 'Failed to add declaration');
+      setError(getErrorMessage(err) || 'Failed to add declaration');
       return null;
     }
   }, [profile?.clinic_id]);
@@ -169,7 +169,7 @@ export function useDeclarations(options?: UseDeclarationsOptions): UseDeclaratio
     }
 
     try {
-      const dbUpdates: any = {};
+      const dbUpdates: DeclarationRowUpdate = {};
       if (updates.patientId !== undefined) dbUpdates.patient_id = updates.patientId;
       if (updates.patientName !== undefined) dbUpdates.patient_name = updates.patientName;
       if (updates.status !== undefined) dbUpdates.status = updates.status;
@@ -184,20 +184,12 @@ export function useDeclarations(options?: UseDeclarationsOptions): UseDeclaratio
 
       if (updateError) throw updateError;
 
-      const updatedDeclaration: Declaration = {
-        id: data.id,
-        patientId: data.patient_id,
-        patientName: data.patient_name,
-        submittedAt: data.submitted_at,
-        status: data.status || 'pending',
-        formData: data.form_data || {},
-      };
-
+      const updatedDeclaration = transformDeclarationRow(data as DeclarationRow);
       setDeclarations(prev => prev.map(dec => dec.id === id ? updatedDeclaration : dec));
       return updatedDeclaration;
-    } catch (err: any) {
+    } catch (err) {
       logger.error('Error updating declaration:', err);
-      setError(err.message || 'Failed to update declaration');
+      setError(getErrorMessage(err) || 'Failed to update declaration');
       return null;
     }
   }, [declarations]);
@@ -223,9 +215,9 @@ export function useDeclarations(options?: UseDeclarationsOptions): UseDeclaratio
 
       setDeclarations(prev => prev.filter(dec => dec.id !== id));
       return true;
-    } catch (err: any) {
+    } catch (err) {
       logger.error('Error deleting declaration:', err);
-      setError(err.message || 'Failed to delete declaration');
+      setError(getErrorMessage(err) || 'Failed to delete declaration');
       return false;
     }
   }, []);

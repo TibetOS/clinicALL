@@ -4,6 +4,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { Patient, RiskLevel } from '../types';
 import { MOCK_PATIENTS } from '../data';
 import { createLogger } from '../lib/logger';
+import { PatientRow, PatientRowUpdate, getErrorMessage } from '../lib/database.types';
 
 const logger = createLogger('usePatients');
 
@@ -28,6 +29,26 @@ interface UsePatients {
   addPatient: (patient: PatientInput) => Promise<Patient | null>;
   updatePatient: (id: string, updates: Partial<PatientInput>) => Promise<Patient | null>;
   deletePatient: (id: string) => Promise<boolean>;
+}
+
+// Transform database row to app format
+function transformPatientRow(p: PatientRow): Patient {
+  return {
+    id: p.id,
+    name: p.name,
+    email: p.email || '',
+    phone: p.phone,
+    avatar: p.avatar_url ?? undefined,
+    riskLevel: p.risk_level || 'low',
+    lastVisit: p.last_visit || '',
+    upcomingAppointment: p.upcoming_appointment ?? undefined,
+    memberSince: p.member_since || p.created_at,
+    birthDate: p.birth_date ?? undefined,
+    age: p.age ?? undefined,
+    gender: p.gender ?? undefined,
+    aestheticInterests: p.aesthetic_interests || [],
+    skinType: p.skin_type ?? undefined,
+  };
 }
 
 export function usePatients(): UsePatients {
@@ -63,26 +84,11 @@ export function usePatients(): UsePatients {
       if (fetchError) throw fetchError;
 
       // Transform database format to app format
-      const transformedPatients: Patient[] = (data || []).map((p: any) => ({
-        id: p.id,
-        name: p.name,
-        email: p.email || '',
-        phone: p.phone,
-        avatar: p.avatar_url,
-        riskLevel: p.risk_level || 'low',
-        lastVisit: p.last_visit || '',
-        upcomingAppointment: p.upcoming_appointment,
-        memberSince: p.member_since || p.created_at,
-        birthDate: p.birth_date,
-        age: p.age,
-        gender: p.gender,
-        aestheticInterests: p.aesthetic_interests || [],
-        skinType: p.skin_type,
-      }));
+      const transformedPatients: Patient[] = (data as PatientRow[] || []).map(transformPatientRow);
 
       setPatients(transformedPatients);
-    } catch (err: any) {
-      setError(err.message || 'Failed to fetch patients');
+    } catch (err) {
+      setError(getErrorMessage(err) || 'Failed to fetch patients');
       logger.error('Error fetching patients:', err);
     } finally {
       setLoading(false);
@@ -103,23 +109,8 @@ export function usePatients(): UsePatients {
 
       if (fetchError) throw fetchError;
 
-      return {
-        id: data.id,
-        name: data.name,
-        email: data.email || '',
-        phone: data.phone,
-        avatar: data.avatar_url,
-        riskLevel: data.risk_level || 'low',
-        lastVisit: data.last_visit || '',
-        upcomingAppointment: data.upcoming_appointment,
-        memberSince: data.member_since || data.created_at,
-        birthDate: data.birth_date,
-        age: data.age,
-        gender: data.gender,
-        aestheticInterests: data.aesthetic_interests || [],
-        skinType: data.skin_type,
-      };
-    } catch (err: any) {
+      return transformPatientRow(data as PatientRow);
+    } catch (err) {
       logger.error('Error fetching patient:', err);
       return null;
     }
@@ -167,26 +158,12 @@ export function usePatients(): UsePatients {
 
       if (insertError) throw insertError;
 
-      const newPatient: Patient = {
-        id: data.id,
-        name: data.name,
-        email: data.email || '',
-        phone: data.phone,
-        riskLevel: data.risk_level || 'low',
-        lastVisit: '',
-        memberSince: data.member_since,
-        birthDate: data.birth_date,
-        age: data.age,
-        gender: data.gender,
-        aestheticInterests: data.aesthetic_interests || [],
-        skinType: data.skin_type,
-      };
-
+      const newPatient = transformPatientRow(data as PatientRow);
       setPatients(prev => [newPatient, ...prev]);
       return newPatient;
-    } catch (err: any) {
+    } catch (err) {
       logger.error('Error adding patient:', err);
-      setError(err.message || 'Failed to add patient');
+      setError(getErrorMessage(err) || 'Failed to add patient');
       return null;
     }
   }, [profile?.clinic_id]);
@@ -201,7 +178,7 @@ export function usePatients(): UsePatients {
     }
 
     try {
-      const dbUpdates: any = {};
+      const dbUpdates: PatientRowUpdate = {};
       if (updates.name !== undefined) dbUpdates.name = updates.name;
       if (updates.email !== undefined) dbUpdates.email = updates.email;
       if (updates.phone !== undefined) dbUpdates.phone = updates.phone;
@@ -221,26 +198,12 @@ export function usePatients(): UsePatients {
 
       if (updateError) throw updateError;
 
-      const updatedPatient: Patient = {
-        id: data.id,
-        name: data.name,
-        email: data.email || '',
-        phone: data.phone,
-        riskLevel: data.risk_level || 'low',
-        lastVisit: data.last_visit || '',
-        memberSince: data.member_since,
-        birthDate: data.birth_date,
-        age: data.age,
-        gender: data.gender,
-        aestheticInterests: data.aesthetic_interests || [],
-        skinType: data.skin_type,
-      };
-
+      const updatedPatient = transformPatientRow(data as PatientRow);
       setPatients(prev => prev.map(p => p.id === id ? updatedPatient : p));
       return updatedPatient;
-    } catch (err: any) {
+    } catch (err) {
       logger.error('Error updating patient:', err);
-      setError(err.message || 'Failed to update patient');
+      setError(getErrorMessage(err) || 'Failed to update patient');
       return null;
     }
   }, [patients]);
@@ -262,9 +225,9 @@ export function usePatients(): UsePatients {
 
       setPatients(prev => prev.filter(p => p.id !== id));
       return true;
-    } catch (err: any) {
+    } catch (err) {
       logger.error('Error deleting patient:', err);
-      setError(err.message || 'Failed to delete patient');
+      setError(getErrorMessage(err) || 'Failed to delete patient');
       return false;
     }
   }, []);
