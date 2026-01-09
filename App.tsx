@@ -251,7 +251,7 @@ const AdminLayout = ({ children }: { children?: React.ReactNode }) => {
 
            <Button
              variant="ghost"
-             className="w-full justify-start text-slate-400 hover:text-red-400 hover:bg-slate-700/50 rounded-xl py-3 min-h-[48px]"
+             className="w-full justify-start text-slate-400 hover:text-red-400 hover:bg-slate-700/50 rounded-xl py-3 min-h-[48px] select-none"
              onClick={async () => {
                await signOut();
                navigate('/login');
