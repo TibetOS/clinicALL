@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect, useRef } from 'react';
-import { Button, Input, Card, Badge, Label, Switch } from '../components/ui';
+import { Button, Input, Card, Badge, Label, Switch, Toast } from '../components/ui';
 import {
   Check, ChevronLeft, ChevronRight, Globe, Building2, User, MapPin,
   FileBadge, Lock, ArrowLeft, Star, Calendar, Smartphone, Zap, TrendingUp,
@@ -8,7 +8,7 @@ import {
   CheckCircle2, AlertCircle, Loader2, UserCheck, PenTool, Eraser, Eye, EyeOff, Mail, KeyRound,
   XCircle, Type
 } from 'lucide-react';
-import { Link, useNavigate, useParams } from 'react-router-dom';
+import { Link, useNavigate, useParams, useLocation } from 'react-router-dom';
 import { MOCK_PATIENTS } from '../data';
 import { useAuth } from '../contexts/AuthContext';
 import { supabase } from '../lib/supabase';
@@ -410,6 +410,7 @@ export const ResetPasswordPage = () => {
 
 export const LoginPage = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const { signIn, resetPassword, user } = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -417,12 +418,25 @@ export const LoginPage = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  // Logout success toast state
+  const [showLogoutToast, setShowLogoutToast] = useState(false);
+
   // Forgot password state
   const [showForgotPassword, setShowForgotPassword] = useState(false);
   const [forgotEmail, setForgotEmail] = useState('');
   const [forgotLoading, setForgotLoading] = useState(false);
   const [forgotSuccess, setForgotSuccess] = useState(false);
   const [forgotError, setForgotError] = useState<string | null>(null);
+
+  // Show logout success toast if arriving from logout
+  useEffect(() => {
+    const state = location.state as { loggedOut?: boolean } | null;
+    if (state?.loggedOut) {
+      setShowLogoutToast(true);
+      // Clear the state so toast doesn't show on refresh
+      window.history.replaceState({}, document.title);
+    }
+  }, [location.state]);
 
   // Redirect if already logged in
   useEffect(() => {
@@ -624,6 +638,16 @@ export const LoginPage = () => {
             )}
           </Card>
         </div>
+      )}
+
+      {/* Logout Success Toast */}
+      {showLogoutToast && (
+        <Toast
+          type="success"
+          message="התנתקת בהצלחה מהמערכת"
+          onClose={() => setShowLogoutToast(false)}
+          duration={4000}
+        />
       )}
     </div>
   );

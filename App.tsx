@@ -10,7 +10,7 @@ import { LoginPage, HealthDeclaration, SignupPage, LandingPage, LockScreen, Rese
 import { ClinicLanding } from './pages/ClinicLanding';
 import { PricingPage } from './pages/Pricing';
 import { BookingApp } from './pages/Booking';
-import { Button, Badge, Dialog } from './components/ui';
+import { Button, Badge, Dialog, cn } from './components/ui';
 import { useNotifications, useHealthTokens } from './hooks';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { ProtectedRoute } from './components/ProtectedRoute';
@@ -106,6 +106,7 @@ const AdminLayout = ({ children }: { children?: React.ReactNode }) => {
 
   // Logout Confirmation Dialog State
   const [logoutDialogOpen, setLogoutDialogOpen] = useState(false);
+  const [loggingOut, setLoggingOut] = useState(false);
 
   // Handle send declaration action from notification
   const handleSendDeclaration = async (notif: Notification) => {
@@ -158,6 +159,20 @@ const AdminLayout = ({ children }: { children?: React.ReactNode }) => {
       markAsRead(declarationDialog.notification.id);
     }
     setDeclarationDialog({ open: false, notification: null, generatedLink: null, tokenValue: null });
+  };
+
+  // Handle logout with loading state
+  const handleLogout = async () => {
+    setLoggingOut(true);
+    try {
+      await signOut();
+      // Small delay for visual feedback before redirect
+      await new Promise(resolve => setTimeout(resolve, 300));
+      navigate('/login', { state: { loggedOut: true } });
+    } catch {
+      setLoggingOut(false);
+      setLogoutDialogOpen(false);
+    }
   };
 
   useEffect(() => {
@@ -545,32 +560,56 @@ const AdminLayout = ({ children }: { children?: React.ReactNode }) => {
       {/* Logout Confirmation Dialog */}
       <Dialog
         open={logoutDialogOpen}
-        onClose={() => setLogoutDialogOpen(false)}
+        onClose={() => !loggingOut && setLogoutDialogOpen(false)}
         title="יציאה מהמערכת"
       >
         <div className="space-y-6">
-          <p className="text-gray-600 text-center">
-            אתה בטוח שברצונך לצאת מהמערכת?
-          </p>
-          <div className="flex gap-3 justify-center">
-            <Button
-              variant="ghost"
-              onClick={() => setLogoutDialogOpen(false)}
-            >
-              ביטול
-            </Button>
-            <Button
-              variant="destructive"
-              onClick={async () => {
-                setLogoutDialogOpen(false);
-                await signOut();
-                navigate('/login');
-              }}
-            >
-              <LogOut size={16} className="ml-2" />
-              כן, התנתק
-            </Button>
+          {/* Icon and message */}
+          <div className="flex flex-col items-center text-center">
+            <div className={cn(
+              "h-16 w-16 rounded-full flex items-center justify-center mb-4 transition-all duration-300",
+              loggingOut
+                ? "bg-gray-100"
+                : "bg-red-50"
+            )}>
+              {loggingOut ? (
+                <div className="h-6 w-6 border-2 border-gray-300 border-t-primary rounded-full animate-spin" />
+              ) : (
+                <LogOut size={28} className="text-red-500" />
+              )}
+            </div>
+            <p className="text-gray-600">
+              {loggingOut
+                ? "מתנתק מהמערכת..."
+                : "האם אתה בטוח שברצונך לצאת מהמערכת?"}
+            </p>
+            {!loggingOut && (
+              <p className="text-sm text-gray-400 mt-1">
+                תצטרך להתחבר מחדש כדי לגשת לחשבונך
+              </p>
+            )}
           </div>
+
+          {/* Action buttons */}
+          {!loggingOut && (
+            <div className="flex gap-3 justify-center pt-2">
+              <Button
+                variant="ghost"
+                onClick={() => setLogoutDialogOpen(false)}
+                className="min-w-[100px]"
+              >
+                ביטול
+              </Button>
+              <Button
+                variant="destructive"
+                onClick={handleLogout}
+                className="min-w-[120px]"
+              >
+                <LogOut size={16} className="ml-2" />
+                כן, התנתק
+              </Button>
+            </div>
+          )}
         </div>
       </Dialog>
     </div>
