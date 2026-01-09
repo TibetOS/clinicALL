@@ -3,7 +3,7 @@
  * These types represent the snake_case column names used in the database
  */
 
-import { RiskLevel, AppointmentStatus, AppointmentDeclarationStatus, LeadStage } from '../types';
+import { RiskLevel, AppointmentStatus, AppointmentDeclarationStatus, DeclarationStatus, LeadStage } from '../types';
 
 // Helper type for extracting error messages safely
 export function getErrorMessage(error: unknown): string {
@@ -36,6 +36,10 @@ export interface PatientRow {
   gender: string | null;
   aesthetic_interests: string[] | null;
   skin_type: string | null;
+  // Health declaration fields
+  last_declaration_date: string | null;
+  declaration_status: DeclarationStatus | null;
+  pending_declaration_token: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -244,6 +248,10 @@ export interface PatientRowUpdate {
   gender?: string | null;
   aesthetic_interests?: string[] | null;
   skin_type?: string | null;
+  // Health declaration fields
+  last_declaration_date?: string | null;
+  declaration_status?: DeclarationStatus | null;
+  pending_declaration_token?: string | null;
 }
 
 export interface AppointmentRowUpdate {
