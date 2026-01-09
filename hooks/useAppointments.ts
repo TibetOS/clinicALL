@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { supabase, isSupabaseConfigured } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
-import { Appointment, AppointmentStatus } from '../types';
+import { Appointment, AppointmentStatus, AppointmentDeclarationStatus } from '../types';
 import { MOCK_APPOINTMENTS } from '../data';
 import { createLogger } from '../lib/logger';
 import { AppointmentRowUpdate, getErrorMessage } from '../lib/database.types';
@@ -72,11 +72,7 @@ export function useAppointments(options?: UseAppointmentsOptions): UseAppointmen
     try {
       let query = supabase
         .from('appointments')
-        .select(`
-          *,
-          patients:patient_id (name),
-          services:service_id (name)
-        `)
+        .select('*')
         .order('date', { ascending: true })
         .order('time', { ascending: true });
 
@@ -95,30 +91,33 @@ export function useAppointments(options?: UseAppointmentsOptions): UseAppointmen
       if (fetchError) throw fetchError;
 
       // Transform database format to app format
-      // Note: The query joins with patients and services tables, so we use a custom type
-      interface AppointmentWithJoins {
+      interface AppointmentDbRow {
         id: string;
         patient_id: string;
-        patients?: { name: string } | null;
+        patient_name: string;
         service_id: string;
-        services?: { name: string } | null;
+        service_name: string;
         date: string;
         time: string;
         duration: number;
         status: AppointmentStatus;
         notes?: string | null;
+        declaration_status?: AppointmentDeclarationStatus | null;
+        declaration_token_id?: string | null;
       }
-      const transformedAppointments: Appointment[] = (data as AppointmentWithJoins[] || []).map((a) => ({
+      const transformedAppointments: Appointment[] = (data as AppointmentDbRow[] || []).map((a) => ({
         id: a.id,
         patientId: a.patient_id,
-        patientName: a.patients?.name || '',
+        patientName: a.patient_name || '',
         serviceId: a.service_id,
-        serviceName: a.services?.name || '',
+        serviceName: a.service_name || '',
         date: a.date,
         time: a.time,
         duration: a.duration,
         status: a.status || 'pending',
         notes: a.notes ?? undefined,
+        declarationStatus: a.declaration_status ?? undefined,
+        declarationTokenId: a.declaration_token_id ?? undefined,
       }));
 
       setAppointments(transformedAppointments);
@@ -138,11 +137,7 @@ export function useAppointments(options?: UseAppointmentsOptions): UseAppointmen
     try {
       const { data, error: fetchError } = await supabase
         .from('appointments')
-        .select(`
-          *,
-          patients:patient_id (name),
-          services:service_id (name)
-        `)
+        .select('*')
         .eq('id', id)
         .single();
 
@@ -151,14 +146,16 @@ export function useAppointments(options?: UseAppointmentsOptions): UseAppointmen
       return {
         id: data.id,
         patientId: data.patient_id,
-        patientName: data.patients?.name || '',
+        patientName: data.patient_name || '',
         serviceId: data.service_id,
-        serviceName: data.services?.name || '',
+        serviceName: data.service_name || '',
         date: data.date,
         time: data.time,
         duration: data.duration,
         status: data.status || 'pending',
         notes: data.notes ?? undefined,
+        declarationStatus: data.declaration_status ?? undefined,
+        declarationTokenId: data.declaration_token_id ?? undefined,
       };
     } catch (err) {
       logger.error('Error fetching appointment:', err);
@@ -184,18 +181,16 @@ export function useAppointments(options?: UseAppointmentsOptions): UseAppointmen
         .insert({
           clinic_id: profile?.clinic_id,
           patient_id: appointment.patientId,
+          patient_name: appointment.patientName,
           service_id: appointment.serviceId,
+          service_name: appointment.serviceName,
           date: appointment.date,
           time: appointment.time,
           duration: appointment.duration,
           status: appointment.status || 'pending',
           notes: appointment.notes,
         })
-        .select(`
-          *,
-          patients:patient_id (name),
-          services:service_id (name)
-        `)
+        .select('*')
         .single();
 
       if (insertError) throw insertError;
@@ -203,14 +198,16 @@ export function useAppointments(options?: UseAppointmentsOptions): UseAppointmen
       const newAppointment: Appointment = {
         id: data.id,
         patientId: data.patient_id,
-        patientName: data.patients?.name || appointment.patientName,
+        patientName: data.patient_name || appointment.patientName,
         serviceId: data.service_id,
-        serviceName: data.services?.name || appointment.serviceName,
+        serviceName: data.service_name || appointment.serviceName,
         date: data.date,
         time: data.time,
         duration: data.duration,
         status: data.status || 'pending',
         notes: data.notes ?? undefined,
+        declarationStatus: data.declaration_status ?? undefined,
+        declarationTokenId: data.declaration_token_id ?? undefined,
       };
 
       setAppointments(prev => [...prev, newAppointment]);
@@ -234,7 +231,9 @@ export function useAppointments(options?: UseAppointmentsOptions): UseAppointmen
     try {
       const dbUpdates: AppointmentRowUpdate = {};
       if (updates.patientId !== undefined) dbUpdates.patient_id = updates.patientId;
+      if (updates.patientName !== undefined) dbUpdates.patient_name = updates.patientName;
       if (updates.serviceId !== undefined) dbUpdates.service_id = updates.serviceId;
+      if (updates.serviceName !== undefined) dbUpdates.service_name = updates.serviceName;
       if (updates.date !== undefined) dbUpdates.date = updates.date;
       if (updates.time !== undefined) dbUpdates.time = updates.time;
       if (updates.duration !== undefined) dbUpdates.duration = updates.duration;
@@ -245,11 +244,7 @@ export function useAppointments(options?: UseAppointmentsOptions): UseAppointmen
         .from('appointments')
         .update(dbUpdates)
         .eq('id', id)
-        .select(`
-          *,
-          patients:patient_id (name),
-          services:service_id (name)
-        `)
+        .select('*')
         .single();
 
       if (updateError) throw updateError;
@@ -257,14 +252,16 @@ export function useAppointments(options?: UseAppointmentsOptions): UseAppointmen
       const updatedAppointment: Appointment = {
         id: data.id,
         patientId: data.patient_id,
-        patientName: data.patients?.name || '',
+        patientName: data.patient_name || '',
         serviceId: data.service_id,
-        serviceName: data.services?.name || '',
+        serviceName: data.service_name || '',
         date: data.date,
         time: data.time,
         duration: data.duration,
         status: data.status || 'pending',
         notes: data.notes ?? undefined,
+        declarationStatus: data.declaration_status ?? undefined,
+        declarationTokenId: data.declaration_token_id ?? undefined,
       };
 
       setAppointments(prev => prev.map(a => a.id === id ? updatedAppointment : a));

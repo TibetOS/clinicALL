@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Plus, ChevronLeft, ChevronRight, FileCheck, Clock, AlertCircle } from 'lucide-react';
+import { Plus, ChevronLeft, ChevronRight, FileCheck, Clock, AlertCircle, Loader2 } from 'lucide-react';
 import { Card, Button, Input, Dialog, Label } from '../../components/ui';
 import { useAppointments, useServices, useNotifications, usePatients } from '../../hooks';
 import { AppointmentDeclarationStatus } from '../../types';
@@ -25,8 +25,8 @@ export const Calendar = () => {
   const [view, setView] = useState<'week' | 'day'>(() =>
     typeof window !== 'undefined' && window.innerWidth < 768 ? 'day' : 'week'
   );
-  const { appointments, addAppointment } = useAppointments();
-  const { services } = useServices();
+  const { appointments, addAppointment, loading, error } = useAppointments();
+  const { services, loading: servicesLoading } = useServices();
   const { addNotification } = useNotifications();
   const { patients } = usePatients();
   const [isNewApptOpen, setIsNewApptOpen] = useState(false);
@@ -228,6 +228,14 @@ export const Calendar = () => {
         </div>
       </div>
 
+      {/* Error Message */}
+      {error && (
+        <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg mb-4 flex items-center gap-2">
+          <AlertCircle size={18} />
+          <span>{error}</span>
+        </div>
+      )}
+
       {/* Calendar Grid */}
       <Card id="calendar-grid" role="grid" aria-label="לוח תורים" className="flex-1 overflow-hidden flex flex-col border-stone-200">
         {/* Header Row */}
@@ -245,6 +253,15 @@ export const Calendar = () => {
 
         {/* Time Grid */}
         <div className="flex-1 overflow-y-auto custom-scrollbar relative">
+          {/* Loading Overlay */}
+          {loading && (
+            <div className="absolute inset-0 bg-white/80 z-40 flex items-center justify-center">
+              <div className="flex flex-col items-center gap-3">
+                <Loader2 className="w-8 h-8 text-primary animate-spin" />
+                <span className="text-gray-600 text-sm">טוען תורים...</span>
+              </div>
+            </div>
+          )}
           {hours.map(hour => (
             <div key={hour} className="flex min-h-[80px]" role="row">
               <div className="w-14 border-l border-b border-gray-100 bg-gray-50 text-xs text-gray-500 text-center pt-2 relative" role="rowheader">
@@ -331,8 +348,9 @@ export const Calendar = () => {
               className="flex h-10 w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm"
               value={apptForm.serviceId}
               onChange={(e) => setApptForm(prev => ({ ...prev, serviceId: e.target.value }))}
+              disabled={servicesLoading}
             >
-              <option value="">בחר טיפול...</option>
+              <option value="">{servicesLoading ? 'טוען טיפולים...' : 'בחר טיפול...'}</option>
               {services.map(s => <option key={s.id} value={s.id}>{s.name} ({s.duration} דק׳)</option>)}
             </select>
           </div>
