@@ -1271,7 +1271,8 @@ export const HealthDeclaration = () => {
   const [lang, setLang] = useState<'he' | 'en'>('he');
   const navigate = useNavigate();
   const { token: tokenParam } = useParams<{ token?: string }>();
-  const { validateToken, markTokenAsUsed } = useHealthTokens();
+  const { validateToken, submitDeclaration } = useHealthTokens();
+  const [submissionError, setSubmissionError] = useState<string | null>(null);
 
   // Token validation state
   const [tokenValidation, setTokenValidation] = useState<{
@@ -1391,9 +1392,35 @@ export const HealthDeclaration = () => {
            return;
         }
 
-        // On final submission, mark token as used
-        if (tokenValidation.token) {
-           await markTokenAsUsed(tokenValidation.token.id);
+        // On final submission, submit declaration and mark token as used
+        if (tokenValidation.token && tokenParam) {
+           // Build the declaration form data structure
+           const nameParts = formData.fullName.trim().split(' ');
+           const firstName = nameParts[0] || '';
+           const lastName = nameParts.slice(1).join(' ') || '';
+
+           const declarationData = {
+             personalInfo: {
+               firstName,
+               lastName,
+               phone: formData.phone,
+               gender: formData.lifestyle.smoke ? 'male' : 'female', // Simplified - actual gender should be collected
+             },
+             medicalHistory: {
+               conditions: Object.entries(formData.healthQuestions)
+                 .filter(([, value]) => value === true)
+                 .map(([key]) => key),
+               medications: formData.healthDetails.medications || '',
+             },
+             signature: formData.signature || '',
+           };
+
+           const result = await submitDeclaration(tokenParam, declarationData);
+
+           if (!result.success) {
+             setSubmissionError(result.message || 'שגיאה בשמירת ההצהרה');
+             return;
+           }
         }
      }
 

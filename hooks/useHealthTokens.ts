@@ -61,6 +61,27 @@ interface CreateTokenInput {
   expiryDays?: number;
 }
 
+interface DeclarationFormData {
+  personalInfo: {
+    firstName: string;
+    lastName: string;
+    phone: string;
+    gender: string;
+  };
+  medicalHistory: {
+    conditions: string[];
+    medications: string;
+  };
+  signature: string;
+}
+
+interface SubmitDeclarationResult {
+  success: boolean;
+  declarationId?: string;
+  error?: string;
+  message?: string;
+}
+
 interface UseHealthTokens {
   tokens: HealthDeclarationToken[];
   loading: boolean;
@@ -71,6 +92,7 @@ interface UseHealthTokens {
   createToken: (input: CreateTokenInput) => Promise<HealthDeclarationToken | null>;
   markTokenAsUsed: (tokenId: string) => Promise<boolean>;
   deleteToken: (tokenId: string) => Promise<boolean>;
+  submitDeclaration: (token: string, formData: DeclarationFormData) => Promise<SubmitDeclarationResult>;
   generateShareLink: (token: string) => string;
   generateWhatsAppLink: (token: string, phone: string) => string;
   generateEmailLink: (token: string, email: string, clinicName?: string) => string;
@@ -356,6 +378,75 @@ export function useHealthTokens(): UseHealthTokens {
     return `mailto:${email}?subject=${subject}&body=${body}`;
   }, [generateShareLink]);
 
+  /**
+   * Submit a health declaration using a token.
+   * This function calls the RPC function that:
+   * 1. Validates the token
+   * 2. Saves the declaration to the database
+   * 3. Marks the token as used
+   * 4. Updates the patient's declaration status to 'valid'
+   */
+  const submitDeclaration = useCallback(async (
+    tokenValue: string,
+    formData: DeclarationFormData
+  ): Promise<SubmitDeclarationResult> => {
+    if (!isSupabaseConfigured()) {
+      // Mock mode - simulate success and mark token as used
+      const token = mockTokensStore.find(t => t.token === tokenValue);
+      if (!token) {
+        return { success: false, error: 'INVALID_TOKEN', message: 'Token not found' };
+      }
+      if (token.status !== 'active') {
+        return { success: false, error: 'TOKEN_USED', message: 'Token already used' };
+      }
+      // Mark token as used in mock store
+      mockTokensStore = mockTokensStore.map(t =>
+        t.token === tokenValue ? { ...t, status: 'used' as const, usedAt: new Date().toISOString() } : t
+      );
+      setTokens(mockTokensStore);
+      return {
+        success: true,
+        declarationId: `mock-decl-${Date.now()}`,
+        message: 'Declaration submitted successfully (mock mode)'
+      };
+    }
+
+    try {
+      const { data, error: rpcError } = await supabase.rpc('submit_health_declaration', {
+        p_token: tokenValue,
+        p_form_data: formData
+      });
+
+      if (rpcError) {
+        logger.error('RPC error submitting declaration:', rpcError);
+        return {
+          success: false,
+          error: 'RPC_ERROR',
+          message: rpcError.message
+        };
+      }
+
+      // The RPC function returns a JSONB object
+      const result = data as SubmitDeclarationResult;
+
+      if (result.success) {
+        // Update local token state to reflect the token is now used
+        setTokens(prev => prev.map(t =>
+          t.token === tokenValue ? { ...t, status: 'used', usedAt: new Date().toISOString() } : t
+        ));
+      }
+
+      return result;
+    } catch (err) {
+      logger.error('Error submitting declaration:', err);
+      return {
+        success: false,
+        error: 'SUBMISSION_ERROR',
+        message: err instanceof Error ? err.message : 'Unknown error'
+      };
+    }
+  }, []);
+
   useEffect(() => {
     fetchTokens();
   }, [fetchTokens]);
@@ -370,6 +461,7 @@ export function useHealthTokens(): UseHealthTokens {
     createToken,
     markTokenAsUsed,
     deleteToken,
+    submitDeclaration,
     generateShareLink,
     generateWhatsAppLink,
     generateEmailLink,
