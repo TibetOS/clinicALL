@@ -8,6 +8,7 @@ import {
 import { Card, Button, Input, Badge, Dialog, Label, Skeleton } from '../../components/ui';
 import { usePatients, useAppointments, useServices, useInvoices, useDeclarations, useHealthTokens } from '../../hooks';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../../contexts/AuthContext';
 
 // Modern Beauty theme colors - Rose + Slate
 const COLORS = {
@@ -25,6 +26,7 @@ const COLORS = {
 
 export const Dashboard = () => {
   const navigate = useNavigate();
+  const { profile } = useAuth();
 
   // ========== DATA HOOKS ==========
   const { appointments, loading: appointmentsLoading, addAppointment } = useAppointments();
@@ -270,7 +272,7 @@ export const Dashboard = () => {
             <GreetingIcon size={20} />
             <span>{greeting.text},</span>
           </div>
-          <h1 className="text-2xl md:text-3xl font-bold text-slate-800">ד״ר שרה</h1>
+          <h1 className="text-2xl md:text-3xl font-bold text-slate-800">{profile?.full_name || 'שלום'}</h1>
         </div>
 
         {/* Desktop Quick Actions - Now just the main CTA */}
