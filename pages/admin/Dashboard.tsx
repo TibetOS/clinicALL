@@ -286,36 +286,36 @@ export const Dashboard = () => {
 
       {/* ========== DAILY SUMMARY STRIP ========== */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-        <div className="bg-white rounded-2xl p-4 shadow-sm border border-slate-100">
+        <div className="bg-white rounded-2xl p-4 shadow-sm border border-slate-100 hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 cursor-pointer group card-animate stagger-1">
           <div className="flex items-center gap-2 mb-1">
-            <CalendarIcon size={16} className="text-slate-400" />
+            <CalendarIcon size={16} className="text-slate-400 group-hover:text-rose-500 transition-colors duration-200" />
             <span className="text-xs font-medium text-slate-500">תורים היום</span>
           </div>
-          <p className="text-2xl font-bold text-slate-800">{todaysAppointments.length}</p>
+          <p className="text-2xl font-bold text-slate-800 counter-animate">{todaysAppointments.length}</p>
         </div>
 
-        <div className="bg-white rounded-2xl p-4 shadow-sm border border-slate-100">
+        <div className="bg-white rounded-2xl p-4 shadow-sm border border-slate-100 hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 cursor-pointer group card-animate stagger-2">
           <div className="flex items-center gap-2 mb-1">
-            <CheckCircle size={16} className="text-slate-400" />
+            <CheckCircle size={16} className="text-slate-400 group-hover:text-green-500 transition-colors duration-200" />
             <span className="text-xs font-medium text-slate-500">הושלמו</span>
           </div>
-          <p className="text-2xl font-bold text-slate-800">{completedToday}</p>
+          <p className="text-2xl font-bold text-slate-800 counter-animate">{completedToday}</p>
         </div>
 
-        <div className="bg-white rounded-2xl p-4 shadow-sm border border-slate-100">
+        <div className="bg-white rounded-2xl p-4 shadow-sm border border-slate-100 hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 cursor-pointer group card-animate stagger-3">
           <div className="flex items-center gap-2 mb-1">
-            <Heart size={16} className="text-rose-500" />
+            <Heart size={16} className="text-rose-500 group-hover:scale-110 transition-transform duration-200" />
             <span className="text-xs font-medium text-slate-500">הכנסות היום</span>
           </div>
-          <p className="text-2xl font-bold text-slate-800">₪{todaysRevenue.toLocaleString()}</p>
+          <p className="text-2xl font-bold text-slate-800 counter-animate">₪{todaysRevenue.toLocaleString()}</p>
         </div>
 
-        <div className="bg-white rounded-2xl p-4 shadow-sm border border-slate-100">
+        <div className="bg-white rounded-2xl p-4 shadow-sm border border-slate-100 hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 cursor-pointer group card-animate stagger-4">
           <div className="flex items-center gap-2 mb-1">
-            <FileText size={16} className="text-slate-400" />
+            <FileText size={16} className="text-slate-400 group-hover:text-amber-500 transition-colors duration-200" />
             <span className="text-xs font-medium text-slate-500">הצהרות ממתינות</span>
           </div>
-          <p className="text-2xl font-bold text-slate-800">{pendingDeclarations.length}</p>
+          <p className="text-2xl font-bold text-slate-800 counter-animate">{pendingDeclarations.length}</p>
         </div>
       </div>
 
@@ -326,9 +326,9 @@ export const Dashboard = () => {
         <div className="lg:col-span-2 space-y-6">
 
           {/* ========== NEXT APPOINTMENT (הטיפול הבא) ========== */}
-          <Card className="p-6 rounded-3xl border border-slate-100 shadow-sm overflow-hidden relative">
+          <Card className="p-6 rounded-3xl border border-slate-100 shadow-sm overflow-hidden relative card-animate stagger-5">
             <div className="flex items-center gap-2 mb-4">
-              <Sparkles size={20} className="text-rose-500" />
+              <Sparkles size={20} className="text-rose-500 animate-gentle-bounce" />
               <h2 className="text-lg font-bold text-slate-800">הטיפול הבא</h2>
             </div>
 
@@ -394,10 +394,10 @@ export const Dashboard = () => {
           </Card>
 
           {/* ========== PENDING HEALTH DECLARATIONS (טפסים ממתינים לחתימה) ========== */}
-          <Card className="p-6 rounded-3xl border border-slate-100 shadow-sm">
+          <Card className="p-6 rounded-3xl border border-slate-100 shadow-sm card-animate stagger-6">
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center gap-2">
-                <FileText size={20} className="text-slate-400" />
+                <FileText size={20} className="text-slate-400 group-hover:rotate-6 transition-transform duration-200" />
                 <h2 className="text-lg font-bold text-slate-800">הצהרות בריאות ממתינות</h2>
               </div>
               {patientsNeedingDeclaration.length > 0 && (
@@ -423,15 +423,20 @@ export const Dashboard = () => {
               </div>
             ) : (
               <div className="space-y-3">
-                {patientsNeedingDeclaration.map((item) => (
+                {patientsNeedingDeclaration.map((item, index) => (
                   <div
                     key={item.id}
-                    className="flex items-center gap-3 p-3 rounded-xl transition-all hover:shadow-sm bg-slate-50"
+                    className="flex items-center gap-3 p-3 rounded-xl transition-all duration-200 hover:shadow-md hover:-translate-y-0.5 bg-slate-50 group"
+                    style={{
+                      animation: 'fadeInUp 300ms ease-out forwards',
+                      animationDelay: `${index * 75}ms`,
+                      opacity: 0
+                    }}
                   >
                     <img
                       src={`https://ui-avatars.com/api/?name=${encodeURIComponent(item.patientName)}&background=FFE4E6&color=E11D48`}
                       alt={item.patientName}
-                      className="w-10 h-10 rounded-full object-cover"
+                      className="w-10 h-10 rounded-full object-cover ring-2 ring-transparent group-hover:ring-rose-200 transition-all duration-200"
                     />
                     <div className="flex-1 min-w-0">
                       <p className="font-medium truncate text-slate-800">{item.patientName}</p>
@@ -449,7 +454,7 @@ export const Dashboard = () => {
                         <span className="animate-spin">⏳</span>
                       ) : (
                         <>
-                          <Send size={14} /> שלח
+                          <Send size={14} className="group-hover:translate-x-0.5 transition-transform duration-200" /> שלח
                         </>
                       )}
                     </Button>
@@ -460,10 +465,10 @@ export const Dashboard = () => {
           </Card>
 
           {/* ========== FOLLOW-UP LIST (לקוחות להתקשר אליהן) ========== */}
-          <Card className="p-6 rounded-3xl border border-slate-100 shadow-sm">
+          <Card className="p-6 rounded-3xl border border-slate-100 shadow-sm card-animate stagger-7">
             <div className="flex items-center justify-between mb-4">
-              <div className="flex items-center gap-2">
-                <Phone size={20} className="text-slate-400" />
+              <div className="flex items-center gap-2 group">
+                <Phone size={20} className="text-slate-400 group-hover:rotate-12 transition-transform duration-200" />
                 <h2 className="text-lg font-bold text-slate-800">לקוחות להתקשר אליהן</h2>
               </div>
             </div>
@@ -484,16 +489,21 @@ export const Dashboard = () => {
               </div>
             ) : (
               <div className="space-y-3">
-                {dueForFollowUp.map((item) => (
+                {dueForFollowUp.map((item, index) => (
                   <div
                     key={item.id}
-                    className="flex items-center gap-3 p-3 rounded-xl cursor-pointer transition-all hover:shadow-sm bg-slate-50"
+                    className="flex items-center gap-3 p-3 rounded-xl cursor-pointer transition-all duration-200 hover:shadow-md hover:-translate-y-0.5 bg-slate-50 group"
+                    style={{
+                      animation: 'fadeInUp 300ms ease-out forwards',
+                      animationDelay: `${index * 75}ms`,
+                      opacity: 0
+                    }}
                     onClick={() => navigate(`/admin/patients/${item.patientId}`)}
                   >
                     <img
                       src={`https://ui-avatars.com/api/?name=${encodeURIComponent(item.patientName)}&background=FFE4E6&color=E11D48`}
                       alt={item.patientName}
-                      className="w-10 h-10 rounded-full object-cover"
+                      className="w-10 h-10 rounded-full object-cover ring-2 ring-transparent group-hover:ring-rose-200 transition-all duration-200"
                     />
                     <div className="flex-1 min-w-0">
                       <p className="font-medium truncate text-slate-800">{item.patientName}</p>
@@ -504,7 +514,7 @@ export const Dashboard = () => {
                     <Badge className="border-none text-xs bg-rose-100 text-rose-700">
                       מעקב בוטוקס
                     </Badge>
-                    <ChevronLeft size={16} className="text-slate-400" />
+                    <ChevronLeft size={16} className="text-slate-400 group-hover:translate-x-[-4px] transition-transform duration-200" />
                   </div>
                 ))}
               </div>
@@ -514,11 +524,11 @@ export const Dashboard = () => {
 
         {/* ========== RIGHT COLUMN - Retention Metrics ========== */}
         <div className="space-y-4">
-          <h3 className="text-sm font-bold uppercase tracking-wider text-slate-400">שימור לקוחות</h3>
+          <h3 className="text-sm font-bold uppercase tracking-wider text-slate-400 animate-fade-in">שימור לקוחות</h3>
 
           {/* Lapsed Clients */}
           <Card
-            className="p-5 rounded-2xl border border-slate-100 cursor-pointer transition-all hover:shadow-md"
+            className="p-5 rounded-2xl border border-slate-100 cursor-pointer transition-all duration-200 hover:shadow-lg hover:-translate-y-1 card-animate stagger-5 group"
             onClick={() => navigate('/admin/patients')}
           >
             <div className="flex items-center gap-3">
@@ -544,11 +554,11 @@ export const Dashboard = () => {
 
           {/* Due for Follow-up */}
           <Card
-            className="p-5 rounded-2xl border border-slate-100 cursor-pointer transition-all hover:shadow-md"
+            className="p-5 rounded-2xl border border-slate-100 cursor-pointer transition-all duration-200 hover:shadow-lg hover:-translate-y-1 card-animate stagger-6 group"
             onClick={() => navigate('/admin/patients')}
           >
             <div className="flex items-center gap-3">
-              <div className="w-12 h-12 rounded-xl flex items-center justify-center bg-rose-50">
+              <div className="w-12 h-12 rounded-xl flex items-center justify-center bg-rose-50 group-hover:scale-110 transition-transform duration-200">
                 <Phone size={24} className="text-rose-500" />
               </div>
               <div className="flex-1">
@@ -570,12 +580,12 @@ export const Dashboard = () => {
 
           {/* Upcoming Birthdays */}
           <Card
-            className="p-5 rounded-2xl border border-slate-100 cursor-pointer transition-all hover:shadow-md"
+            className="p-5 rounded-2xl border border-slate-100 cursor-pointer transition-all duration-200 hover:shadow-lg hover:-translate-y-1 card-animate stagger-7 group"
             onClick={() => navigate('/admin/patients')}
           >
             <div className="flex items-center gap-3">
-              <div className="w-12 h-12 rounded-xl flex items-center justify-center bg-pink-50">
-                <Gift size={24} className="text-pink-500" />
+              <div className="w-12 h-12 rounded-xl flex items-center justify-center bg-pink-50 group-hover:scale-110 transition-transform duration-200">
+                <Gift size={24} className="text-pink-500 group-hover:rotate-12 transition-transform duration-200" />
               </div>
               <div className="flex-1">
                 <p className="text-sm font-medium text-slate-500">ימי הולדת</p>
@@ -596,11 +606,11 @@ export const Dashboard = () => {
 
           {/* Active Patients */}
           <Card
-            className="p-5 rounded-2xl border border-slate-100 cursor-pointer transition-all hover:shadow-md"
+            className="p-5 rounded-2xl border border-slate-100 cursor-pointer transition-all duration-200 hover:shadow-lg hover:-translate-y-1 card-animate stagger-8 group"
             onClick={() => navigate('/admin/patients')}
           >
             <div className="flex items-center gap-3">
-              <div className="w-12 h-12 rounded-xl flex items-center justify-center bg-green-50">
+              <div className="w-12 h-12 rounded-xl flex items-center justify-center bg-green-50 group-hover:scale-110 transition-transform duration-200">
                 <UserCheck size={24} className="text-green-600" />
               </div>
               <div className="flex-1">
@@ -618,40 +628,45 @@ export const Dashboard = () => {
       {/* ========== MOBILE FAB ========== */}
       <div className="md:hidden fixed bottom-6 left-6 z-50">
         {/* FAB Menu */}
-        {isFabOpen && (
-          <div className="absolute bottom-16 left-0 space-y-2 animate-in slide-in-from-bottom-2 duration-200">
-            <button
-              className="flex items-center gap-2 bg-white shadow-lg rounded-full py-2 px-4 text-sm font-medium text-slate-700 hover:bg-slate-50 transition-colors min-h-[44px]"
-              onClick={() => { setIsNewApptOpen(true); setIsFabOpen(false); }}
-            >
-              <Plus size={18} className="text-rose-500" />
-              תור חדש
-            </button>
-            <button
-              className="flex items-center gap-2 bg-white shadow-lg rounded-full py-2 px-4 text-sm font-medium text-slate-700 hover:bg-slate-50 transition-colors min-h-[44px]"
-              onClick={() => { setIsWalkInOpen(true); setIsFabOpen(false); }}
-            >
-              <User size={18} className="text-blue-500" />
-              קבלת לקוחה
-            </button>
-            <button
-              className="flex items-center gap-2 bg-white shadow-lg rounded-full py-2 px-4 text-sm font-medium text-slate-700 hover:bg-slate-50 transition-colors min-h-[44px]"
-              onClick={() => { navigate('/admin/patients'); setIsFabOpen(false); }}
-            >
-              <MessageCircle size={18} className="text-green-500" />
-              שלח תזכורת
-            </button>
-          </div>
-        )}
+        <div
+          className={`absolute bottom-16 left-0 space-y-2 transition-all duration-300 ${
+            isFabOpen ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4 pointer-events-none'
+          }`}
+        >
+          <button
+            className="flex items-center gap-2 bg-white shadow-lg rounded-full py-2 px-4 text-sm font-medium text-slate-700 hover:bg-slate-50 hover:shadow-xl hover:-translate-y-0.5 transition-all duration-200 min-h-[44px] active:scale-95"
+            style={{ transitionDelay: isFabOpen ? '100ms' : '0ms' }}
+            onClick={() => { setIsNewApptOpen(true); setIsFabOpen(false); }}
+          >
+            <Plus size={18} className="text-rose-500" />
+            תור חדש
+          </button>
+          <button
+            className="flex items-center gap-2 bg-white shadow-lg rounded-full py-2 px-4 text-sm font-medium text-slate-700 hover:bg-slate-50 hover:shadow-xl hover:-translate-y-0.5 transition-all duration-200 min-h-[44px] active:scale-95"
+            style={{ transitionDelay: isFabOpen ? '50ms' : '0ms' }}
+            onClick={() => { setIsWalkInOpen(true); setIsFabOpen(false); }}
+          >
+            <User size={18} className="text-blue-500" />
+            קבלת לקוחה
+          </button>
+          <button
+            className="flex items-center gap-2 bg-white shadow-lg rounded-full py-2 px-4 text-sm font-medium text-slate-700 hover:bg-slate-50 hover:shadow-xl hover:-translate-y-0.5 transition-all duration-200 min-h-[44px] active:scale-95"
+            style={{ transitionDelay: isFabOpen ? '0ms' : '0ms' }}
+            onClick={() => { navigate('/admin/patients'); setIsFabOpen(false); }}
+          >
+            <MessageCircle size={18} className="text-green-500" />
+            שלח תזכורת
+          </button>
+        </div>
 
         {/* FAB Button */}
         <button
-          className={`w-14 h-14 rounded-full shadow-lg flex items-center justify-center transition-all duration-300 ${
-            isFabOpen ? 'bg-slate-800 rotate-45' : 'bg-rose-500 hover:bg-rose-600'
+          className={`w-14 h-14 rounded-full shadow-lg flex items-center justify-center transition-all duration-300 transform-gpu active:scale-90 ${
+            isFabOpen ? 'bg-slate-800 rotate-45 shadow-xl' : 'bg-rose-500 hover:bg-rose-600 hover:shadow-xl hover:scale-105'
           }`}
           onClick={() => setIsFabOpen(!isFabOpen)}
         >
-          <Plus size={24} className="text-white" />
+          <Plus size={24} className="text-white transition-transform duration-300" />
         </button>
       </div>
 
