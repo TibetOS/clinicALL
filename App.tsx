@@ -225,7 +225,7 @@ const AdminLayout = ({ children }: { children?: React.ReactNode }) => {
         </nav>
 
         {/* Subscription Widget & Logout */}
-        <div className="p-4 mt-auto border-t border-slate-700/50 bg-slate-900/30">
+        <div className="p-4 pb-6 mt-auto border-t border-slate-700/50 bg-slate-900/30 relative z-20">
            {/* Plan Widget - Clickable Link to Settings */}
            <Link to="/admin/settings?tab=billing">
              <div className="bg-gradient-to-br from-slate-700 to-slate-800 rounded-xl p-4 text-white mb-4 shadow-lg relative overflow-hidden group cursor-pointer hover:shadow-xl transition-all transform hover:-translate-y-0.5 ring-1 ring-slate-600/50">
@@ -251,7 +251,7 @@ const AdminLayout = ({ children }: { children?: React.ReactNode }) => {
 
            <Button
              variant="ghost"
-             className="w-full justify-start text-slate-400 hover:text-red-400 hover:bg-slate-700/50 rounded-xl"
+             className="w-full justify-start text-slate-400 hover:text-red-400 hover:bg-slate-700/50 rounded-xl py-3 min-h-[48px] select-none"
              onClick={async () => {
                await signOut();
                navigate('/login');
