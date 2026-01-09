@@ -98,7 +98,7 @@ export function useServices(): UseServices {
         duration: data.duration,
         price: data.price || 0,
         category: data.category,
-        image: data.image_url ?? undefined,
+        image: data.image ?? undefined,
       };
     } catch (err) {
       logger.error('Error fetching service:', err);
@@ -132,7 +132,7 @@ export function useServices(): UseServices {
           duration: service.duration,
           price: service.price,
           category: service.category,
-          image_url: service.image,
+          image: service.image,
           is_active: service.isActive !== false,
         })
         .select()
@@ -147,7 +147,7 @@ export function useServices(): UseServices {
         duration: data.duration,
         price: data.price || 0,
         category: data.category,
-        image: data.image_url ?? undefined,
+        image: data.image ?? undefined,
       };
 
       setServices(prev => [...prev, newService]);
@@ -169,13 +169,13 @@ export function useServices(): UseServices {
     }
 
     try {
-      const dbUpdates: ServiceRowUpdate & { is_active?: boolean; image_url?: string } = {};
+      const dbUpdates: ServiceRowUpdate = {};
       if (updates.name !== undefined) dbUpdates.name = updates.name;
       if (updates.description !== undefined) dbUpdates.description = updates.description;
       if (updates.duration !== undefined) dbUpdates.duration = updates.duration;
       if (updates.price !== undefined) dbUpdates.price = updates.price;
       if (updates.category !== undefined) dbUpdates.category = updates.category;
-      if (updates.image !== undefined) dbUpdates.image_url = updates.image;
+      if (updates.image !== undefined) dbUpdates.image = updates.image;
       if (updates.isActive !== undefined) dbUpdates.is_active = updates.isActive;
 
       const { data, error: updateError } = await supabase
@@ -194,7 +194,7 @@ export function useServices(): UseServices {
         duration: data.duration,
         price: data.price || 0,
         category: data.category,
-        image: data.image_url ?? undefined,
+        image: data.image ?? undefined,
       };
 
       setServices(prev => prev.map(s => s.id === id ? updatedService : s));
