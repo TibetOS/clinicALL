@@ -4,6 +4,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { HealthDeclarationToken } from '../types';
 import { MOCK_HEALTH_TOKENS } from '../data';
 import { createLogger } from '../lib/logger';
+import { tokenCreationLimiter } from '../lib/rateLimiter';
 
 const logger = createLogger('useHealthTokens');
 
@@ -218,6 +219,16 @@ export function useHealthTokens(): UseHealthTokens {
   }, [getTokenByValue]);
 
   const createToken = useCallback(async (input: CreateTokenInput): Promise<HealthDeclarationToken | null> => {
+    // SECURITY: Client-side rate limiting to prevent abuse
+    // Note: Server-side rate limiting via RLS/Edge Functions is the primary defense
+    const rateLimit = tokenCreationLimiter.checkLimit();
+    if (!rateLimit.allowed) {
+      const retrySeconds = Math.ceil((rateLimit.retryAfterMs || 60000) / 1000);
+      logger.warn(`Rate limit exceeded for token creation. Retry in ${retrySeconds}s`);
+      setError(`יותר מדי בקשות. נסה שוב בעוד ${retrySeconds} שניות`);
+      return null;
+    }
+
     const tokenValue = generateToken();
     const expiresAt = getDefaultExpiry(input.expiryDays || 7);
 

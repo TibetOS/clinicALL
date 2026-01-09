@@ -6,7 +6,7 @@ import {
   FileBadge, Lock, ArrowLeft, Star, Calendar, Smartphone, Zap, TrendingUp,
   Sparkles, Image as ImageIcon, Palette, Heart, Shield, FileText, Clock,
   CheckCircle2, AlertCircle, Loader2, UserCheck, PenTool, Eraser, Eye, EyeOff, Mail, KeyRound,
-  XCircle
+  XCircle, Type
 } from 'lucide-react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { MOCK_PATIENTS } from '../data';
@@ -653,7 +653,9 @@ export const SignupPage = () => {
     phone: '',
   });
 
-  const handleChange = (field: string, value: any) => {
+  // Type-safe form field update handler
+  type SignupFormData = typeof formData;
+  const handleChange = <K extends keyof SignupFormData>(field: K, value: SignupFormData[K]) => {
     setFormData(prev => ({ ...prev, [field]: value }));
     // Clear field error when user types
     if (fieldErrors[field]) {
@@ -1163,17 +1165,23 @@ const HEALTH_QUESTIONS = [
   { id: 'q9', text: { en: 'Do you have any active skin infection or open wounds?', he: 'האם יש דלקת עור פעילה או פצעים פתוחים?' }, details: false },
 ];
 
-const SignaturePad = ({ onEnd, onClear }: { onEnd: (data: string | null) => void, onClear?: () => void }) => {
+// Accessible signature component with draw and type options
+const SignaturePad = ({ onEnd, onClear, lang = 'he' }: { onEnd: (data: string | null) => void, onClear?: () => void, lang?: 'he' | 'en' }) => {
    const canvasRef = useRef<HTMLCanvasElement>(null);
    const [isDrawing, setIsDrawing] = useState(false);
    const [hasSignature, setHasSignature] = useState(false);
+   const [signatureMode, setSignatureMode] = useState<'draw' | 'type'>('draw');
+   const [typedName, setTypedName] = useState('');
+
+   // Translations
+   const t = (he: string, en: string) => lang === 'he' ? he : en;
 
    const startDrawing = (e: React.MouseEvent | React.TouchEvent) => {
       const canvas = canvasRef.current;
       if (!canvas) return;
       const ctx = canvas.getContext('2d');
       if (!ctx) return;
-      
+
       const rect = canvas.getBoundingClientRect();
       const clientX = 'touches' in e && e.touches[0] ? e.touches[0].clientX : (e as React.MouseEvent).clientX;
       const clientY = 'touches' in e && e.touches[0] ? e.touches[0].clientY : (e as React.MouseEvent).clientY;
@@ -1209,7 +1217,7 @@ const SignaturePad = ({ onEnd, onClear }: { onEnd: (data: string | null) => void
          onEnd(canvasRef.current?.toDataURL() || null);
       }
    };
-   
+
    const clearCanvas = () => {
       const canvas = canvasRef.current;
       if (!canvas) return;
@@ -1217,8 +1225,34 @@ const SignaturePad = ({ onEnd, onClear }: { onEnd: (data: string | null) => void
       if (!ctx) return;
       ctx.clearRect(0, 0, canvas.width, canvas.height);
       setHasSignature(false);
+      setTypedName('');
       onEnd(null);
       if (onClear) onClear();
+   };
+
+   // Handle typed signature - renders text to canvas
+   const handleTypedSignature = (name: string) => {
+      setTypedName(name);
+      if (!name.trim()) {
+         clearCanvas();
+         return;
+      }
+
+      const canvas = canvasRef.current;
+      if (!canvas) return;
+      const ctx = canvas.getContext('2d');
+      if (!ctx) return;
+
+      // Clear and draw typed signature
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      ctx.font = 'italic 32px "Brush Script MT", "Segoe Script", cursive';
+      ctx.fillStyle = '#000';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(name, canvas.width / 2, canvas.height / 2);
+
+      setHasSignature(true);
+      onEnd(canvas.toDataURL());
    };
 
    // Initial setup
@@ -1237,31 +1271,92 @@ const SignaturePad = ({ onEnd, onClear }: { onEnd: (data: string | null) => void
    }, []);
 
    return (
-      <div className="relative border-2 border-dashed border-gray-300 rounded-xl bg-gray-50 touch-none">
-         <canvas 
-            ref={canvasRef}
-            onMouseDown={startDrawing}
-            onMouseMove={draw}
-            onMouseUp={endDrawing}
-            onMouseLeave={endDrawing}
-            onTouchStart={startDrawing}
-            onTouchMove={draw}
-            onTouchEnd={endDrawing}
-            className="w-full h-[200px] cursor-crosshair rounded-xl"
-         />
-         <div className="absolute top-2 right-2 flex gap-2">
-            <Button size="sm" variant="ghost" className="h-8 bg-white/80 backdrop-blur-sm shadow-sm" onClick={clearCanvas}>
-               <Eraser size={14} className="mr-1"/> Clear
-            </Button>
+      <div className="space-y-3">
+         {/* Mode toggle for accessibility */}
+         <div className="flex gap-2 text-sm" role="tablist" aria-label={t('בחר שיטת חתימה', 'Choose signature method')}>
+            <button
+               role="tab"
+               aria-selected={signatureMode === 'draw'}
+               onClick={() => { setSignatureMode('draw'); clearCanvas(); }}
+               className={`px-3 py-1.5 rounded-lg transition-colors ${
+                  signatureMode === 'draw'
+                     ? 'bg-primary text-white'
+                     : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+               }`}
+            >
+               <PenTool size={14} className="inline mr-1" />
+               {t('צייר חתימה', 'Draw signature')}
+            </button>
+            <button
+               role="tab"
+               aria-selected={signatureMode === 'type'}
+               onClick={() => { setSignatureMode('type'); clearCanvas(); }}
+               className={`px-3 py-1.5 rounded-lg transition-colors ${
+                  signatureMode === 'type'
+                     ? 'bg-primary text-white'
+                     : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+               }`}
+            >
+               <Type size={14} className="inline mr-1" />
+               {t('הקלד שם', 'Type name')}
+            </button>
          </div>
-         {!hasSignature && (
-            <div className="absolute inset-0 flex items-center justify-center pointer-events-none opacity-40">
-               <div className="text-center">
-                  <PenTool className="mx-auto mb-2" />
-                  <span className="text-sm">Sign Here</span>
-               </div>
+
+         {/* Type signature input (accessibility alternative) */}
+         {signatureMode === 'type' && (
+            <div className="space-y-2">
+               <Input
+                  type="text"
+                  value={typedName}
+                  onChange={(e) => handleTypedSignature(e.target.value)}
+                  placeholder={t('הקלד את שמך המלא', 'Type your full name')}
+                  className="text-lg"
+                  aria-label={t('הקלד את שמך לחתימה', 'Type your name for signature')}
+               />
+               <p className="text-xs text-gray-500">
+                  {t('החתימה שלך תופיע בסגנון כתב יד', 'Your signature will appear in handwriting style')}
+               </p>
             </div>
          )}
+
+         {/* Canvas signature pad */}
+         <div
+            className={`relative border-2 border-dashed border-gray-300 rounded-xl bg-gray-50 ${signatureMode === 'draw' ? 'touch-none' : ''}`}
+            role="img"
+            aria-label={t('אזור חתימה', 'Signature area')}
+         >
+            <canvas
+               ref={canvasRef}
+               onMouseDown={signatureMode === 'draw' ? startDrawing : undefined}
+               onMouseMove={signatureMode === 'draw' ? draw : undefined}
+               onMouseUp={signatureMode === 'draw' ? endDrawing : undefined}
+               onMouseLeave={signatureMode === 'draw' ? endDrawing : undefined}
+               onTouchStart={signatureMode === 'draw' ? startDrawing : undefined}
+               onTouchMove={signatureMode === 'draw' ? draw : undefined}
+               onTouchEnd={signatureMode === 'draw' ? endDrawing : undefined}
+               className={`w-full h-[200px] rounded-xl ${signatureMode === 'draw' ? 'cursor-crosshair' : 'cursor-default'}`}
+               aria-hidden={signatureMode === 'type'}
+            />
+            <div className="absolute top-2 right-2 flex gap-2">
+               <Button
+                  size="sm"
+                  variant="ghost"
+                  className="h-8 bg-white/80 backdrop-blur-sm shadow-sm"
+                  onClick={clearCanvas}
+                  aria-label={t('נקה חתימה', 'Clear signature')}
+               >
+                  <Eraser size={14} className="mr-1"/> {t('נקה', 'Clear')}
+               </Button>
+            </div>
+            {!hasSignature && signatureMode === 'draw' && (
+               <div className="absolute inset-0 flex items-center justify-center pointer-events-none opacity-40">
+                  <div className="text-center">
+                     <PenTool className="mx-auto mb-2" />
+                     <span className="text-sm">{t('חתום כאן', 'Sign Here')}</span>
+                  </div>
+               </div>
+            )}
+         </div>
       </div>
    );
 };

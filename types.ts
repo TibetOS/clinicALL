@@ -251,3 +251,33 @@ export interface HealthDeclarationToken {
   status: 'active' | 'used' | 'expired';
   usedAt?: string; // ISO Date - when the form was submitted
 }
+
+// Activity Log for healthcare compliance audit trail
+export type ActivityAction = 'view' | 'create' | 'update' | 'delete' | 'export' | 'login' | 'logout' | 'send_declaration';
+export type ActivityResourceType =
+  | 'patient'
+  | 'appointment'
+  | 'clinical_note'
+  | 'declaration'
+  | 'invoice'
+  | 'health_token'
+  | 'service'
+  | 'inventory'
+  | 'settings'
+  | 'user';
+
+export interface ActivityLog {
+  id: string;
+  clinicId: string;
+  userId?: string;
+  userEmail?: string;
+  userRole?: string;
+  action: ActivityAction;
+  resourceType: ActivityResourceType;
+  resourceId?: string;
+  resourceName?: string; // Human-readable name for display
+  details?: Record<string, unknown>; // Additional context
+  ipAddress?: string;
+  userAgent?: string;
+  createdAt: string; // ISO Date
+}

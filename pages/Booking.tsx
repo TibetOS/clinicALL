@@ -239,7 +239,7 @@ export const BookingApp: React.FC<BookingAppProps> = ({
                       onClick={() => { setSelectedStaff(staffMember); setStep('datetime'); }}
                       className="border border-gray-200 rounded-xl p-4 flex flex-col items-center justify-center gap-2 cursor-pointer hover:border-primary hover:shadow-md transition-all aspect-square bg-white"
                     >
-                      <img src={staffMember.avatar} alt={`תמונת פרופיל של ${staffMember.name}`} className="h-16 w-16 rounded-full object-cover border-2 border-white shadow-sm" />
+                      <img src={staffMember.avatar} alt={`תמונת פרופיל של ${staffMember.name}`} loading="lazy" className="h-16 w-16 rounded-full object-cover border-2 border-white shadow-sm" />
                       <div className="text-center">
                         <div className="font-bold text-sm text-gray-900">{staffMember.name}</div>
                         <div className="text-xs text-gray-500">{staffMember.role}</div>

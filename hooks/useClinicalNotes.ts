@@ -5,6 +5,7 @@ import { ClinicalNote, InjectionPoint } from '../types';
 import { MOCK_CLINICAL_NOTES } from '../data';
 import { createLogger } from '../lib/logger';
 import { ClinicalNoteRow, ClinicalNoteRowUpdate, getErrorMessage } from '../lib/database.types';
+import { sanitizeInput } from '../lib/validation';
 
 const logger = createLogger('useClinicalNotes');
 
@@ -121,16 +122,24 @@ export function useClinicalNotes(options?: UseClinicalNotesOptions): UseClinical
   }, []);
 
   const addClinicalNote = useCallback(async (note: ClinicalNoteInput): Promise<ClinicalNote | null> => {
+    // SECURITY: Sanitize free-text fields to prevent XSS in stored data
+    const sanitizedNote = {
+      ...note,
+      providerName: note.providerName ? sanitizeInput(note.providerName) : undefined,
+      treatmentType: note.treatmentType ? sanitizeInput(note.treatmentType) : undefined,
+      notes: note.notes ? sanitizeInput(note.notes) : undefined,
+    };
+
     if (!isSupabaseConfigured()) {
       const newNote: ClinicalNote = {
         id: `mock-${Date.now()}`,
-        patientId: note.patientId || '',
-        date: note.date ?? new Date().toISOString().split('T')[0] ?? '',
-        providerName: note.providerName || '',
-        treatmentType: note.treatmentType || '',
-        notes: note.notes || '',
-        injectionPoints: note.injectionPoints || [],
-        images: note.images || [],
+        patientId: sanitizedNote.patientId || '',
+        date: sanitizedNote.date ?? new Date().toISOString().split('T')[0] ?? '',
+        providerName: sanitizedNote.providerName || '',
+        treatmentType: sanitizedNote.treatmentType || '',
+        notes: sanitizedNote.notes || '',
+        injectionPoints: sanitizedNote.injectionPoints || [],
+        images: sanitizedNote.images || [],
       };
       setClinicalNotes(prev => [newNote, ...prev]);
       return newNote;
@@ -141,13 +150,13 @@ export function useClinicalNotes(options?: UseClinicalNotesOptions): UseClinical
         .from('clinical_notes')
         .insert({
           clinic_id: profile?.clinic_id,
-          patient_id: note.patientId || '',
-          date: note.date || new Date().toISOString().split('T')[0],
-          provider_name: note.providerName ?? null,
-          treatment_type: note.treatmentType ?? null,
-          notes: note.notes ?? null,
-          injection_points: note.injectionPoints || [],
-          images: note.images || [],
+          patient_id: sanitizedNote.patientId || '',
+          date: sanitizedNote.date || new Date().toISOString().split('T')[0],
+          provider_name: sanitizedNote.providerName ?? null,
+          treatment_type: sanitizedNote.treatmentType ?? null,
+          notes: sanitizedNote.notes ?? null,
+          injection_points: sanitizedNote.injectionPoints || [],
+          images: sanitizedNote.images || [],
         })
         .select()
         .single();
@@ -175,22 +184,30 @@ export function useClinicalNotes(options?: UseClinicalNotesOptions): UseClinical
   }, [profile?.clinic_id]);
 
   const updateClinicalNote = useCallback(async (id: string, updates: Partial<ClinicalNoteInput>): Promise<ClinicalNote | null> => {
+    // SECURITY: Sanitize free-text fields to prevent XSS in stored data
+    const sanitizedUpdates = {
+      ...updates,
+      providerName: updates.providerName !== undefined ? sanitizeInput(updates.providerName) : undefined,
+      treatmentType: updates.treatmentType !== undefined ? sanitizeInput(updates.treatmentType) : undefined,
+      notes: updates.notes !== undefined ? sanitizeInput(updates.notes) : undefined,
+    };
+
     if (!isSupabaseConfigured()) {
       setClinicalNotes(prev => prev.map(note =>
-        note.id === id ? { ...note, ...updates } : note
+        note.id === id ? { ...note, ...sanitizedUpdates } : note
       ));
       return clinicalNotes.find(note => note.id === id) || null;
     }
 
     try {
       const dbUpdates: ClinicalNoteRowUpdate = {};
-      if (updates.patientId !== undefined) dbUpdates.patient_id = updates.patientId;
-      if (updates.date !== undefined) dbUpdates.date = updates.date;
-      if (updates.providerName !== undefined) dbUpdates.provider_name = updates.providerName;
-      if (updates.treatmentType !== undefined) dbUpdates.treatment_type = updates.treatmentType;
-      if (updates.notes !== undefined) dbUpdates.notes = updates.notes;
-      if (updates.injectionPoints !== undefined) dbUpdates.injection_points = updates.injectionPoints;
-      if (updates.images !== undefined) dbUpdates.images = updates.images;
+      if (sanitizedUpdates.patientId !== undefined) dbUpdates.patient_id = sanitizedUpdates.patientId;
+      if (sanitizedUpdates.date !== undefined) dbUpdates.date = sanitizedUpdates.date;
+      if (sanitizedUpdates.providerName !== undefined) dbUpdates.provider_name = sanitizedUpdates.providerName;
+      if (sanitizedUpdates.treatmentType !== undefined) dbUpdates.treatment_type = sanitizedUpdates.treatmentType;
+      if (sanitizedUpdates.notes !== undefined) dbUpdates.notes = sanitizedUpdates.notes;
+      if (sanitizedUpdates.injectionPoints !== undefined) dbUpdates.injection_points = sanitizedUpdates.injectionPoints;
+      if (sanitizedUpdates.images !== undefined) dbUpdates.images = sanitizedUpdates.images;
 
       const { data, error: updateError } = await supabase
         .from('clinical_notes')
