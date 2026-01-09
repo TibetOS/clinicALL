@@ -2,10 +2,12 @@ import { useState, useEffect } from 'react';
 import {
   Settings as SettingsIcon, UserPlus, MoreVertical, Crown,
   CreditCard, ArrowUpRight, Download, Check, XCircle, Sparkles,
-  Globe, Image as ImageIcon
+  Globe, Image as ImageIcon, Loader2
 } from 'lucide-react';
-import { Card, Button, Input, Badge, Tabs, TabsList, TabsTrigger, Label } from '../../components/ui';
+import { Card, Button, Input, Badge, Tabs, TabsList, TabsTrigger, Label, Skeleton } from '../../components/ui';
 import { useSearchParams } from 'react-router-dom';
+import { useMyClinic, useStaff, usePatients, useAppointments, useInvoices } from '../../hooks';
+import { useAuth } from '../../contexts/AuthContext';
 
 export const SettingsPage = () => {
   const [searchParams] = useSearchParams();
@@ -13,26 +15,59 @@ export const SettingsPage = () => {
   const [saving, setSaving] = useState(false);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
-  // Form states for different tabs
+  // Data hooks
+  const { profile } = useAuth();
+  const { clinic, loading: clinicLoading, updateClinic } = useMyClinic();
+  const { staff, loading: staffLoading } = useStaff(profile?.clinic_id);
+  const { patients } = usePatients();
+  const { appointments } = useAppointments();
+  const { invoices, loading: invoicesLoading } = useInvoices();
+
+  // Form states for different tabs - initialized from database
   const [profileForm, setProfileForm] = useState({
-    description: 'ברוכים הבאים לקליניקה שלנו בלב תל אביב. אנו מתמחים בטיפולי אסתטיקה מתקדמים...',
-    slug: 'dr-sarah',
+    description: '',
+    slug: '',
+    brandColor: '#BCA48D',
   });
 
   const [businessForm, setBusinessForm] = useState({
-    businessName: 'ד״ר שרה כהן בע״מ',
-    taxId: '512345678',
-    address: 'שדרות רוטשילד 45, תל אביב',
-    phone: '03-555-1234',
-    email: 'billing@clinic.com',
+    businessName: '',
+    taxId: '',
+    address: '',
+    phone: '',
+    email: '',
   });
 
   const [billingForm, setBillingForm] = useState({
-    billingName: 'ד״ר שרה כהן בע״מ',
-    billingTaxId: '512345678',
-    billingAddress: 'שדרות רוטשילד 45, תל אביב 6688312',
-    billingEmail: 'billing@drsarah.co.il',
+    billingName: '',
+    billingTaxId: '',
+    billingAddress: '',
+    billingEmail: '',
   });
+
+  // Populate forms when clinic data loads
+  useEffect(() => {
+    if (clinic) {
+      setProfileForm({
+        description: clinic.description || '',
+        slug: clinic.slug || '',
+        brandColor: clinic.brandColor || '#BCA48D',
+      });
+      setBusinessForm({
+        businessName: clinic.name || '',
+        taxId: clinic.businessId || '',
+        address: clinic.address || '',
+        phone: clinic.phone || '',
+        email: profile?.email || '',
+      });
+      setBillingForm({
+        billingName: clinic.name || '',
+        billingTaxId: clinic.businessId || '',
+        billingAddress: clinic.address || '',
+        billingEmail: profile?.email || '',
+      });
+    }
+  }, [clinic, profile]);
 
   // Sync activeTab with URL param
   useEffect(() => {
@@ -47,25 +82,59 @@ export const SettingsPage = () => {
 
   const handleSaveProfile = async () => {
     setSaving(true);
-    // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 500));
+    const result = await updateClinic({
+      description: profileForm.description,
+      slug: profileForm.slug,
+      brandColor: profileForm.brandColor,
+    });
     setSaving(false);
-    showSuccess('פרטי האתר נשמרו בהצלחה');
+    if (result.success) {
+      showSuccess('פרטי האתר נשמרו בהצלחה');
+    } else {
+      showSuccess(`שגיאה: ${result.error}`);
+    }
   };
 
   const handleSaveBusiness = async () => {
     setSaving(true);
-    await new Promise(resolve => setTimeout(resolve, 500));
+    const result = await updateClinic({
+      name: businessForm.businessName,
+      businessId: businessForm.taxId,
+      address: businessForm.address,
+      phone: businessForm.phone,
+    });
     setSaving(false);
-    showSuccess('פרטי העסק נשמרו בהצלחה');
+    if (result.success) {
+      showSuccess('פרטי העסק נשמרו בהצלחה');
+    } else {
+      showSuccess(`שגיאה: ${result.error}`);
+    }
   };
 
   const handleSaveBilling = async () => {
     setSaving(true);
-    await new Promise(resolve => setTimeout(resolve, 500));
+    // Billing info would typically go to a separate billing_info table
+    // For now, we update the clinic with the available fields
+    const result = await updateClinic({
+      name: billingForm.billingName,
+      businessId: billingForm.billingTaxId,
+      address: billingForm.billingAddress,
+    });
     setSaving(false);
-    showSuccess('פרטי החיוב נשמרו בהצלחה');
+    if (result.success) {
+      showSuccess('פרטי החיוב נשמרו בהצלחה');
+    } else {
+      showSuccess(`שגיאה: ${result.error}`);
+    }
   };
+
+  // Calculate usage stats from real data
+  const activePatients = patients.length;
+  const monthlyAppointments = appointments.filter(a => {
+    const apptDate = new Date(a.date);
+    const now = new Date();
+    return apptDate.getMonth() === now.getMonth() && apptDate.getFullYear() === now.getFullYear();
+  }).length;
 
   return (
     <div className="max-w-5xl mx-auto animate-in fade-in pb-10">
@@ -111,7 +180,7 @@ export const SettingsPage = () => {
                 <Card className="p-6 rounded-3xl border-stone-100 shadow-soft">
                   <div className="flex justify-between items-center mb-6">
                     <h3 className="text-lg font-bold">עיצוב עמוד נחיתה</h3>
-                    <a href="/c/dr-sarah" target="_blank" rel="noopener noreferrer">
+                    <a href={`/c/${clinic?.slug || 'preview'}`} target="_blank" rel="noopener noreferrer">
                       <Button variant="outline" size="sm">
                         <Globe size={14} className="ml-2" /> צפה באתר החי
                       </Button>
@@ -122,7 +191,7 @@ export const SettingsPage = () => {
                     <div>
                       <Label>תמונת נושא (Hero Image)</Label>
                       <div className="h-40 bg-gray-100 rounded-xl border-2 border-dashed border-gray-300 flex items-center justify-center cursor-pointer hover:bg-gray-50 transition-colors relative overflow-hidden group">
-                        <img src="https://images.unsplash.com/photo-1629909613654-28e377c37b09?auto=format&fit=crop&q=80&w=2068" alt="תמונת נושא נוכחית" className="w-full h-full object-cover opacity-80" />
+                        <img src={clinic?.coverUrl || "https://images.unsplash.com/photo-1629909613654-28e377c37b09?auto=format&fit=crop&q=80&w=2068"} alt="תמונת נושא נוכחית" className="w-full h-full object-cover opacity-80" />
                         <div className="absolute inset-0 flex items-center justify-center bg-black/20 group-hover:bg-black/30 transition-colors">
                           <span className="bg-white/90 px-4 py-2 rounded-lg text-sm font-medium flex items-center">
                             <ImageIcon size={16} className="ml-2" /> החלף תמונה
@@ -136,7 +205,11 @@ export const SettingsPage = () => {
                         <Label>לוגו הקליניקה</Label>
                         <div className="flex items-center gap-4">
                           <div className="h-16 w-16 rounded-full border bg-gray-50 flex items-center justify-center overflow-hidden">
-                            <span className="text-xl font-bold text-gray-400">Logo</span>
+                            {clinic?.logoUrl ? (
+                              <img src={clinic.logoUrl} alt="לוגו" className="w-full h-full object-cover" />
+                            ) : (
+                              <span className="text-xl font-bold text-gray-400">Logo</span>
+                            )}
                           </div>
                           <Button variant="ghost" size="sm">העלה</Button>
                         </div>
@@ -144,8 +217,13 @@ export const SettingsPage = () => {
                       <div>
                         <Label>צבע מותג</Label>
                         <div className="flex items-center gap-2 border p-2 rounded-lg bg-white">
-                          <div className="w-8 h-8 rounded bg-[#BCA48D] border"></div>
-                          <span className="text-sm font-mono">#BCA48D</span>
+                          <input
+                            type="color"
+                            value={profileForm.brandColor}
+                            onChange={(e) => setProfileForm(prev => ({ ...prev, brandColor: e.target.value }))}
+                            className="w-8 h-8 rounded border-0 cursor-pointer"
+                          />
+                          <span className="text-sm font-mono">{profileForm.brandColor}</span>
                         </div>
                       </div>
                     </div>
@@ -272,26 +350,38 @@ export const SettingsPage = () => {
                   <Button size="sm"><UserPlus size={14} className="ml-2" /> הזמן איש צוות</Button>
                 </div>
                 <div className="space-y-4">
-                  {[
-                    { name: 'ד״ר שרה כהן', role: 'מנהלת רפואית', email: 'sarah@clinic.com', avatar: 'ש' },
-                    { name: 'מיכל לוי', role: 'קוסמטיקאית', email: 'michal@clinic.com', avatar: 'מ' },
-                  ].map((member, i) => (
-                    <div key={i} className="flex items-center justify-between p-4 bg-stone-50 rounded-xl">
-                      <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-full bg-primary/10 text-primary flex items-center justify-center font-bold">
-                          {member.avatar}
-                        </div>
-                        <div>
-                          <p className="font-bold text-gray-900">{member.name}</p>
-                          <p className="text-sm text-gray-500">{member.role}</p>
-                        </div>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <Badge variant="success">פעיל</Badge>
-                        <Button variant="ghost" size="icon"><MoreVertical size={16} /></Button>
-                      </div>
+                  {staffLoading ? (
+                    <>
+                      {[1, 2].map(i => (
+                        <Skeleton key={i} className="h-16 w-full rounded-xl" />
+                      ))}
+                    </>
+                  ) : staff.length === 0 ? (
+                    <div className="text-center py-8 text-gray-500">
+                      <p>אין עדיין אנשי צוות</p>
+                      <p className="text-sm mt-1">הזמן את הצוות הראשון שלך</p>
                     </div>
-                  ))}
+                  ) : (
+                    staff.map((member) => (
+                      <div key={member.id} className="flex items-center justify-between p-4 bg-stone-50 rounded-xl">
+                        <div className="flex items-center gap-3">
+                          <img
+                            src={member.avatar}
+                            alt={member.name}
+                            className="w-10 h-10 rounded-full object-cover"
+                          />
+                          <div>
+                            <p className="font-bold text-gray-900">{member.name}</p>
+                            <p className="text-sm text-gray-500">{member.role}</p>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <Badge variant="success">פעיל</Badge>
+                          <Button variant="ghost" size="icon"><MoreVertical size={16} /></Button>
+                        </div>
+                      </div>
+                    ))
+                  )}
                 </div>
               </Card>
             </div>
@@ -328,30 +418,30 @@ export const SettingsPage = () => {
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-4 p-4 bg-stone-50 rounded-2xl">
                       <div>
                         <p className="text-xs text-gray-500 mb-1">מטופלים פעילים</p>
-                        <p className="text-lg font-bold text-gray-900">127 <span className="text-sm font-normal text-gray-400">/ 500</span></p>
+                        <p className="text-lg font-bold text-gray-900">{activePatients} <span className="text-sm font-normal text-gray-400">/ 500</span></p>
                         <div className="w-full bg-gray-200 rounded-full h-1.5 mt-1">
-                          <div className="bg-primary h-1.5 rounded-full" style={{ width: '25%' }}></div>
+                          <div className="bg-primary h-1.5 rounded-full" style={{ width: `${Math.min((activePatients / 500) * 100, 100)}%` }}></div>
                         </div>
                       </div>
                       <div>
                         <p className="text-xs text-gray-500 mb-1">תורים החודש</p>
-                        <p className="text-lg font-bold text-gray-900">89 <span className="text-sm font-normal text-gray-400">/ ללא הגבלה</span></p>
+                        <p className="text-lg font-bold text-gray-900">{monthlyAppointments} <span className="text-sm font-normal text-gray-400">/ ללא הגבלה</span></p>
                         <div className="w-full bg-gray-200 rounded-full h-1.5 mt-1">
                           <div className="bg-green-500 h-1.5 rounded-full" style={{ width: '100%' }}></div>
                         </div>
                       </div>
                       <div>
                         <p className="text-xs text-gray-500 mb-1">SMS שנשלחו</p>
-                        <p className="text-lg font-bold text-gray-900">342 <span className="text-sm font-normal text-gray-400">/ 500</span></p>
+                        <p className="text-lg font-bold text-gray-900">-- <span className="text-sm font-normal text-gray-400">/ 500</span></p>
                         <div className="w-full bg-gray-200 rounded-full h-1.5 mt-1">
-                          <div className="bg-amber-500 h-1.5 rounded-full" style={{ width: '68%' }}></div>
+                          <div className="bg-amber-500 h-1.5 rounded-full" style={{ width: '0%' }}></div>
                         </div>
                       </div>
                       <div>
                         <p className="text-xs text-gray-500 mb-1">שאילתות AI</p>
-                        <p className="text-lg font-bold text-gray-900">156 <span className="text-sm font-normal text-gray-400">/ 200</span></p>
+                        <p className="text-lg font-bold text-gray-900">-- <span className="text-sm font-normal text-gray-400">/ 200</span></p>
                         <div className="w-full bg-gray-200 rounded-full h-1.5 mt-1">
-                          <div className="bg-purple-500 h-1.5 rounded-full" style={{ width: '78%' }}></div>
+                          <div className="bg-purple-500 h-1.5 rounded-full" style={{ width: '0%' }}></div>
                         </div>
                       </div>
                     </div>
@@ -376,15 +466,15 @@ export const SettingsPage = () => {
                       <div className="w-10 h-7 bg-gradient-to-br from-yellow-400 to-yellow-600 rounded"></div>
                       <span className="text-xs opacity-60">VISA</span>
                     </div>
-                    <p className="font-mono text-lg tracking-wider mb-4">•••• •••• •••• 4521</p>
+                    <p className="font-mono text-lg tracking-wider mb-4">•••• •••• •••• ****</p>
                     <div className="flex justify-between text-xs">
                       <div>
                         <p className="opacity-60">בעל הכרטיס</p>
-                        <p>שרה כהן</p>
+                        <p>{profile?.full_name || '---'}</p>
                       </div>
                       <div>
                         <p className="opacity-60">תוקף</p>
-                        <p>12/26</p>
+                        <p>--/--</p>
                       </div>
                     </div>
                   </div>
@@ -463,26 +553,38 @@ export const SettingsPage = () => {
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-gray-100">
-                      {[
-                        { id: 'INV-2024-012', date: '15/01/2024', amount: 408.41, status: 'paid' },
-                        { id: 'INV-2024-011', date: '15/12/2023', amount: 408.41, status: 'paid' },
-                        { id: 'INV-2024-010', date: '15/11/2023', amount: 408.41, status: 'paid' },
-                        { id: 'INV-2024-009', date: '15/10/2023', amount: 408.41, status: 'paid' },
-                      ].map((inv, i) => (
-                        <tr key={i} className="hover:bg-gray-50">
-                          <td className="py-3 px-4 font-medium text-gray-900">{inv.id}</td>
-                          <td className="py-3 px-4 text-gray-500">{inv.date}</td>
-                          <td className="py-3 px-4 text-gray-900">₪{inv.amount.toFixed(2)}</td>
-                          <td className="py-3 px-4">
-                            <Badge variant="success">שולם</Badge>
-                          </td>
-                          <td className="py-3 px-4">
-                            <Button variant="ghost" size="sm">
-                              <Download size={14} />
-                            </Button>
+                      {invoicesLoading ? (
+                        <tr>
+                          <td colSpan={5} className="py-8 text-center text-gray-500">
+                            <Loader2 className="w-6 h-6 animate-spin mx-auto mb-2" />
+                            טוען חשבוניות...
                           </td>
                         </tr>
-                      ))}
+                      ) : invoices.length === 0 ? (
+                        <tr>
+                          <td colSpan={5} className="py-8 text-center text-gray-500">
+                            אין חשבוניות עדיין
+                          </td>
+                        </tr>
+                      ) : (
+                        invoices.slice(0, 10).map((inv) => (
+                          <tr key={inv.id} className="hover:bg-gray-50">
+                            <td className="py-3 px-4 font-medium text-gray-900">{inv.invoiceNumber}</td>
+                            <td className="py-3 px-4 text-gray-500">{new Date(inv.date).toLocaleDateString('he-IL')}</td>
+                            <td className="py-3 px-4 text-gray-900">₪{inv.total.toFixed(2)}</td>
+                            <td className="py-3 px-4">
+                              <Badge variant={inv.status === 'paid' ? 'success' : inv.status === 'pending' ? 'warning' : 'destructive'}>
+                                {inv.status === 'paid' ? 'שולם' : inv.status === 'pending' ? 'ממתין' : inv.status === 'overdue' ? 'באיחור' : 'החזר'}
+                              </Badge>
+                            </td>
+                            <td className="py-3 px-4">
+                              <Button variant="ghost" size="sm">
+                                <Download size={14} />
+                              </Button>
+                            </td>
+                          </tr>
+                        ))
+                      )}
                     </tbody>
                   </table>
                 </div>
