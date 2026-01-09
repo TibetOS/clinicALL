@@ -24,6 +24,7 @@ New Radix UI-based components following shadcn/ui patterns:
 | `drawer.tsx` | Mobile-friendly bottom drawer (vaul-based) |
 | `dropdown-menu.tsx` | Context menus and action dropdowns |
 | `empty.tsx` | Empty state placeholder component |
+| `field.tsx` | Accessible form field composition (label, control, help text) |
 | `popover.tsx` | Floating content panels |
 | `tooltip.tsx` | Hover tooltips |
 | `index.ts` | Barrel export for all shadcn/ui components |
@@ -88,6 +89,47 @@ import { AlertDialog, Tooltip, Empty } from '@/components/ui';
     </TooltipContent>
   </Tooltip>
 </TooltipProvider>
+```
+
+### Field Example
+
+Compose accessible form fields with automatic label-input association and error handling:
+
+```tsx
+import { Field, FieldLabel, FieldControl, FieldDescription, FieldError, Fieldset } from '@/components/ui/field';
+
+// Basic field with label and help text
+<Field>
+  <FieldLabel required>אימייל</FieldLabel>
+  <FieldControl>
+    <Input type="email" placeholder="name@example.com" />
+  </FieldControl>
+  <FieldDescription>נשתמש באימייל זה ליצירת קשר</FieldDescription>
+</Field>
+
+// Field with error
+<Field error="שדה חובה">
+  <FieldLabel required>שם מלא</FieldLabel>
+  <FieldControl>
+    <Input />
+  </FieldControl>
+</Field>
+
+// Grouped fields with Fieldset
+<Fieldset legend="פרטים אישיים">
+  <Field>
+    <FieldLabel>שם פרטי</FieldLabel>
+    <FieldControl>
+      <Input />
+    </FieldControl>
+  </Field>
+  <Field>
+    <FieldLabel>שם משפחה</FieldLabel>
+    <FieldControl>
+      <Input />
+    </FieldControl>
+  </Field>
+</Fieldset>
 ```
 
 ### Dependencies

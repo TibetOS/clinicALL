@@ -8,5 +8,6 @@ export * from './dialog';
 export * from './drawer';
 export * from './dropdown-menu';
 export * from './empty';
+export * from './field';
 export * from './popover';
 export * from './tooltip';
