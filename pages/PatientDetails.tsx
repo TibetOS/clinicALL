@@ -12,7 +12,7 @@ import { FaceMap } from '../components/FaceMap';
 import { ImageSlider } from '../components/ImageSlider';
 import { usePatients, useAppointments, useClinicalNotes, useDeclarations } from '../hooks';
 import { useAuth } from '../contexts/AuthContext';
-import { InjectionPoint, Declaration } from '../types';
+import { InjectionPoint, Declaration, Patient } from '../types';
 
 export const PatientDetails = () => {
   const { id } = useParams();
@@ -27,16 +27,26 @@ export const PatientDetails = () => {
   // Get current user for provider name
   const { profile } = useAuth();
 
-  const [patient, setPatient] = useState<any>(null);
+  const [patient, setPatient] = useState<Patient | null>(null);
   const [patientLoading, setPatientLoading] = useState(true);
+  const [patientError, setPatientError] = useState<string | null>(null);
 
   // Fetch patient on mount
   useEffect(() => {
     if (id) {
-      getPatient(id).then((p) => {
-        setPatient(p);
-        setPatientLoading(false);
-      });
+      setPatientLoading(true);
+      setPatientError(null);
+      getPatient(id)
+        .then((p) => {
+          setPatient(p);
+        })
+        .catch((err) => {
+          const message = err instanceof Error ? err.message : 'שגיאה בטעינת המטופל';
+          setPatientError(message);
+        })
+        .finally(() => {
+          setPatientLoading(false);
+        });
     }
   }, [id, getPatient]);
 
@@ -63,6 +73,15 @@ export const PatientDetails = () => {
   // verifying tenant_id for multi-tenant security
 
   if (patientLoading) return <div className="p-8">טוען...</div>;
+  if (patientError) return (
+    <div className="p-8 text-center">
+      <div className="h-12 w-12 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+        <AlertTriangle className="h-6 w-6 text-red-600" />
+      </div>
+      <h2 className="text-lg font-bold text-gray-900 mb-2">שגיאה בטעינת מטופל</h2>
+      <p className="text-gray-500">{patientError}</p>
+    </div>
+  );
   if (!patient) return <div className="p-8">מטופל לא נמצא</div>;
 
   const handleAddPoint = (point: { x: number; y: number }) => {

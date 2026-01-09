@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import {
   Calendar as CalendarIcon, FileText, AlertTriangle,
   Plus, ChevronLeft, TrendingUp, Clock, CheckCircle,
@@ -15,13 +15,24 @@ export const Dashboard = () => {
   const navigate = useNavigate();
 
   // ========== DATA HOOKS ==========
-  const { appointments, loading: appointmentsLoading, addAppointment } = useAppointments();
-  const { patients, loading: patientsLoading, addPatient } = usePatients();
-  const { inventory, loading: inventoryLoading } = useInventory();
-  const { leads, loading: leadsLoading } = useLeads();
-  const { invoices, loading: invoicesLoading } = useInvoices();
-  const { declarations, loading: declarationsLoading } = useDeclarations();
+  const { appointments, loading: appointmentsLoading, error: appointmentsError, addAppointment } = useAppointments();
+  const { patients, loading: patientsLoading, error: patientsError, addPatient } = usePatients();
+  const { inventory, loading: inventoryLoading, error: inventoryError } = useInventory();
+  const { leads, loading: leadsLoading, error: leadsError } = useLeads();
+  const { invoices, loading: invoicesLoading, error: invoicesError } = useInvoices();
+  const { declarations, loading: declarationsLoading, error: declarationsError } = useDeclarations();
   const { services } = useServices();
+
+  // Aggregate data fetch errors for display
+  const dataErrors = [
+    appointmentsError && 'תורים',
+    patientsError && 'מטופלים',
+    inventoryError && 'מלאי',
+    leadsError && 'לידים',
+    invoicesError && 'חשבוניות',
+    declarationsError && 'הצהרות'
+  ].filter(Boolean);
+  const hasDataErrors = dataErrors.length > 0;
 
   // ========== DIALOG STATES ==========
   const [isPosOpen, setIsPosOpen] = useState(false);
@@ -45,12 +56,12 @@ export const Dashboard = () => {
   const [saving, setSaving] = useState(false);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
-  // ========== COMPUTED VALUES ==========
-  const today = new Date();
-  const todayStr = today.toISOString().split('T')[0] ?? '';
+  // ========== COMPUTED VALUES (MEMOIZED FOR PERFORMANCE) ==========
+  const today = useMemo(() => new Date(), []);
+  const todayStr = useMemo(() => today.toISOString().split('T')[0] ?? '', [today]);
 
   // Today's appointments with avatar fallback
-  const todaysAppointments = appointments
+  const todaysAppointments = useMemo(() => appointments
     .filter(a => {
       const apptDate = new Date(a.date);
       return apptDate.toDateString() === today.toDateString();
@@ -59,39 +70,43 @@ export const Dashboard = () => {
     .map(a => ({
       ...a,
       avatar: `https://ui-avatars.com/api/?name=${encodeURIComponent(a.patientName)}&background=random`
-    }));
+    })), [appointments, today]);
 
   // Next appointment (first pending or confirmed)
-  const nextAppointment = todaysAppointments.find(a =>
+  const nextAppointment = useMemo(() => todaysAppointments.find(a =>
     a.status === 'confirmed' || a.status === 'pending'
-  );
+  ), [todaysAppointments]);
 
-  // Alerts calculations
-  const pendingDeclarations = declarations.filter(d => d.status === 'pending');
+  // Alerts calculations (memoized)
+  const pendingDeclarations = useMemo(() =>
+    declarations.filter(d => d.status === 'pending'), [declarations]);
 
-  const expiringProducts = inventory.filter(i => {
+  const expiringProducts = useMemo(() => inventory.filter(i => {
     if (!i.expiryDate) return false;
     const expiry = new Date(i.expiryDate);
     const thirtyDaysFromNow = new Date();
     thirtyDaysFromNow.setDate(thirtyDaysFromNow.getDate() + 30);
     return expiry <= thirtyDaysFromNow && expiry >= today;
-  });
+  }), [inventory, today]);
 
-  const lowStockItems = inventory.filter(i => i.status === 'low' || i.status === 'critical');
-  const overdueInvoices = invoices.filter(i => i.status === 'overdue');
-  const newLeads = leads.filter(l => l.stage === 'new');
+  const lowStockItems = useMemo(() =>
+    inventory.filter(i => i.status === 'low' || i.status === 'critical'), [inventory]);
+  const overdueInvoices = useMemo(() =>
+    invoices.filter(i => i.status === 'overdue'), [invoices]);
+  const newLeads = useMemo(() =>
+    leads.filter(l => l.stage === 'new'), [leads]);
 
-  // Revenue calculations
-  const todaysRevenue = invoices
+  // Revenue calculations (memoized)
+  const todaysRevenue = useMemo(() => invoices
     .filter(i => i.date === todayStr && i.status === 'paid')
-    .reduce((sum, i) => sum + i.total, 0);
+    .reduce((sum, i) => sum + i.total, 0), [invoices, todayStr]);
 
-  const outstandingBalance = invoices
+  const outstandingBalance = useMemo(() => invoices
     .filter(i => i.status === 'pending' || i.status === 'overdue')
-    .reduce((sum, i) => sum + i.total, 0);
+    .reduce((sum, i) => sum + i.total, 0), [invoices]);
 
-  // Weekly revenue for trend chart
-  const revenueData = Array.from({ length: 7 }, (_, i) => {
+  // Weekly revenue for trend chart (memoized)
+  const revenueData = useMemo(() => Array.from({ length: 7 }, (_, i) => {
     const date = new Date();
     date.setDate(date.getDate() - (6 - i));
     const dateStr = date.toISOString().split('T')[0];
@@ -103,39 +118,46 @@ export const Dashboard = () => {
       name: dayNames[date.getDay()],
       value: dayRevenue || Math.floor(Math.random() * 3000) + 1000 // Fallback for demo
     };
-  });
+  }), [invoices]);
 
-  // Calculate trend
-  const thisWeekRevenue = revenueData.reduce((sum, d) => sum + d.value, 0);
-  const lastWeekRevenue = thisWeekRevenue * 0.85;
-  const revenueTrend = lastWeekRevenue > 0
-    ? Math.round(((thisWeekRevenue - lastWeekRevenue) / lastWeekRevenue) * 100)
-    : 0;
+  // Calculate trend (memoized)
+  const { revenueTrend } = useMemo(() => {
+    const thisWeekRevenue = revenueData.reduce((sum, d) => sum + d.value, 0);
+    const lastWeekRevenue = thisWeekRevenue * 0.85;
+    const trend = lastWeekRevenue > 0
+      ? Math.round(((thisWeekRevenue - lastWeekRevenue) / lastWeekRevenue) * 100)
+      : 0;
+    return { revenueTrend: trend };
+  }, [revenueData]);
 
-  // Retention: Lapsed clients (no visit > 60 days)
-  const sixtyDaysAgo = new Date();
-  sixtyDaysAgo.setDate(sixtyDaysAgo.getDate() - 60);
-  const lapsedClients = patients.filter(p =>
-    new Date(p.lastVisit) < sixtyDaysAgo && !p.upcomingAppointment
-  );
-
-  // Due for Follow-up: Patients with completed botox appointments ~2 weeks ago (10-17 days)
-  const botoxFollowUpDays = { min: 10, max: 17 };
-  const botoxKeywords = ['בוטוקס', 'botox', 'dysport', 'דיספורט'];
-  const dueForFollowUp = appointments.filter(appt => {
-    if (appt.status !== 'completed') return false;
-    const isBotox = botoxKeywords.some(keyword =>
-      appt.serviceName.toLowerCase().includes(keyword.toLowerCase())
+  // Retention: Lapsed clients (no visit > 60 days) - memoized
+  const lapsedClients = useMemo(() => {
+    const sixtyDaysAgo = new Date();
+    sixtyDaysAgo.setDate(sixtyDaysAgo.getDate() - 60);
+    return patients.filter(p =>
+      new Date(p.lastVisit) < sixtyDaysAgo && !p.upcomingAppointment
     );
-    if (!isBotox) return false;
+  }, [patients]);
 
-    const apptDate = new Date(appt.date);
-    const daysSince = Math.floor((today.getTime() - apptDate.getTime()) / (1000 * 60 * 60 * 24));
-    return daysSince >= botoxFollowUpDays.min && daysSince <= botoxFollowUpDays.max;
-  });
+  // Due for Follow-up: Patients with completed botox appointments ~2 weeks ago (memoized)
+  const dueForFollowUp = useMemo(() => {
+    const botoxFollowUpDays = { min: 10, max: 17 };
+    const botoxKeywords = ['בוטוקס', 'botox', 'dysport', 'דיספורט'];
+    return appointments.filter(appt => {
+      if (appt.status !== 'completed') return false;
+      const isBotox = botoxKeywords.some(keyword =>
+        appt.serviceName.toLowerCase().includes(keyword.toLowerCase())
+      );
+      if (!isBotox) return false;
 
-  // Upcoming Birthdays: Patients with birthdays in the next 7 days
-  const upcomingBirthdays = patients.filter(p => {
+      const apptDate = new Date(appt.date);
+      const daysSince = Math.floor((today.getTime() - apptDate.getTime()) / (1000 * 60 * 60 * 24));
+      return daysSince >= botoxFollowUpDays.min && daysSince <= botoxFollowUpDays.max;
+    });
+  }, [appointments, today]);
+
+  // Upcoming Birthdays: Patients with birthdays in the next 7 days (memoized)
+  const upcomingBirthdays = useMemo(() => patients.filter(p => {
     if (!p.birthDate) return false;
     const birthDate = new Date(p.birthDate);
 
@@ -149,11 +171,12 @@ export const Dashboard = () => {
       }
     }
     return false;
-  });
+  }), [patients, today]);
 
-  // Total alerts count
-  const totalAlerts = pendingDeclarations.length + expiringProducts.length +
-    lowStockItems.length + overdueInvoices.length + newLeads.length;
+  // Total alerts count (memoized)
+  const totalAlerts = useMemo(() => pendingDeclarations.length + expiringProducts.length +
+    lowStockItems.length + overdueInvoices.length + newLeads.length,
+    [pendingDeclarations, expiringProducts, lowStockItems, overdueInvoices, newLeads]);
 
   // Loading state
   const isLoading = appointmentsLoading || patientsLoading || inventoryLoading ||
@@ -257,6 +280,19 @@ export const Dashboard = () => {
       {successMessage && (
         <div className="fixed top-6 left-1/2 -translate-x-1/2 z-50 bg-green-600 text-white px-6 py-3 rounded-xl shadow-lg animate-in slide-in-from-top-2 duration-300">
           {successMessage}
+        </div>
+      )}
+
+      {/* Data Fetch Error Banner */}
+      {hasDataErrors && (
+        <div className="bg-red-50 border border-red-200 rounded-xl p-4 flex items-start gap-3">
+          <AlertTriangle className="h-5 w-5 text-red-500 mt-0.5 shrink-0" />
+          <div>
+            <h4 className="font-medium text-red-800">שגיאה בטעינת נתונים</h4>
+            <p className="text-sm text-red-600 mt-1">
+              לא ניתן לטעון: {dataErrors.join(', ')}. נסה לרענן את הדף.
+            </p>
+          </div>
         </div>
       )}
 
