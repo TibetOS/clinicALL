@@ -104,6 +104,9 @@ const AdminLayout = ({ children }: { children?: React.ReactNode }) => {
     tokenValue: string | null;
   }>({ open: false, notification: null, generatedLink: null, tokenValue: null });
 
+  // Logout Confirmation Dialog State
+  const [logoutDialogOpen, setLogoutDialogOpen] = useState(false);
+
   // Handle send declaration action from notification
   const handleSendDeclaration = async (notif: Notification) => {
     if (!notif.metadata) return;
@@ -282,10 +285,7 @@ const AdminLayout = ({ children }: { children?: React.ReactNode }) => {
            <Button
              variant="ghost"
              className="w-full justify-start text-slate-400 hover:text-red-400 hover:bg-slate-700/50 rounded-xl py-3 min-h-[48px] select-none group transition-all duration-200"
-             onClick={async () => {
-               await signOut();
-               navigate('/login');
-             }}
+             onClick={() => setLogoutDialogOpen(true)}
            >
              <LogOut size={20} className="ml-3 transition-transform duration-200 group-hover:rotate-[-12deg] group-hover:scale-110" /> התנתק
            </Button>
@@ -537,6 +537,38 @@ const AdminLayout = ({ children }: { children?: React.ReactNode }) => {
           <div className="flex justify-end pt-2">
             <Button variant="ghost" onClick={closeDeclarationDialog}>
               סגור
+            </Button>
+          </div>
+        </div>
+      </Dialog>
+
+      {/* Logout Confirmation Dialog */}
+      <Dialog
+        open={logoutDialogOpen}
+        onClose={() => setLogoutDialogOpen(false)}
+        title="יציאה מהמערכת"
+      >
+        <div className="space-y-6">
+          <p className="text-gray-600 text-center">
+            אתה בטוח שברצונך לצאת מהמערכת?
+          </p>
+          <div className="flex gap-3 justify-center">
+            <Button
+              variant="ghost"
+              onClick={() => setLogoutDialogOpen(false)}
+            >
+              ביטול
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={async () => {
+                setLogoutDialogOpen(false);
+                await signOut();
+                navigate('/login');
+              }}
+            >
+              <LogOut size={16} className="ml-2" />
+              כן, התנתק
             </Button>
           </div>
         </div>
