@@ -14,19 +14,50 @@ This directory contains reusable UI components for the ClinicALL application.
 
 ## shadcn/ui Components (`ui/`)
 
-New Radix UI-based components following shadcn/ui patterns:
+Comprehensive Radix UI-based components following shadcn/ui patterns:
+
+### Primitives
 
 | File | Description |
 |------|-------------|
+| `accordion.tsx` | Collapsible content sections |
 | `alert-dialog.tsx` | Confirmation dialogs for destructive actions |
+| `aspect-ratio.tsx` | Maintain aspect ratios for images/videos |
+| `avatar.tsx` | User profile images with fallback |
+| `checkbox.tsx` | Checkbox input with indeterminate state |
+| `collapsible.tsx` | Show/hide content sections |
 | `command.tsx` | Command palette/search (cmdk-based) |
+| `context-menu.tsx` | Right-click context menus |
 | `dialog.tsx` | Radix-based modal dialog |
 | `drawer.tsx` | Mobile-friendly bottom drawer (vaul-based) |
 | `dropdown-menu.tsx` | Context menus and action dropdowns |
-| `empty.tsx` | Empty state placeholder component |
-| `field.tsx` | Accessible form field composition (label, control, help text) |
+| `hover-card.tsx` | Preview cards on hover |
 | `popover.tsx` | Floating content panels |
+| `progress.tsx` | Progress bar indicator |
+| `radio-group.tsx` | Radio button groups |
+| `scroll-area.tsx` | Custom styled scrollbars |
+| `select.tsx` | Enhanced select dropdowns |
+| `separator.tsx` | Visual dividers |
+| `slider.tsx` | Range slider input |
+| `toggle.tsx` | Toggle button |
+| `toggle-group.tsx` | Group of toggle buttons |
 | `tooltip.tsx` | Hover tooltips |
+
+### Forms & Inputs
+
+| File | Description |
+|------|-------------|
+| `calendar.tsx` | Date picker calendar (react-day-picker) |
+| `date-picker.tsx` | Date picker with popover + DateRangePicker |
+| `field.tsx` | Accessible form field composition |
+
+### Blocks & Custom Components
+
+| File | Description |
+|------|-------------|
+| `empty.tsx` | Empty state placeholder component |
+| `calendar-appointment.tsx` | Full appointment calendar view (calendar-31 style) |
+| `time-slot-picker.tsx` | Time slot booking interface (calendar-32 style) |
 | `index.ts` | Barrel export for all shadcn/ui components |
 
 ### Usage
@@ -132,15 +163,78 @@ import { Field, FieldLabel, FieldControl, FieldDescription, FieldError, Fieldset
 </Fieldset>
 ```
 
+### Calendar Appointment Example
+
+Full week view calendar for scheduling:
+
+```tsx
+import { CalendarAppointment, Appointment } from '@/components/ui/calendar-appointment';
+
+const appointments: Appointment[] = [
+  {
+    id: '1',
+    title: 'בוטוקס',
+    start: new Date(2024, 0, 15, 10, 0),
+    end: new Date(2024, 0, 15, 10, 30),
+    patientName: 'דנה כהן',
+    status: 'confirmed',
+  },
+];
+
+<CalendarAppointment
+  appointments={appointments}
+  onAppointmentClick={(apt) => console.log(apt)}
+  onTimeSlotClick={(date, hour) => console.log(date, hour)}
+/>
+```
+
+### Time Slot Picker Example
+
+Compact booking interface:
+
+```tsx
+import { TimeSlotPicker } from '@/components/ui/time-slot-picker';
+
+<TimeSlotPicker
+  selectedDate={new Date()}
+  selectedTime="10:00"
+  onDateSelect={(date) => setDate(date)}
+  onTimeSelect={(time) => setTime(time)}
+  disablePastDates
+/>
+```
+
 ### Dependencies
 
-- `@radix-ui/react-alert-dialog` - AlertDialog primitive
-- `@radix-ui/react-dialog` - Dialog primitive
-- `@radix-ui/react-dropdown-menu` - DropdownMenu primitive
-- `@radix-ui/react-popover` - Popover primitive
-- `@radix-ui/react-tooltip` - Tooltip primitive
+**Radix UI Primitives:**
+- `@radix-ui/react-accordion` - Accordion
+- `@radix-ui/react-alert-dialog` - AlertDialog
+- `@radix-ui/react-aspect-ratio` - AspectRatio
+- `@radix-ui/react-avatar` - Avatar
+- `@radix-ui/react-checkbox` - Checkbox
+- `@radix-ui/react-collapsible` - Collapsible
+- `@radix-ui/react-context-menu` - ContextMenu
+- `@radix-ui/react-dialog` - Dialog
+- `@radix-ui/react-dropdown-menu` - DropdownMenu
+- `@radix-ui/react-hover-card` - HoverCard
+- `@radix-ui/react-popover` - Popover
+- `@radix-ui/react-progress` - Progress
+- `@radix-ui/react-radio-group` - RadioGroup
+- `@radix-ui/react-scroll-area` - ScrollArea
+- `@radix-ui/react-select` - Select
+- `@radix-ui/react-separator` - Separator
+- `@radix-ui/react-slider` - Slider
+- `@radix-ui/react-slot` - Slot utility
+- `@radix-ui/react-toggle` - Toggle
+- `@radix-ui/react-toggle-group` - ToggleGroup
+- `@radix-ui/react-tooltip` - Tooltip
+
+**Other Libraries:**
 - `cmdk` - Command palette
 - `vaul` - Drawer component
+- `react-day-picker` - Calendar
+- `date-fns` - Date utilities
+- `class-variance-authority` - Variant utilities
 
 ## Design System (`ui.tsx`)
 
