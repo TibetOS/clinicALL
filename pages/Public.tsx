@@ -2,13 +2,13 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Button, Input, Card, Badge, Label, Switch } from '../components/ui';
 import {
-  Check, ChevronLeft, ChevronRight, AlertTriangle, Globe, Building2, User, MapPin,
+  Check, ChevronLeft, ChevronRight, Globe, Building2, User, MapPin,
   FileBadge, Lock, ArrowLeft, Star, Calendar, Smartphone, Zap, TrendingUp,
   Sparkles, Image as ImageIcon, Palette, Heart, Shield, FileText, Clock,
   CheckCircle2, AlertCircle, Loader2, UserCheck, PenTool, Eraser, Eye, EyeOff, Mail, KeyRound,
-  XCircle, RefreshCw
+  XCircle
 } from 'lucide-react';
-import { Link, useNavigate, useSearchParams, useParams } from 'react-router-dom';
+import { Link, useNavigate, useParams } from 'react-router-dom';
 import { MOCK_PATIENTS } from '../data';
 import { useAuth } from '../contexts/AuthContext';
 import { supabase } from '../lib/supabase';
@@ -816,7 +816,7 @@ export const SignupPage = () => {
                    })}
                 </div>
                 <div className="text-center">
-                   <h2 className="text-lg font-bold text-gray-900">{steps[step-1].title}</h2>
+                   <h2 className="text-lg font-bold text-gray-900">{steps[step-1]?.title}</h2>
                 </div>
              </div>
 
@@ -1175,13 +1175,13 @@ const SignaturePad = ({ onEnd, onClear }: { onEnd: (data: string | null) => void
       if (!ctx) return;
       
       const rect = canvas.getBoundingClientRect();
-      const clientX = 'touches' in e ? e.touches[0].clientX : e.clientX;
-      const clientY = 'touches' in e ? e.touches[0].clientY : e.clientY;
-      
+      const clientX = 'touches' in e && e.touches[0] ? e.touches[0].clientX : (e as React.MouseEvent).clientX;
+      const clientY = 'touches' in e && e.touches[0] ? e.touches[0].clientY : (e as React.MouseEvent).clientY;
+
       ctx.beginPath();
       ctx.moveTo(clientX - rect.left, clientY - rect.top);
       setIsDrawing(true);
-      
+
       // Prevent scrolling on touch
       if ('touches' in e) e.preventDefault();
    };
@@ -1194,8 +1194,8 @@ const SignaturePad = ({ onEnd, onClear }: { onEnd: (data: string | null) => void
       if (!ctx) return;
 
       const rect = canvas.getBoundingClientRect();
-      const clientX = 'touches' in e ? e.touches[0].clientX : e.clientX;
-      const clientY = 'touches' in e ? e.touches[0].clientY : e.clientY;
+      const clientX = 'touches' in e && e.touches[0] ? e.touches[0].clientX : (e as React.MouseEvent).clientX;
+      const clientY = 'touches' in e && e.touches[0] ? e.touches[0].clientY : (e as React.MouseEvent).clientY;
 
       ctx.lineTo(clientX - rect.left, clientY - rect.top);
       ctx.stroke();
@@ -1303,10 +1303,6 @@ export const HealthDeclaration = () => {
     : undefined;
 
   // Form State - initialized with token data or patient data
-  const initialName = tokenValidation.token?.patientName || patient?.name || '';
-  const initialPhone = tokenValidation.token?.patientPhone || patient?.phone || '';
-  const initialEmail = tokenValidation.token?.patientEmail || patient?.email || '';
-
   const [formData, setFormData] = useState({
      fullName: '',
      dob: '',

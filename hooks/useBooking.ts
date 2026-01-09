@@ -48,7 +48,7 @@ export function useBooking(): UseBooking {
   const getAvailableSlots = useCallback(async (
     date: string,
     serviceDuration: number,
-    staffId?: string,
+    _staffId?: string,
     clinicId?: string
   ): Promise<TimeSlot[]> => {
     if (!isSupabaseConfigured()) {
@@ -91,7 +91,7 @@ export function useBooking(): UseBooking {
 
         // Check if this slot overlaps with any existing appointment
         const isBlocked = bookedSlots.some(appt => {
-          const apptStart = timeToMinutes(appt.time);
+          const apptStart = timeToMinutes(appt.time ?? '00:00');
           const apptEnd = apptStart + (appt.duration || 30);
 
           // Check for overlap
@@ -203,7 +203,7 @@ export function useBooking(): UseBooking {
 
 // Helper functions
 function timeToMinutes(time: string): number {
-  const [hours, minutes] = time.split(':').map(Number);
+  const [hours = 0, minutes = 0] = time.split(':').map(Number);
   return hours * 60 + minutes;
 }
 

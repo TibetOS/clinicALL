@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import {
   Calendar as CalendarIcon, FileText, AlertTriangle,
   Plus, ChevronLeft, TrendingUp, Clock, CheckCircle,
@@ -34,7 +34,7 @@ export const Dashboard = () => {
     patientId: '',
     patientName: '',
     serviceId: '',
-    date: new Date().toISOString().split('T')[0],
+    date: new Date().toISOString().split('T')[0] ?? '',
     time: '10:00',
   });
   const [walkInForm, setWalkInForm] = useState({
@@ -47,7 +47,7 @@ export const Dashboard = () => {
 
   // ========== COMPUTED VALUES ==========
   const today = new Date();
-  const todayStr = today.toISOString().split('T')[0];
+  const todayStr = today.toISOString().split('T')[0] ?? '';
 
   // Today's appointments with avatar fallback
   const todaysAppointments = appointments
@@ -533,7 +533,7 @@ export const Dashboard = () => {
                     fontSize: '12px',
                     color: '#fff'
                   }}
-                  formatter={(value: number) => [`₪${value.toLocaleString()}`, 'הכנסות']}
+                  formatter={(value) => [`₪${(value ?? 0).toLocaleString()}`, 'הכנסות']}
                 />
                 <Area
                   type="monotone"

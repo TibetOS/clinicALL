@@ -3,12 +3,12 @@ import React, { useState, useEffect } from 'react';
 import { useParams, Navigate } from 'react-router-dom';
 import {
   MapPin, Phone, Instagram, Facebook, Clock, Star,
-  ChevronDown, Calendar, ArrowRight, X, Menu, Share2, Loader2
+  ChevronDown, ArrowRight, X, Menu, Share2, Loader2
 } from 'lucide-react';
 import { Button, Card, Badge, Dialog } from '../components/ui';
 import { BookingApp } from './Booking';
 import { useClinic, useServices } from '../hooks';
-import { ClinicProfile, Service } from '../types';
+import { Service } from '../types';
 import { ImageSlider } from '../components/ImageSlider';
 import { isSupabaseConfigured } from '../lib/supabase';
 import { createLogger } from '../lib/logger';

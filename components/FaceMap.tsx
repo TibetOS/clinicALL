@@ -1,5 +1,5 @@
 
-import React, { useState, MouseEvent } from 'react';
+import React, { MouseEvent } from 'react';
 import { InjectionPoint } from '../types';
 
 interface FaceMapProps {

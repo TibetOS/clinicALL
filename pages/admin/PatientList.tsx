@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import {
-  Search, Filter, UserPlus, ChevronLeft, Download, Calendar as CalendarIcon,
+  Search, Filter, UserPlus, ChevronLeft, Download,
   X, CheckSquare, Square, MessageSquare, Trash2, FileDown, FileHeart, Copy,
   Check, Send, Mail, Phone, Clock, AlertCircle, FileCheck
 } from 'lucide-react';
@@ -357,7 +357,7 @@ export const PatientList = () => {
         </div>
         <div className="flex gap-2 w-full sm:w-auto">
           <Button
-            variant={hasActiveFilters ? "default" : "outline"}
+            variant={hasActiveFilters ? "primary" : "outline"}
             size="sm"
             className="flex-1 relative"
             onClick={() => setIsFilterOpen(true)}

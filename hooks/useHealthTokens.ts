@@ -14,7 +14,10 @@ export const generateToken = (): string => {
   const array = new Uint32Array(12);
   crypto.getRandomValues(array);
   for (let i = 0; i < 12; i++) {
-    result += chars[array[i] % chars.length];
+    const value = array[i];
+    if (value !== undefined) {
+      result += chars[value % chars.length];
+    }
   }
   return result;
 };

@@ -123,8 +123,8 @@ export function useClinicalNotes(options?: UseClinicalNotesOptions): UseClinical
     if (!isSupabaseConfigured()) {
       const newNote: ClinicalNote = {
         id: `mock-${Date.now()}`,
-        patientId: note.patientId,
-        date: note.date || new Date().toISOString().split('T')[0],
+        patientId: note.patientId || '',
+        date: note.date ?? new Date().toISOString().split('T')[0] ?? '',
         providerName: note.providerName || '',
         treatmentType: note.treatmentType || '',
         notes: note.notes || '',
@@ -140,11 +140,11 @@ export function useClinicalNotes(options?: UseClinicalNotesOptions): UseClinical
         .from('clinical_notes')
         .insert({
           clinic_id: profile?.clinic_id,
-          patient_id: note.patientId,
+          patient_id: note.patientId || '',
           date: note.date || new Date().toISOString().split('T')[0],
-          provider_name: note.providerName,
-          treatment_type: note.treatmentType,
-          notes: note.notes,
+          provider_name: note.providerName ?? null,
+          treatment_type: note.treatmentType ?? null,
+          notes: note.notes ?? null,
           injection_points: note.injectionPoints || [],
           images: note.images || [],
         })

@@ -1,10 +1,10 @@
 
 import React, { useState, useEffect } from 'react';
 import {
-  Calendar as CalendarIcon, Clock, ChevronRight, ChevronLeft,
-  MapPin, Star, User, Check, CreditCard, ShieldCheck, Lock, Smartphone, X, Loader2, AlertCircle
+  Calendar as CalendarIcon, ChevronRight, ChevronLeft,
+  MapPin, Star, Check, ShieldCheck, Smartphone, X, Loader2, AlertCircle
 } from 'lucide-react';
-import { Button, Card, Input, Badge } from '../components/ui';
+import { Button, Card, Input } from '../components/ui';
 import { Service, BookingStep, StaffMember, TimeSlot } from '../types';
 import { useServices, useStaff, useBooking } from '../hooks';
 import { isValidIsraeliPhone } from '../lib/validation';
@@ -30,8 +30,6 @@ export const BookingApp: React.FC<BookingAppProps> = ({
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const [selectedTime, setSelectedTime] = useState<string | null>(null);
   const [authPhone, setAuthPhone] = useState('');
-  const [authCode, setAuthCode] = useState('');
-  const [isAuthVerify, setIsAuthVerify] = useState(false);
   const [customerName, setCustomerName] = useState('');
   const [availableSlots, setAvailableSlots] = useState<TimeSlot[]>([]);
   const [slotsLoading, setSlotsLoading] = useState(false);
@@ -58,8 +56,9 @@ export const BookingApp: React.FC<BookingAppProps> = ({
       if (!selectedService || step !== 'datetime') return;
 
       setSlotsLoading(true);
+      const dateStr = selectedDate.toISOString().split('T')[0] ?? '';
       const slots = await getAvailableSlots(
-        selectedDate.toISOString().split('T')[0],
+        dateStr,
         selectedService.duration,
         selectedStaff?.id,
         clinicId
@@ -99,7 +98,7 @@ export const BookingApp: React.FC<BookingAppProps> = ({
       serviceDuration: selectedService.duration,
       staffId: selectedStaff?.id,
       staffName: selectedStaff?.name,
-      date: selectedDate.toISOString().split('T')[0],
+      date: selectedDate.toISOString().split('T')[0] ?? '',
       time: selectedTime,
       customerPhone: authPhone,
       customerName: customerName || undefined,

@@ -9,8 +9,6 @@
 
 const isDevelopment = import.meta.env.DEV;
 
-type LogLevel = 'debug' | 'info' | 'warn' | 'error';
-
 interface Logger {
   debug: (...args: unknown[]) => void;
   info: (...args: unknown[]) => void;

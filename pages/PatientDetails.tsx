@@ -1,22 +1,21 @@
 
-import React, { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useState, useEffect } from 'react';
+import { useParams } from 'react-router-dom';
 import {
   Phone, Mail, AlertTriangle, FileText, Image as ImageIcon,
   Activity, Save, Plus, MoreHorizontal, X, ZoomIn,
   FileSignature, Send, Eye, CheckCircle2, Sparkles, Smile,
   SplitSquareHorizontal, ShieldCheck, Download
 } from 'lucide-react';
-import { Button, Card, Badge, Input, Dialog, Tabs, TabsList, TabsTrigger, Breadcrumb } from '../components/ui';
+import { Button, Card, Badge, Dialog, Tabs, Breadcrumb } from '../components/ui';
 import { FaceMap } from '../components/FaceMap';
 import { ImageSlider } from '../components/ImageSlider';
 import { usePatients, useAppointments, useClinicalNotes, useDeclarations } from '../hooks';
 import { useAuth } from '../contexts/AuthContext';
-import { ClinicalNote, InjectionPoint, Declaration } from '../types';
+import { InjectionPoint, Declaration } from '../types';
 
 export const PatientDetails = () => {
   const { id } = useParams();
-  const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('clinical');
 
   // Use hooks for data fetching
@@ -52,10 +51,10 @@ export const PatientDetails = () => {
 
   // Form Viewing State
   const [selectedDeclaration, setSelectedDeclaration] = useState<Declaration | null>(null);
-  const [linkCopied, setLinkCopied] = useState(false);
+  const [, _setLinkCopied] = useState(false);
 
   // Medical Forms State (Mocking secure fetch)
-  const [medicalForms, setMedicalForms] = useState([
+  const [medicalForms] = useState([
      { id: 'mf-1', name: 'שאלון אבחון עור מקיף', category: 'אבחון', date: '2023-10-15', status: 'completed' },
      { id: 'mf-2', name: 'מעקב טיפול בפיגמנטציה', category: 'מעקב', date: '2023-09-01', status: 'completed' }
   ]);
@@ -91,12 +90,6 @@ export const PatientDetails = () => {
     setIsEditing(false);
     setNoteText('');
     setNewPoints([]);
-  };
-
-  const copyFormLink = () => {
-    // In reality, this would copy to clipboard
-    setLinkCopied(true);
-    setTimeout(() => setLinkCopied(false), 2000);
   };
 
   return (
@@ -177,7 +170,7 @@ export const PatientDetails = () => {
                      <div className="mb-6">
                         <h4 className="text-sm font-medium text-gray-500 mb-2">תחומי עניין</h4>
                         <div className="flex gap-2 flex-wrap">
-                           {patient.aestheticInterests?.map(interest => (
+                           {patient.aestheticInterests?.map((interest: string) => (
                               <Badge key={interest} className="bg-pink-50 text-pink-700 hover:bg-pink-100 border-pink-200">{interest}</Badge>
                            )) || <span className="text-gray-400 text-sm">לא צוינו תחומי עניין</span>}
                         </div>
