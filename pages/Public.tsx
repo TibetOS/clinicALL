@@ -12,7 +12,7 @@ import { Link, useNavigate, useParams } from 'react-router-dom';
 import { MOCK_PATIENTS } from '../data';
 import { useAuth } from '../contexts/AuthContext';
 import { supabase } from '../lib/supabase';
-import { useHealthTokens } from '../hooks/useHealthTokens';
+import { useHealthTokens, useActivityLog } from '../hooks';
 import { HealthDeclarationToken } from '../types';
 import { isValidEmail, isValidIsraeliPhone, isStrongPassword } from '../lib/validation';
 
@@ -124,9 +124,14 @@ export const LandingPage = () => {
 // -- LOCK SCREEN --
 export const LockScreen = () => {
   const navigate = useNavigate();
-  const { signOut } = useAuth();
+  const { signOut, profile } = useAuth();
+  const { logActivity } = useActivityLog();
 
   const handleLogout = async () => {
+    // Log the logout activity before signing out
+    await logActivity('logout', 'user', profile?.id, profile?.full_name, {
+      reason: 'lock_screen',
+    });
     await signOut();
     navigate('/login');
   };

@@ -32,7 +32,7 @@ interface AuthContextType {
   loading: boolean;
   signIn: (email: string, password: string) => Promise<{ error: Error | null }>;
   signUp: (data: SignUpData) => Promise<{ error: Error | null }>;
-  signOut: () => Promise<void>;
+  signOut: () => Promise<{ error: Error | null }>;
   resetPassword: (email: string) => Promise<{ error: Error | null }>;
   updatePassword: (newPassword: string) => Promise<{ error: Error | null }>;
   isConfigured: boolean;
@@ -172,13 +172,46 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return { error: error as Error | null };
   };
 
-  const signOut = async () => {
-    if (isConfigured) {
-      await supabase.auth.signOut();
+  const signOut = async (): Promise<{ error: Error | null }> => {
+    logger.info('User signing out');
+
+    try {
+      // Clear any cached data from localStorage (except essential app settings)
+      const keysToRemove = Object.keys(localStorage).filter(key =>
+        key.startsWith('supabase.') ||
+        key.startsWith('clinic_') ||
+        key.startsWith('cache_')
+      );
+      keysToRemove.forEach(key => localStorage.removeItem(key));
+
+      // Sign out from Supabase if configured
+      if (isConfigured) {
+        const { error } = await supabase.auth.signOut();
+        if (error) {
+          logger.error('Supabase signOut error:', error);
+          // Still clear local state even if Supabase fails
+          setUser(null);
+          setProfile(null);
+          setSession(null);
+          return { error: error as Error };
+        }
+      }
+
+      // Clear local auth state
+      setUser(null);
+      setProfile(null);
+      setSession(null);
+
+      logger.info('User signed out successfully');
+      return { error: null };
+    } catch (err) {
+      logger.error('signOut exception:', err);
+      // Still clear local state on exception
+      setUser(null);
+      setProfile(null);
+      setSession(null);
+      return { error: err as Error };
     }
-    setUser(null);
-    setProfile(null);
-    setSession(null);
   };
 
   const resetPassword = async (email: string) => {
