@@ -4,14 +4,15 @@ import { BrowserRouter, Routes, Route, Navigate, useLocation, Link, useNavigate 
 import {
   LayoutDashboard, Users, Calendar as CalendarIcon, Settings,
   Menu, Bell, LogOut, ChevronLeft, Package,
-  Crown, Sparkles, X, Syringe, FileHeart, MessageCircle, Mail
+  Crown, Sparkles, X, Syringe, FileHeart, MessageCircle, Mail,
+  Timer, Loader2
 } from 'lucide-react';
 import { LoginPage, HealthDeclaration, SignupPage, LandingPage, LockScreen, ResetPasswordPage } from './pages/Public';
 import { ClinicLanding } from './pages/ClinicLanding';
 import { PricingPage } from './pages/Pricing';
 import { BookingApp } from './pages/Booking';
 import { Button, Badge, Dialog } from './components/ui';
-import { useNotifications, useHealthTokens } from './hooks';
+import { useNotifications, useHealthTokens, useActivityLog, useSessionTimeout, formatRemainingTime } from './hooks';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { ProtectedRoute } from './components/ProtectedRoute';
 import { ErrorBoundary } from './components/ErrorBoundary';
@@ -106,6 +107,29 @@ const AdminLayout = ({ children }: { children?: React.ReactNode }) => {
 
   // Logout Confirmation Dialog State
   const [logoutDialogOpen, setLogoutDialogOpen] = useState(false);
+  const [logoutLoading, setLogoutLoading] = useState(false);
+  const [logoutError, setLogoutError] = useState<string | null>(null);
+
+  // Activity Logging
+  const { logActivity } = useActivityLog();
+
+  // Session Timeout for HIPAA compliance (15 min timeout, 1 min warning)
+  const {
+    showWarning: showTimeoutWarning,
+    remainingSeconds,
+    dismissWarning: dismissTimeoutWarning,
+  } = useSessionTimeout({
+    timeoutMinutes: 15,
+    warningMinutes: 1,
+    onTimeout: async () => {
+      await logActivity('logout', 'user', profile?.id, profile?.full_name, {
+        reason: 'session_timeout',
+        duration_minutes: 15,
+      });
+    },
+    navigateToLock: true,
+    enabled: true,
+  });
 
   // Handle send declaration action from notification
   const handleSendDeclaration = async (notif: Notification) => {
@@ -158,6 +182,35 @@ const AdminLayout = ({ children }: { children?: React.ReactNode }) => {
       markAsRead(declarationDialog.notification.id);
     }
     setDeclarationDialog({ open: false, notification: null, generatedLink: null, tokenValue: null });
+  };
+
+  // Handle logout with activity logging and error handling
+  const handleLogout = async () => {
+    setLogoutLoading(true);
+    setLogoutError(null);
+
+    try {
+      // Log the logout activity before signing out
+      await logActivity('logout', 'user', profile?.id, profile?.full_name, {
+        reason: 'user_initiated',
+      });
+
+      // Perform sign out
+      const { error } = await signOut();
+
+      if (error) {
+        setLogoutError('שגיאה בהתנתקות. אנא נסה שוב.');
+        setLogoutLoading(false);
+        return;
+      }
+
+      // Close dialog and navigate to login
+      setLogoutDialogOpen(false);
+      navigate('/login');
+    } catch {
+      setLogoutError('שגיאה בהתנתקות. אנא נסה שוב.');
+      setLogoutLoading(false);
+    }
   };
 
   useEffect(() => {
@@ -545,31 +598,79 @@ const AdminLayout = ({ children }: { children?: React.ReactNode }) => {
       {/* Logout Confirmation Dialog */}
       <Dialog
         open={logoutDialogOpen}
-        onClose={() => setLogoutDialogOpen(false)}
+        onClose={() => !logoutLoading && setLogoutDialogOpen(false)}
         title="יציאה מהמערכת"
       >
         <div className="space-y-6">
           <p className="text-gray-600 text-center">
             אתה בטוח שברצונך לצאת מהמערכת?
           </p>
+
+          {/* Error Message */}
+          {logoutError && (
+            <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm text-center">
+              {logoutError}
+            </div>
+          )}
+
           <div className="flex gap-3 justify-center">
             <Button
               variant="ghost"
-              onClick={() => setLogoutDialogOpen(false)}
+              onClick={() => {
+                setLogoutError(null);
+                setLogoutDialogOpen(false);
+              }}
+              disabled={logoutLoading}
             >
               ביטול
             </Button>
             <Button
               variant="destructive"
-              className="gap-2"
-              onClick={async () => {
-                setLogoutDialogOpen(false);
-                await signOut();
-                navigate('/login');
-              }}
+              className="gap-2 min-w-[120px]"
+              onClick={handleLogout}
+              disabled={logoutLoading}
             >
-              <LogOut size={16} />
-              כן, התנתק
+              {logoutLoading ? (
+                <>
+                  <Loader2 size={16} className="animate-spin" />
+                  מתנתק...
+                </>
+              ) : (
+                <>
+                  <LogOut size={16} />
+                  כן, התנתק
+                </>
+              )}
+            </Button>
+          </div>
+        </div>
+      </Dialog>
+
+      {/* Session Timeout Warning Dialog */}
+      <Dialog
+        open={showTimeoutWarning}
+        onClose={dismissTimeoutWarning}
+        title="אזהרת סיום סשן"
+      >
+        <div className="space-y-6">
+          <div className="flex flex-col items-center gap-4">
+            <div className="h-16 w-16 bg-orange-100 rounded-full flex items-center justify-center">
+              <Timer size={32} className="text-orange-600" />
+            </div>
+            <p className="text-gray-600 text-center">
+              הסשן שלך עומד להסתיים עקב חוסר פעילות.
+            </p>
+            <div className="text-3xl font-bold text-orange-600 font-mono">
+              {formatRemainingTime(remainingSeconds)}
+            </div>
+            <p className="text-sm text-gray-500 text-center">
+              לחץ להמשיך עבודה כדי להישאר מחובר
+            </p>
+          </div>
+
+          <div className="flex gap-3 justify-center">
+            <Button onClick={dismissTimeoutWarning} className="gap-2">
+              המשך עבודה
             </Button>
           </div>
         </div>

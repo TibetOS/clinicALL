@@ -14,4 +14,4 @@ export { useStaff } from './useStaff';
 export { useBooking } from './useBooking';
 export { useHealthTokens } from './useHealthTokens';
 export { useActivityLog, getActivityDescription } from './useActivityLog';
-export { useSessionTimeout } from './useSessionTimeout';
+export { useSessionTimeout, formatRemainingTime } from './useSessionTimeout';
