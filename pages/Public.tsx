@@ -6,7 +6,8 @@ import {
   FileBadge, Lock, ArrowLeft, Star, Calendar, Smartphone, Zap, TrendingUp,
   Sparkles, Image as ImageIcon, Palette, Heart, Shield, FileText, Clock,
   CheckCircle2, AlertCircle, Loader2, UserCheck, PenTool, Eraser, Eye, EyeOff, Mail, KeyRound,
-  XCircle, Type
+  XCircle, Type, Phone, MessageCircle, Instagram, Facebook, Briefcase, Award,
+  Languages, Users, HelpCircle, FileCheck
 } from 'lucide-react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { MOCK_PATIENTS } from '../data';
@@ -644,18 +645,35 @@ export const SignupPage = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [formData, setFormData] = useState({
+    // Step 1: Account
     fullName: '',
     email: '',
     password: '',
     confirmPassword: '',
+    // Step 2: Clinic & Business
     clinicName: '',
     businessId: '',
+    businessType: '' as '' | 'exempt' | 'authorized' | 'company' | 'partnership',
     slug: '',
+    city: '',
+    address: '',
+    // Step 3: Contact & Social
+    phone: '',
+    whatsapp: '',
+    instagram: '',
+    facebook: '',
+    // Step 4: Professional
+    practitionerType: '' as '' | 'doctor' | 'nurse' | 'aesthetician' | 'cosmetician' | 'other',
+    licenseNumber: '',
+    specializations: [] as string[],
+    languages: [] as string[],
+    // Step 5: Branding & Final
     brandColor: '#0D9488',
     coverImage: 'default',
-    address: '',
+    operatingHours: '',
+    referralSource: '',
+    termsAccepted: false,
     niche: 'aesthetics',
-    phone: '',
   });
 
   // Type-safe form field update handler
@@ -713,6 +731,10 @@ export const SignupPage = () => {
       errors.clinicName = 'שם הקליניקה חייב להכיל לפחות 2 תווים';
     }
 
+    if (!formData.businessType) {
+      errors.businessType = 'נא לבחור סוג עסק';
+    }
+
     if (!formData.businessId.trim()) {
       errors.businessId = 'נא להזין ת.ז. או ח.פ.';
     } else if (!/^\d{9}$/.test(formData.businessId.replace(/\D/g, ''))) {
@@ -725,8 +747,58 @@ export const SignupPage = () => {
       errors.slug = 'כתובת URL יכולה להכיל רק אותיות קטנות באנגלית, מספרים ומקפים';
     }
 
-    if (formData.phone && !isValidIsraeliPhone(formData.phone)) {
+    if (!formData.city) {
+      errors.city = 'נא לבחור עיר';
+    }
+
+    setFieldErrors(errors);
+    return Object.keys(errors).length === 0;
+  };
+
+  const validateStep3 = () => {
+    const errors: Record<string, string> = {};
+
+    if (!formData.phone.trim()) {
+      errors.phone = 'נא להזין מספר טלפון';
+    } else if (!isValidIsraeliPhone(formData.phone)) {
       errors.phone = 'מספר טלפון אינו תקין';
+    }
+
+    // WhatsApp is optional but validate if provided
+    if (formData.whatsapp && !isValidIsraeliPhone(formData.whatsapp)) {
+      errors.whatsapp = 'מספר וואטסאפ אינו תקין';
+    }
+
+    // Instagram validation - optional but check format if provided
+    if (formData.instagram && !/^[a-zA-Z0-9._]{1,30}$/.test(formData.instagram)) {
+      errors.instagram = 'שם משתמש אינסטגרם אינו תקין';
+    }
+
+    setFieldErrors(errors);
+    return Object.keys(errors).length === 0;
+  };
+
+  const validateStep4 = () => {
+    const errors: Record<string, string> = {};
+
+    if (!formData.practitionerType) {
+      errors.practitionerType = 'נא לבחור סוג מטפל/ת';
+    }
+
+    // License number is required for medical professionals
+    if (['doctor', 'nurse'].includes(formData.practitionerType) && !formData.licenseNumber.trim()) {
+      errors.licenseNumber = 'נא להזין מספר רישיון';
+    }
+
+    setFieldErrors(errors);
+    return Object.keys(errors).length === 0;
+  };
+
+  const validateStep5 = () => {
+    const errors: Record<string, string> = {};
+
+    if (!formData.termsAccepted) {
+      errors.termsAccepted = 'נא לאשר את תנאי השימוש';
     }
 
     setFieldErrors(errors);
@@ -748,6 +820,24 @@ export const SignupPage = () => {
     }
   };
 
+  const handleNextStep3 = () => {
+    if (validateStep3()) {
+      nextStep();
+    }
+  };
+
+  const handleNextStep4 = () => {
+    if (validateStep4()) {
+      nextStep();
+    }
+  };
+
+  const handleNextStep5 = () => {
+    if (validateStep5()) {
+      nextStep();
+    }
+  };
+
   const handleSubmit = async () => {
     setLoading(true);
     setError(null);
@@ -761,6 +851,18 @@ export const SignupPage = () => {
       businessId: formData.businessId,
       address: formData.address,
       phone: formData.phone,
+      // New fields
+      whatsapp: formData.whatsapp || undefined,
+      city: formData.city || undefined,
+      businessType: formData.businessType || undefined,
+      practitionerType: formData.practitionerType || undefined,
+      licenseNumber: formData.licenseNumber || undefined,
+      instagram: formData.instagram || undefined,
+      facebook: formData.facebook || undefined,
+      languages: formData.languages.length > 0 ? formData.languages : undefined,
+      operatingHours: formData.operatingHours || undefined,
+      referralSource: formData.referralSource || undefined,
+      specializations: formData.specializations.length > 0 ? formData.specializations : undefined,
     });
 
     if (error) {
@@ -774,8 +876,10 @@ export const SignupPage = () => {
 
   const steps = [
     { title: 'פרטי חשבון', icon: User },
-    { title: 'פרטי הקליניקה', icon: Building2 },
-    { title: 'מיתוג ועיצוב', icon: Palette },
+    { title: 'פרטי עסק', icon: Building2 },
+    { title: 'יצירת קשר', icon: Phone },
+    { title: 'פרופיל מקצועי', icon: Award },
+    { title: 'מיתוג ואישורים', icon: Palette },
     { title: 'סיום', icon: Check }
   ];
 
@@ -912,9 +1016,9 @@ export const SignupPage = () => {
                    </div>
                 )}
 
-                {/* STEP 2: CLINIC DETAILS */}
+                {/* STEP 2: BUSINESS DETAILS */}
                 {step === 2 && (
-                   <div className="space-y-6 animate-in fade-in slide-in-from-right-8 duration-300">
+                   <div className="space-y-4 animate-in fade-in slide-in-from-right-8 duration-300">
                       <div>
                          <label className="text-sm font-medium text-gray-700">שם הקליניקה</label>
                          <Input
@@ -932,8 +1036,27 @@ export const SignupPage = () => {
                          />
                          {fieldErrors.clinicName && <p className="text-red-500 text-xs mt-1">{fieldErrors.clinicName}</p>}
                       </div>
+
                       <div>
-                         <label className="text-sm font-medium text-gray-700">ת.ז. / ח.פ. (לצורכי חשבונית)</label>
+                         <label className="text-sm font-medium text-gray-700">סוג עסק</label>
+                         <select
+                            value={formData.businessType}
+                            onChange={e => handleChange('businessType', e.target.value as typeof formData.businessType)}
+                            className={`w-full h-10 px-3 rounded-lg border bg-white text-sm ${fieldErrors.businessType ? 'border-red-500' : 'border-gray-200'}`}
+                         >
+                            <option value="">בחר סוג עסק...</option>
+                            <option value="exempt">עוסק פטור</option>
+                            <option value="authorized">עוסק מורשה</option>
+                            <option value="company">חברה בע"מ</option>
+                            <option value="partnership">שותפות</option>
+                         </select>
+                         {fieldErrors.businessType && <p className="text-red-500 text-xs mt-1">{fieldErrors.businessType}</p>}
+                      </div>
+
+                      <div>
+                         <label className="text-sm font-medium text-gray-700">
+                            {formData.businessType === 'company' || formData.businessType === 'partnership' ? 'ח.פ.' : 'ת.ז.'} (לצורכי חשבונית)
+                         </label>
                          <Input
                             value={formData.businessId}
                             onChange={e => handleChange('businessId', e.target.value)}
@@ -942,8 +1065,9 @@ export const SignupPage = () => {
                          />
                          {fieldErrors.businessId && <p className="text-red-500 text-xs mt-1">{fieldErrors.businessId}</p>}
                       </div>
+
                       <div>
-                         <label className="text-sm font-medium text-gray-700">כתובת ה-URL שלך (Slug)</label>
+                         <label className="text-sm font-medium text-gray-700">כתובת ה-URL שלך</label>
                          <div className={`flex direction-ltr ${fieldErrors.slug ? '[&>input]:border-red-500' : ''}`}>
                             <span className="inline-flex items-center px-3 rounded-l-lg border border-r-0 border-gray-200 bg-gray-50 text-gray-500 text-sm">
                                clinicall.com/c/
@@ -960,18 +1084,51 @@ export const SignupPage = () => {
                             <p className="text-xs text-gray-500 mt-1">זו הכתובת שבה המטופלים ימצאו אותך.</p>
                          )}
                       </div>
+
                       <div>
-                         <label className="text-sm font-medium text-gray-700">כתובת פיזית</label>
+                         <label className="text-sm font-medium text-gray-700">עיר</label>
+                         <select
+                            value={formData.city}
+                            onChange={e => handleChange('city', e.target.value)}
+                            className={`w-full h-10 px-3 rounded-lg border bg-white text-sm ${fieldErrors.city ? 'border-red-500' : 'border-gray-200'}`}
+                         >
+                            <option value="">בחר עיר...</option>
+                            <option value="תל אביב">תל אביב</option>
+                            <option value="ירושלים">ירושלים</option>
+                            <option value="חיפה">חיפה</option>
+                            <option value="ראשון לציון">ראשון לציון</option>
+                            <option value="פתח תקווה">פתח תקווה</option>
+                            <option value="אשדוד">אשדוד</option>
+                            <option value="נתניה">נתניה</option>
+                            <option value="באר שבע">באר שבע</option>
+                            <option value="בני ברק">בני ברק</option>
+                            <option value="חולון">חולון</option>
+                            <option value="רמת גן">רמת גן</option>
+                            <option value="אשקלון">אשקלון</option>
+                            <option value="רחובות">רחובות</option>
+                            <option value="בת ים">בת ים</option>
+                            <option value="הרצליה">הרצליה</option>
+                            <option value="כפר סבא">כפר סבא</option>
+                            <option value="רעננה">רעננה</option>
+                            <option value="מודיעין">מודיעין</option>
+                            <option value="אחר">אחר</option>
+                         </select>
+                         {fieldErrors.city && <p className="text-red-500 text-xs mt-1">{fieldErrors.city}</p>}
+                      </div>
+
+                      <div>
+                         <label className="text-sm font-medium text-gray-700">כתובת מלאה (אופציונלי)</label>
                          <div className="relative">
                             <MapPin className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
                             <Input
                                value={formData.address}
                                onChange={e => handleChange('address', e.target.value)}
                                className="pr-9"
-                               placeholder="רוטשילד 45, תל אביב"
+                               placeholder="רוטשילד 45"
                             />
                          </div>
                       </div>
+
                       <div className="flex justify-between pt-4">
                          <Button variant="ghost" onClick={prevStep}>חזור</Button>
                          <Button onClick={handleNextStep2}><span className="flex items-center gap-2">המשך <ChevronLeft size={16} /></span></Button>
@@ -979,14 +1136,203 @@ export const SignupPage = () => {
                    </div>
                 )}
 
-                {/* STEP 3: BRANDING */}
+                {/* STEP 3: CONTACT & SOCIAL */}
                 {step === 3 && (
-                   <div className="space-y-6 animate-in fade-in slide-in-from-right-8 duration-300">
+                   <div className="space-y-4 animate-in fade-in slide-in-from-right-8 duration-300">
+                      <div>
+                         <label className="text-sm font-medium text-gray-700">טלפון</label>
+                         <div className="relative">
+                            <Phone className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                            <Input
+                               type="tel"
+                               value={formData.phone}
+                               onChange={e => handleChange('phone', e.target.value)}
+                               placeholder="050-1234567"
+                               className={`pr-9 text-left ${fieldErrors.phone ? 'border-red-500' : ''}`}
+                               dir="ltr"
+                               autoFocus
+                            />
+                         </div>
+                         {fieldErrors.phone && <p className="text-red-500 text-xs mt-1">{fieldErrors.phone}</p>}
+                      </div>
+
+                      <div>
+                         <label className="text-sm font-medium text-gray-700">וואטסאפ (אופציונלי)</label>
+                         <div className="relative">
+                            <MessageCircle className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-green-500" />
+                            <Input
+                               type="tel"
+                               value={formData.whatsapp}
+                               onChange={e => handleChange('whatsapp', e.target.value)}
+                               placeholder="אותו מספר או מספר אחר"
+                               className={`pr-9 text-left ${fieldErrors.whatsapp ? 'border-red-500' : ''}`}
+                               dir="ltr"
+                            />
+                         </div>
+                         {fieldErrors.whatsapp ? (
+                            <p className="text-red-500 text-xs mt-1">{fieldErrors.whatsapp}</p>
+                         ) : (
+                            <p className="text-xs text-gray-500 mt-1">הלקוחות יוכלו ליצור קשר ישירות בוואטסאפ</p>
+                         )}
+                      </div>
+
+                      <div>
+                         <label className="text-sm font-medium text-gray-700">אינסטגרם (אופציונלי)</label>
+                         <div className="relative">
+                            <Instagram className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-pink-500" />
+                            <div className="flex direction-ltr">
+                               <span className="inline-flex items-center px-3 rounded-l-lg border border-r-0 border-gray-200 bg-gray-50 text-gray-500 text-sm">
+                                  @
+                               </span>
+                               <Input
+                                  value={formData.instagram}
+                                  onChange={e => handleChange('instagram', e.target.value.replace('@', ''))}
+                                  placeholder="your_clinic"
+                                  className={`rounded-l-none ${fieldErrors.instagram ? 'border-red-500' : ''}`}
+                               />
+                            </div>
+                         </div>
+                         {fieldErrors.instagram && <p className="text-red-500 text-xs mt-1">{fieldErrors.instagram}</p>}
+                      </div>
+
+                      <div>
+                         <label className="text-sm font-medium text-gray-700">פייסבוק (אופציונלי)</label>
+                         <div className="relative">
+                            <Facebook className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-blue-600" />
+                            <Input
+                               value={formData.facebook}
+                               onChange={e => handleChange('facebook', e.target.value)}
+                               placeholder="שם העמוד או קישור"
+                               className="pr-9"
+                            />
+                         </div>
+                      </div>
+
+                      <div className="flex justify-between pt-4">
+                         <Button variant="ghost" onClick={prevStep}>חזור</Button>
+                         <Button onClick={handleNextStep3}><span className="flex items-center gap-2">המשך <ChevronLeft size={16} /></span></Button>
+                      </div>
+                   </div>
+                )}
+
+                {/* STEP 4: PROFESSIONAL PROFILE */}
+                {step === 4 && (
+                   <div className="space-y-4 animate-in fade-in slide-in-from-right-8 duration-300">
+                      <div>
+                         <label className="text-sm font-medium text-gray-700">סוג מטפל/ת</label>
+                         <select
+                            value={formData.practitionerType}
+                            onChange={e => handleChange('practitionerType', e.target.value as typeof formData.practitionerType)}
+                            className={`w-full h-10 px-3 rounded-lg border bg-white text-sm ${fieldErrors.practitionerType ? 'border-red-500' : 'border-gray-200'}`}
+                            autoFocus
+                         >
+                            <option value="">בחר התמחות...</option>
+                            <option value="doctor">רופא/ה</option>
+                            <option value="nurse">אח/ות מוסמכ/ת</option>
+                            <option value="aesthetician">אסתטיקאי/ת רפואי/ת</option>
+                            <option value="cosmetician">קוסמטיקאי/ת</option>
+                            <option value="other">אחר</option>
+                         </select>
+                         {fieldErrors.practitionerType && <p className="text-red-500 text-xs mt-1">{fieldErrors.practitionerType}</p>}
+                      </div>
+
+                      {['doctor', 'nurse'].includes(formData.practitionerType) && (
+                         <div>
+                            <label className="text-sm font-medium text-gray-700">מספר רישיון משרד הבריאות</label>
+                            <div className="relative">
+                               <Award className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                               <Input
+                                  value={formData.licenseNumber}
+                                  onChange={e => handleChange('licenseNumber', e.target.value)}
+                                  placeholder="מספר רישיון"
+                                  className={`pr-9 ${fieldErrors.licenseNumber ? 'border-red-500' : ''}`}
+                               />
+                            </div>
+                            {fieldErrors.licenseNumber && <p className="text-red-500 text-xs mt-1">{fieldErrors.licenseNumber}</p>}
+                         </div>
+                      )}
+
+                      <div>
+                         <label className="text-sm font-medium text-gray-700 mb-2 block">שפות שירות</label>
+                         <div className="flex flex-wrap gap-2">
+                            {[
+                               { value: 'hebrew', label: 'עברית' },
+                               { value: 'english', label: 'אנגלית' },
+                               { value: 'russian', label: 'רוסית' },
+                               { value: 'arabic', label: 'ערבית' },
+                               { value: 'french', label: 'צרפתית' },
+                               { value: 'spanish', label: 'ספרדית' },
+                            ].map(lang => (
+                               <button
+                                  key={lang.value}
+                                  type="button"
+                                  onClick={() => {
+                                     const newLangs = formData.languages.includes(lang.value)
+                                        ? formData.languages.filter(l => l !== lang.value)
+                                        : [...formData.languages, lang.value];
+                                     handleChange('languages', newLangs);
+                                  }}
+                                  className={`px-3 py-1.5 rounded-full text-sm border transition-all ${
+                                     formData.languages.includes(lang.value)
+                                        ? 'bg-primary text-white border-primary'
+                                        : 'bg-white text-gray-600 border-gray-200 hover:border-gray-300'
+                                  }`}
+                               >
+                                  {lang.label}
+                               </button>
+                            ))}
+                         </div>
+                      </div>
+
+                      <div>
+                         <label className="text-sm font-medium text-gray-700 mb-2 block">התמחויות (אופציונלי)</label>
+                         <div className="flex flex-wrap gap-2">
+                            {[
+                               { value: 'botox', label: 'בוטוקס' },
+                               { value: 'fillers', label: 'חומרי מילוי' },
+                               { value: 'laser', label: 'לייזר' },
+                               { value: 'skincare', label: 'טיפולי עור' },
+                               { value: 'threads', label: 'חוטים' },
+                               { value: 'prp', label: 'PRP' },
+                               { value: 'mesotherapy', label: 'מזותרפיה' },
+                               { value: 'body', label: 'עיצוב גוף' },
+                            ].map(spec => (
+                               <button
+                                  key={spec.value}
+                                  type="button"
+                                  onClick={() => {
+                                     const newSpecs = formData.specializations.includes(spec.value)
+                                        ? formData.specializations.filter(s => s !== spec.value)
+                                        : [...formData.specializations, spec.value];
+                                     handleChange('specializations', newSpecs);
+                                  }}
+                                  className={`px-3 py-1.5 rounded-full text-sm border transition-all ${
+                                     formData.specializations.includes(spec.value)
+                                        ? 'bg-primary text-white border-primary'
+                                        : 'bg-white text-gray-600 border-gray-200 hover:border-gray-300'
+                                  }`}
+                               >
+                                  {spec.label}
+                               </button>
+                            ))}
+                         </div>
+                      </div>
+
+                      <div className="flex justify-between pt-4">
+                         <Button variant="ghost" onClick={prevStep}>חזור</Button>
+                         <Button onClick={handleNextStep4}><span className="flex items-center gap-2">המשך <ChevronLeft size={16} /></span></Button>
+                      </div>
+                   </div>
+                )}
+
+                {/* STEP 5: BRANDING & FINAL */}
+                {step === 5 && (
+                   <div className="space-y-4 animate-in fade-in slide-in-from-right-8 duration-300">
                       <div>
                          <label className="text-sm font-medium text-gray-700 mb-2 block">צבע מותג ראשי</label>
                          <div className="flex gap-3 flex-wrap">
                             {['#0D9488', '#BCA48D', '#EC4899', '#6366F1', '#1F2937'].map(color => (
-                               <button 
+                               <button
                                  key={color}
                                  onClick={() => handleChange('brandColor', color)}
                                  className={`w-10 h-10 rounded-full border-2 transition-all ${formData.brandColor === color ? 'border-gray-900 scale-110 shadow-md' : 'border-transparent'}`}
@@ -994,8 +1340,8 @@ export const SignupPage = () => {
                                />
                             ))}
                             <div className="w-10 h-10 rounded-full border border-gray-200 flex items-center justify-center overflow-hidden relative">
-                               <input 
-                                 type="color" 
+                               <input
+                                 type="color"
                                  className="absolute inset-0 w-[150%] h-[150%] -translate-x-1/4 -translate-y-1/4 cursor-pointer p-0 border-0"
                                  value={formData.brandColor}
                                  onChange={e => handleChange('brandColor', e.target.value)}
@@ -1005,37 +1351,86 @@ export const SignupPage = () => {
                       </div>
 
                       <div>
-                         <label className="text-sm font-medium text-gray-700 mb-2 block">תמונת נושא (Hero)</label>
+                         <label className="text-sm font-medium text-gray-700 mb-2 block">תמונת נושא</label>
                          <div className="grid grid-cols-2 gap-3">
-                            <div 
+                            <div
                               onClick={() => handleChange('coverImage', 'default')}
-                              className={`border-2 rounded-xl overflow-hidden cursor-pointer h-24 relative ${formData.coverImage === 'default' ? 'border-primary' : 'border-gray-200'}`}
+                              className={`border-2 rounded-xl overflow-hidden cursor-pointer h-20 relative ${formData.coverImage === 'default' ? 'border-primary' : 'border-gray-200'}`}
                             >
                                <img src="https://images.unsplash.com/photo-1629909613654-28e377c37b09?auto=format&fit=crop&q=80&w=600" alt="תמונת נושא קליניקה רפואית" className="w-full h-full object-cover" />
                                {formData.coverImage === 'default' && <div className="absolute inset-0 bg-primary/20 flex items-center justify-center"><Check className="text-white drop-shadow-md"/></div>}
                             </div>
                             <div
                               onClick={() => handleChange('coverImage', 'spa')}
-                              className={`border-2 rounded-xl overflow-hidden cursor-pointer h-24 relative ${formData.coverImage === 'spa' ? 'border-primary' : 'border-gray-200'}`}
+                              className={`border-2 rounded-xl overflow-hidden cursor-pointer h-20 relative ${formData.coverImage === 'spa' ? 'border-primary' : 'border-gray-200'}`}
                             >
                                <img src="https://images.unsplash.com/photo-1540555700478-4be289fbecef?auto=format&fit=crop&q=80&w=600" alt="תמונת נושא ספא" className="w-full h-full object-cover" />
                                {formData.coverImage === 'spa' && <div className="absolute inset-0 bg-primary/20 flex items-center justify-center"><Check className="text-white drop-shadow-md"/></div>}
                             </div>
                          </div>
-                         <Button variant="outline" size="sm" className="mt-2 w-full border-dashed">
-                            <ImageIcon size={14} className="ml-2"/> העלה תמונה משלך
-                         </Button>
+                      </div>
+
+                      <div>
+                         <label className="text-sm font-medium text-gray-700">שעות פעילות (אופציונלי)</label>
+                         <select
+                            value={formData.operatingHours}
+                            onChange={e => handleChange('operatingHours', e.target.value)}
+                            className="w-full h-10 px-3 rounded-lg border border-gray-200 bg-white text-sm"
+                         >
+                            <option value="">בחר שעות פעילות...</option>
+                            <option value="sunday-thursday">א׳-ה׳ 9:00-18:00</option>
+                            <option value="sunday-friday">א׳-ו׳ 9:00-14:00</option>
+                            <option value="flexible">שעות גמישות</option>
+                            <option value="by-appointment">בתיאום מראש בלבד</option>
+                         </select>
+                      </div>
+
+                      <div>
+                         <label className="text-sm font-medium text-gray-700">איך שמעת עלינו? (אופציונלי)</label>
+                         <select
+                            value={formData.referralSource}
+                            onChange={e => handleChange('referralSource', e.target.value)}
+                            className="w-full h-10 px-3 rounded-lg border border-gray-200 bg-white text-sm"
+                         >
+                            <option value="">בחר...</option>
+                            <option value="google">חיפוש בגוגל</option>
+                            <option value="instagram">אינסטגרם</option>
+                            <option value="facebook">פייסבוק</option>
+                            <option value="friend">המלצה מחבר/ה</option>
+                            <option value="colleague">המלצה מקולגה</option>
+                            <option value="conference">כנס / תערוכה</option>
+                            <option value="other">אחר</option>
+                         </select>
+                      </div>
+
+                      <div className={`p-4 rounded-lg border ${fieldErrors.termsAccepted ? 'border-red-300 bg-red-50' : 'border-gray-200 bg-gray-50'}`}>
+                         <label className="flex items-start gap-3 cursor-pointer">
+                            <input
+                               type="checkbox"
+                               checked={formData.termsAccepted}
+                               onChange={e => handleChange('termsAccepted', e.target.checked)}
+                               className="mt-1 h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary"
+                            />
+                            <span className="text-sm text-gray-600">
+                               אני מאשר/ת את{' '}
+                               <a href="/terms" target="_blank" className="text-primary hover:underline">תנאי השימוש</a>
+                               {' '}ו
+                               <a href="/privacy" target="_blank" className="text-primary hover:underline">מדיניות הפרטיות</a>
+                               , כולל עיבוד מידע רפואי בהתאם לחוק הגנת הפרטיות.
+                            </span>
+                         </label>
+                         {fieldErrors.termsAccepted && <p className="text-red-500 text-xs mt-2">{fieldErrors.termsAccepted}</p>}
                       </div>
 
                       <div className="flex justify-between pt-4">
                          <Button variant="ghost" onClick={prevStep}>חזור</Button>
-                         <Button onClick={nextStep}><span className="flex items-center gap-2">ראה תוצאה סופית <ChevronLeft size={16} /></span></Button>
+                         <Button onClick={handleNextStep5}><span className="flex items-center gap-2">סיום <ChevronLeft size={16} /></span></Button>
                       </div>
                    </div>
                 )}
 
-                {/* STEP 4: SUCCESS */}
-                {step === 4 && (
+                {/* STEP 6: SUCCESS */}
+                {step === 6 && (
                    <div className="text-center py-8 animate-in fade-in zoom-in-95">
                       <div className="w-20 h-20 bg-green-100 text-green-600 rounded-full flex items-center justify-center mx-auto mb-6 animate-bounce">
                         <Check size={40} />
@@ -1055,6 +1450,21 @@ export const SignupPage = () => {
                         <div className="flex justify-between py-1">
                            <span className="text-gray-500">כתובת האתר:</span>
                            <span className="font-mono font-bold text-primary">clinicall.com/c/{formData.slug || 'my-clinic'}</span>
+                        </div>
+                        <div className="flex justify-between py-1">
+                           <span className="text-gray-500">עיר:</span>
+                           <span className="font-bold">{formData.city || '-'}</span>
+                        </div>
+                        <div className="flex justify-between py-1">
+                           <span className="text-gray-500">סוג מטפל/ת:</span>
+                           <span className="font-bold">
+                              {formData.practitionerType === 'doctor' && 'רופא/ה'}
+                              {formData.practitionerType === 'nurse' && 'אח/ות'}
+                              {formData.practitionerType === 'aesthetician' && 'אסתטיקאי/ת'}
+                              {formData.practitionerType === 'cosmetician' && 'קוסמטיקאי/ת'}
+                              {formData.practitionerType === 'other' && 'אחר'}
+                              {!formData.practitionerType && '-'}
+                           </span>
                         </div>
                         <div className="flex justify-between py-1">
                            <span className="text-gray-500">חבילה:</span>

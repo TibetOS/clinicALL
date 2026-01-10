@@ -23,6 +23,18 @@ interface SignUpData {
   businessId?: string;
   address?: string;
   phone?: string;
+  // New fields for Israeli market
+  whatsapp?: string;
+  city?: string;
+  businessType?: 'exempt' | 'authorized' | 'company' | 'partnership'; // עוסק פטור, עוסק מורשה, חברה בע"מ, שותפות
+  practitionerType?: 'doctor' | 'nurse' | 'aesthetician' | 'cosmetician' | 'other';
+  licenseNumber?: string;
+  instagram?: string;
+  facebook?: string;
+  languages?: string[];
+  operatingHours?: string;
+  referralSource?: string;
+  specializations?: string[];
 }
 
 interface AuthContextType {
@@ -166,6 +178,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           business_id: data.businessId,
           address: data.address,
           phone: data.phone,
+          // New fields for Israeli market
+          whatsapp: data.whatsapp,
+          city: data.city,
+          business_type: data.businessType,
+          practitioner_type: data.practitionerType,
+          license_number: data.licenseNumber,
+          instagram: data.instagram,
+          facebook: data.facebook,
+          languages: data.languages,
+          operating_hours: data.operatingHours,
+          referral_source: data.referralSource,
+          specializations: data.specializations,
         },
       },
     });
