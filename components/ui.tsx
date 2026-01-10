@@ -51,7 +51,7 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
             </svg>
           </div>
         )}
-        <span className={cn('transition-opacity duration-150', loading ? 'opacity-0' : 'opacity-100')}>{children}</span>
+        <span className={cn('inline-flex items-center gap-[inherit]', 'transition-opacity duration-150', loading ? 'opacity-0' : 'opacity-100')}>{children}</span>
       </button>
     );
   }
