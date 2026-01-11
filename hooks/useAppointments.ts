@@ -4,7 +4,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { Appointment, AppointmentStatus, AppointmentDeclarationStatus } from '../types';
 import { MOCK_APPOINTMENTS } from '../data';
 import { createLogger } from '../lib/logger';
-import { AppointmentRowUpdate, getErrorMessage } from '../lib/database.types';
+import { AppointmentRow, AppointmentRowUpdate, getErrorMessage } from '../lib/database.types';
 
 const logger = createLogger('useAppointments');
 
@@ -76,6 +76,11 @@ export function useAppointments(options?: UseAppointmentsOptions): UseAppointmen
         .order('date', { ascending: true })
         .order('time', { ascending: true });
 
+      // Filter by clinic_id for multi-tenant isolation
+      if (profile?.clinic_id) {
+        query = query.eq('clinic_id', profile.clinic_id);
+      }
+
       if (opts.patientId) {
         query = query.eq('patient_id', opts.patientId);
       }
@@ -91,21 +96,7 @@ export function useAppointments(options?: UseAppointmentsOptions): UseAppointmen
       if (fetchError) throw fetchError;
 
       // Transform database format to app format
-      interface AppointmentDbRow {
-        id: string;
-        patient_id: string;
-        patient_name: string;
-        service_id: string;
-        service_name: string;
-        date: string;
-        time: string;
-        duration: number;
-        status: AppointmentStatus;
-        notes?: string | null;
-        declaration_status?: AppointmentDeclarationStatus | null;
-        declaration_token_id?: string | null;
-      }
-      const transformedAppointments: Appointment[] = (data as AppointmentDbRow[] || []).map((a) => ({
+      const transformedAppointments: Appointment[] = (data as AppointmentRow[] || []).map((a) => ({
         id: a.id,
         patientId: a.patient_id,
         patientName: a.patient_name || '',
@@ -127,7 +118,7 @@ export function useAppointments(options?: UseAppointmentsOptions): UseAppointmen
     } finally {
       setLoading(false);
     }
-  }, [options?.startDate, options?.endDate, options?.patientId]);
+  }, [profile?.clinic_id, options?.startDate, options?.endDate, options?.patientId]);
 
   const getAppointment = useCallback(async (id: string): Promise<Appointment | null> => {
     if (!isSupabaseConfigured()) {

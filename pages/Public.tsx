@@ -16,6 +16,7 @@ import { supabase } from '../lib/supabase';
 import { useHealthTokens, useActivityLog } from '../hooks';
 import { HealthDeclarationToken } from '../types';
 import { isValidEmail, isValidIsraeliPhone, isStrongPassword } from '../lib/validation';
+import { loginAttemptLimiter } from '../lib/rateLimiter';
 
 // -- LANDING PAGE --
 export const LandingPage = () => {
@@ -441,6 +442,15 @@ export const LoginPage = () => {
     e.preventDefault();
     setLoading(true);
     setError(null);
+
+    // SECURITY: Client-side rate limiting to prevent brute force attacks
+    const rateLimit = loginAttemptLimiter.checkLimit();
+    if (!rateLimit.allowed) {
+      const retrySeconds = Math.ceil((rateLimit.retryAfterMs || 60000) / 1000);
+      setError(`יותר מדי ניסיונות התחברות. נסה שוב בעוד ${retrySeconds} שניות`);
+      setLoading(false);
+      return;
+    }
 
     const { error } = await signIn(email.trim(), password);
 

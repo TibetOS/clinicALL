@@ -1,6 +1,6 @@
 
 
-export type Role = 'admin' | 'client' | 'guest';
+export type Role = 'owner' | 'admin' | 'staff' | 'client';
 
 export interface User {
   id: string;

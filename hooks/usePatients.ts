@@ -179,10 +179,12 @@ export function usePatients(): UsePatients {
   const updatePatient = useCallback(async (id: string, updates: Partial<PatientInput>): Promise<Patient | null> => {
     if (!isSupabaseConfigured()) {
       // Mock update for dev mode
-      setPatients(prev => prev.map(p =>
-        p.id === id ? { ...p, ...updates } : p
-      ));
-      return patients.find(p => p.id === id) || null;
+      const existingPatient = patients.find(p => p.id === id);
+      if (!existingPatient) return null;
+
+      const updatedPatient: Patient = { ...existingPatient, ...updates };
+      setPatients(prev => prev.map(p => p.id === id ? updatedPatient : p));
+      return updatedPatient;
     }
 
     try {
