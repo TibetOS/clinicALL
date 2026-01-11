@@ -10,6 +10,8 @@ This directory contains admin dashboard pages, all lazy-loaded for performance.
 | `Dashboard.tsx` | Main dashboard with stats | `/admin/dashboard` |
 | `PatientList.tsx` | Patient management | `/admin/patients` |
 | `Calendar.tsx` | Appointment calendar | `/admin/calendar` |
+| `Services.tsx` | Services & pricing management | `/admin/services` |
+| `Inventory.tsx` | Inventory management | `/admin/inventory` |
 | `SettingsPage.tsx` | Clinic settings | `/admin/settings` |
 
 ## Route Structure
@@ -21,8 +23,8 @@ All routes are under `/admin/*` and protected by `ProtectedRoute`:
 /admin/patients       → PatientList.tsx
 /admin/patients/:id   → PatientDetails.tsx (in pages/)
 /admin/calendar       → Calendar.tsx
-/admin/services       → Services.tsx (in pages/)
-/admin/inventory      → Inventory.tsx (in pages/)
+/admin/services       → Services.tsx
+/admin/inventory      → Inventory.tsx
 /admin/settings       → SettingsPage.tsx
 /admin/settings?tab=billing → Billing tab
 ```

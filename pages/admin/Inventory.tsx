@@ -3,19 +3,19 @@ import {
   Search, Filter, Plus, Package, AlertTriangle,
   ArrowDown, ArrowUp, History, Download
 } from 'lucide-react';
-import { Card, Button, Input, Badge, Dialog, Label } from '../components/ui';
+import { Card, Button, Input, Badge, Dialog, Label, ComingSoon } from '../../components/ui';
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '../components/ui/select';
-import { Progress } from '../components/ui/progress';
-import { Empty } from '../components/ui/empty';
-import { useInventory } from '../hooks';
-import { InventoryItem } from '../types';
-import { createLogger } from '../lib/logger';
+} from '../../components/ui/select';
+import { Progress } from '../../components/ui/progress';
+import { Empty } from '../../components/ui/empty';
+import { useInventory } from '../../hooks';
+import { InventoryItem } from '../../types';
+import { createLogger } from '../../lib/logger';
 
 const logger = createLogger('Inventory');
 
@@ -115,6 +115,7 @@ export const InventoryPage = () => {
       });
       setNewItem(initialFormState);
       setIsAddOpen(false);
+      showSuccess('הפריט נוסף בהצלחה');
     } catch (err) {
       logger.error('Failed to add item:', err);
     } finally {
@@ -138,6 +139,24 @@ export const InventoryPage = () => {
       case 'low': return <Badge variant="warning">נמוך</Badge>;
       default: return <Badge variant="success">תקין</Badge>;
     }
+  };
+
+  // Calculate days until expiry
+  const getDaysUntilExpiry = (expiryDate: string): number | null => {
+    if (!expiryDate) return null;
+    const expiry = new Date(expiryDate);
+    const today = new Date();
+    const diffTime = expiry.getTime() - today.getTime();
+    return Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+  };
+
+  const getExpiryWarning = (expiryDate: string) => {
+    const days = getDaysUntilExpiry(expiryDate);
+    if (days === null) return null;
+    if (days <= 0) return <Badge variant="destructive">פג תוקף</Badge>;
+    if (days <= 7) return <Badge variant="destructive">פג בקרוב ({days} ימים)</Badge>;
+    if (days <= 30) return <Badge variant="warning">תוקף קרוב ({days} ימים)</Badge>;
+    return null;
   };
 
   return (
@@ -166,7 +185,9 @@ export const InventoryPage = () => {
            <p className="text-muted-foreground">מעקב אחר חומרים מתכלים, תרופות וציוד</p>
         </div>
         <div className="flex gap-2">
-            <Button variant="outline"><Download size={16} className="ml-2"/> ייצוא</Button>
+            <ComingSoon>
+              <Button variant="outline"><Download size={16} className="ml-2"/> ייצוא</Button>
+            </ComingSoon>
             <Button className="shadow-sm" onClick={() => setIsAddOpen(true)}>
             <Plus className="ml-2 h-4 w-4" /> קליטת סחורה
             </Button>
@@ -240,7 +261,9 @@ export const InventoryPage = () => {
           />
         </div>
         <div className="flex gap-2 w-full sm:w-auto">
-          <Button variant="outline" size="sm" className="flex-1"><Filter className="ml-2 h-3 w-3" /> סינון</Button>
+          <ComingSoon>
+            <Button variant="outline" size="sm" className="flex-1"><Filter className="ml-2 h-3 w-3" /> סינון</Button>
+          </ComingSoon>
         </div>
       </div>
 
@@ -252,6 +275,7 @@ export const InventoryPage = () => {
                      <th className="px-6 py-4">שם הפריט</th>
                      <th className="px-6 py-4">מק״ט</th>
                      <th className="px-6 py-4">קטגוריה</th>
+                     <th className="px-6 py-4">ספק</th>
                      <th className="px-6 py-4">כמות במלאי</th>
                      <th className="px-6 py-4">תוקף</th>
                      <th className="px-6 py-4">סטטוס</th>
@@ -261,7 +285,7 @@ export const InventoryPage = () => {
                <tbody className="divide-y divide-gray-100">
                   {loading ? (
                     <tr>
-                      <td colSpan={7} className="px-6 py-12 text-center text-gray-500">
+                      <td colSpan={8} className="px-6 py-12 text-center text-gray-500">
                         <div className="flex flex-col items-center gap-2">
                           <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin" />
                           <span>טוען מלאי...</span>
@@ -270,7 +294,7 @@ export const InventoryPage = () => {
                     </tr>
                   ) : filteredItems.length === 0 ? (
                     <tr>
-                      <td colSpan={7} className="px-6 py-12">
+                      <td colSpan={8} className="px-6 py-12">
                         <Empty
                           icon={searchTerm ? Search : Package}
                           title={searchTerm ? 'לא נמצאו תוצאות' : 'אין פריטים במלאי'}
@@ -294,6 +318,7 @@ export const InventoryPage = () => {
                               {item.category}
                            </span>
                         </td>
+                        <td className="px-6 py-4 text-gray-500 text-sm">{item.supplier || '—'}</td>
                         <td className="px-6 py-4">
                            <div className="flex items-center gap-2">
                               <span className={`font-bold ${item.quantity <= item.minQuantity ? 'text-red-600' : 'text-gray-900'}`}>
@@ -302,7 +327,12 @@ export const InventoryPage = () => {
                               <span className="text-xs text-gray-500">{item.unit}</span>
                            </div>
                         </td>
-                        <td className="px-6 py-4 text-gray-500 direction-ltr text-right">{item.expiryDate}</td>
+                        <td className="px-6 py-4">
+                           <div className="flex flex-col gap-1">
+                              <span className="text-gray-500 direction-ltr text-right">{item.expiryDate || '—'}</span>
+                              {getExpiryWarning(item.expiryDate)}
+                           </div>
+                        </td>
                         <td className="px-6 py-4">{getStatusBadge(item.status)}</td>
                         <td className="px-6 py-4">
                            <div className="flex gap-1">

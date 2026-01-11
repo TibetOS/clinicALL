@@ -1,9 +1,10 @@
 <!DOCTYPE html>
 <html lang="he" dir="rtl">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta http-equiv="Content-Security-Policy" content="
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta http-equiv="Content-Security-Policy" content="
       default-src 'self';
       script-src 'self' https://esm.sh;
       style-src 'self' 'unsafe-inline' https://fonts.googleapis.com;
@@ -14,482 +15,593 @@
       form-action 'self';
       upgrade-insecure-requests;
     ">
-    <title>ClinicALL - ניהול קליניקה אסתטית</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Heebo:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
-    <style>
-      :root {
-        /* Modern Beauty Color Palette - Rose + Slate */
-        --color-primary: #F43F5E;
-        --color-primary-dark: #E11D48;
-        --color-primary-light: #FB7185;
-        --color-accent: #FFE4E6;
-        --color-slate-50: #F8FAFC;
-        --color-slate-100: #F1F5F9;
-        --color-slate-200: #E2E8F0;
-        --color-slate-400: #94A3B8;
-        --color-slate-600: #475569;
-        --color-slate-800: #1E293B;
-        --color-slate-900: #0F172A;
+  <title>ClinicALL - ניהול קליניקה אסתטית</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Heebo:wght@300;400;500;600;700;800&display=swap"
+    rel="stylesheet">
+  <style>
+    :root {
+      /* Modern Beauty Color Palette - Teal + Slate */
+      --color-primary: #0D9488;
+      --color-primary-dark: #0F766E;
+      --color-primary-light: #14B8A6;
+      --color-accent: #CCFBF1;
+      --color-slate-50: #F8FAFC;
+      --color-slate-100: #F1F5F9;
+      --color-slate-200: #E2E8F0;
+      --color-slate-400: #94A3B8;
+      --color-slate-600: #475569;
+      --color-slate-800: #1E293B;
+      --color-slate-900: #0F172A;
 
-        /* Override primary colors */
-        --primary: var(--color-primary);
-        --primary-foreground: #FFFFFF;
-        --ring: var(--color-primary);
+      /* Override primary colors */
+      --primary: var(--color-primary);
+      --primary-foreground: #FFFFFF;
+      --ring: var(--color-primary);
 
-        /* Animation timing */
-        --animation-fast: 150ms;
-        --animation-normal: 250ms;
-        --animation-slow: 350ms;
-        --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
-        --ease-out-back: cubic-bezier(0.34, 1.56, 0.64, 1);
-        --ease-spring: cubic-bezier(0.175, 0.885, 0.32, 1.275);
-      }
+      /* Animation timing */
+      --animation-fast: 150ms;
+      --animation-normal: 250ms;
+      --animation-slow: 350ms;
+      --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
+      --ease-out-back: cubic-bezier(0.34, 1.56, 0.64, 1);
+      --ease-spring: cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
 
-      body {
-        font-family: 'Heebo', 'Inter', sans-serif;
-      }
+    body {
+      font-family: 'Heebo', 'Inter', sans-serif;
+    }
 
-      /* Custom scrollbar */
-      .custom-scrollbar::-webkit-scrollbar {
-        width: 6px;
-      }
-      .custom-scrollbar::-webkit-scrollbar-track {
-        background: var(--color-gray-100);
-      }
-      .custom-scrollbar::-webkit-scrollbar-thumb {
-        background: var(--color-gray-300);
-        border-radius: 3px;
-      }
-      .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-        background: var(--color-gray-400);
-      }
+    /* Custom scrollbar */
+    .custom-scrollbar::-webkit-scrollbar {
+      width: 6px;
+    }
 
-      /* ===== KEYFRAME ANIMATIONS ===== */
+    .custom-scrollbar::-webkit-scrollbar-track {
+      background: var(--color-gray-100);
+    }
 
-      /* Fade animations */
-      @keyframes fadeIn {
-        from { opacity: 0; }
-        to { opacity: 1; }
-      }
+    .custom-scrollbar::-webkit-scrollbar-thumb {
+      background: var(--color-gray-300);
+      border-radius: 3px;
+    }
 
-      @keyframes fadeInUp {
-        from {
-          opacity: 0;
-          transform: translateY(16px);
-        }
-        to {
-          opacity: 1;
-          transform: translateY(0);
-        }
-      }
+    .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+      background: var(--color-gray-400);
+    }
 
-      @keyframes fadeInDown {
-        from {
-          opacity: 0;
-          transform: translateY(-16px);
-        }
-        to {
-          opacity: 1;
-          transform: translateY(0);
-        }
-      }
+    /* ===== KEYFRAME ANIMATIONS ===== */
 
-      @keyframes fadeInScale {
-        from {
-          opacity: 0;
-          transform: scale(0.95);
-        }
-        to {
-          opacity: 1;
-          transform: scale(1);
-        }
-      }
-
-      /* Slide animations */
-      @keyframes slideInFromRight {
-        from {
-          opacity: 0;
-          transform: translateX(-20px);
-        }
-        to {
-          opacity: 1;
-          transform: translateX(0);
-        }
-      }
-
-      @keyframes slideInFromLeft {
-        from {
-          opacity: 0;
-          transform: translateX(20px);
-        }
-        to {
-          opacity: 1;
-          transform: translateX(0);
-        }
-      }
-
-      /* Bounce and spring animations */
-      @keyframes bounceIn {
-        0% {
-          opacity: 0;
-          transform: scale(0.3);
-        }
-        50% {
-          transform: scale(1.05);
-        }
-        70% {
-          transform: scale(0.9);
-        }
-        100% {
-          opacity: 1;
-          transform: scale(1);
-        }
-      }
-
-      @keyframes gentleBounce {
-        0%, 100% { transform: translateY(0); }
-        50% { transform: translateY(-4px); }
-      }
-
-      @keyframes pulse {
-        0%, 100% { opacity: 1; }
-        50% { opacity: 0.5; }
-      }
-
-      @keyframes shimmer {
-        0% { background-position: -200% 0; }
-        100% { background-position: 200% 0; }
-      }
-
-      /* Icon animations */
-      @keyframes iconSpin {
-        from { transform: rotate(0deg); }
-        to { transform: rotate(360deg); }
-      }
-
-      @keyframes iconPulse {
-        0%, 100% { transform: scale(1); }
-        50% { transform: scale(1.1); }
-      }
-
-      @keyframes iconWiggle {
-        0%, 100% { transform: rotate(0deg); }
-        25% { transform: rotate(-5deg); }
-        75% { transform: rotate(5deg); }
-      }
-
-      /* Number counter animation */
-      @keyframes countUp {
-        from { opacity: 0; transform: translateY(10px); }
-        to { opacity: 1; transform: translateY(0); }
-      }
-
-      /* Stagger list animation */
-      @keyframes staggerFadeIn {
-        from {
-          opacity: 0;
-          transform: translateY(10px);
-        }
-        to {
-          opacity: 1;
-          transform: translateY(0);
-        }
-      }
-
-      /* Active indicator slide */
-      @keyframes indicatorSlide {
-        from { transform: scaleY(0); }
-        to { transform: scaleY(1); }
-      }
-
-      /* Progress bar fill */
-      @keyframes progressFill {
-        from { width: 0; }
-      }
-
-      /* Notification badge bounce */
-      @keyframes notificationBounce {
-        0%, 100% { transform: scale(1); }
-        50% { transform: scale(1.2); }
-      }
-
-      /* ===== ANIMATION UTILITY CLASSES ===== */
-
-      /* Fade animations */
-      .animate-fade-in {
-        animation: fadeIn var(--animation-normal) var(--ease-out-expo) forwards;
-      }
-
-      .animate-fade-in-up {
-        animation: fadeInUp var(--animation-normal) var(--ease-out-expo) forwards;
-      }
-
-      .animate-fade-in-down {
-        animation: fadeInDown var(--animation-normal) var(--ease-out-expo) forwards;
-      }
-
-      .animate-fade-in-scale {
-        animation: fadeInScale var(--animation-normal) var(--ease-out-expo) forwards;
-      }
-
-      /* Slide animations */
-      .animate-slide-in-right {
-        animation: slideInFromRight var(--animation-normal) var(--ease-out-expo) forwards;
-      }
-
-      .animate-slide-in-left {
-        animation: slideInFromLeft var(--animation-normal) var(--ease-out-expo) forwards;
-      }
-
-      /* Bounce animations */
-      .animate-bounce-in {
-        animation: bounceIn var(--animation-slow) var(--ease-spring) forwards;
-      }
-
-      .animate-gentle-bounce {
-        animation: gentleBounce 2s ease-in-out infinite;
-      }
-
-      /* Skeleton shimmer */
-      .animate-shimmer {
-        background: linear-gradient(90deg, #e2e8f0 25%, #f1f5f9 50%, #e2e8f0 75%);
-        background-size: 200% 100%;
-        animation: shimmer 1.5s infinite;
-      }
-
-      /* Icon animations on hover */
-      .hover-icon-spin:hover svg,
-      .hover-icon-spin:hover .icon {
-        animation: iconSpin 0.5s var(--ease-out-expo);
-      }
-
-      .hover-icon-pulse:hover svg,
-      .hover-icon-pulse:hover .icon {
-        animation: iconPulse 0.3s var(--ease-spring);
-      }
-
-      .hover-icon-wiggle:hover svg,
-      .hover-icon-wiggle:hover .icon {
-        animation: iconWiggle 0.5s ease-in-out;
-      }
-
-      /* Stagger animation delays for lists */
-      .stagger-1 { animation-delay: 50ms; }
-      .stagger-2 { animation-delay: 100ms; }
-      .stagger-3 { animation-delay: 150ms; }
-      .stagger-4 { animation-delay: 200ms; }
-      .stagger-5 { animation-delay: 250ms; }
-      .stagger-6 { animation-delay: 300ms; }
-      .stagger-7 { animation-delay: 350ms; }
-      .stagger-8 { animation-delay: 400ms; }
-      .stagger-9 { animation-delay: 450ms; }
-      .stagger-10 { animation-delay: 500ms; }
-
-      /* Page transition wrapper */
-      .page-transition {
-        animation: fadeInUp var(--animation-slow) var(--ease-out-expo) forwards;
-      }
-
-      /* Card entrance animation */
-      .card-animate {
+    /* Fade animations */
+    @keyframes fadeIn {
+      from {
         opacity: 0;
-        animation: fadeInUp var(--animation-normal) var(--ease-out-expo) forwards;
       }
 
-      /* Button press animation */
-      .btn-press:active {
-        transform: scale(0.96);
-        transition: transform 100ms ease;
+      to {
+        opacity: 1;
+      }
+    }
+
+    @keyframes fadeInUp {
+      from {
+        opacity: 0;
+        transform: translateY(16px);
       }
 
-      /* Input focus glow */
-      .input-focus-glow:focus {
-        box-shadow: 0 0 0 3px rgba(244, 63, 94, 0.15);
-        transition: box-shadow var(--animation-fast) ease;
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    @keyframes fadeInDown {
+      from {
+        opacity: 0;
+        transform: translateY(-16px);
       }
 
-      /* Card hover lift */
-      .card-hover-lift {
-        transition: transform var(--animation-fast) var(--ease-out-expo),
-                    box-shadow var(--animation-fast) var(--ease-out-expo);
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    @keyframes fadeInScale {
+      from {
+        opacity: 0;
+        transform: scale(0.95);
       }
 
-      .card-hover-lift:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 8px 25px -5px rgba(0, 0, 0, 0.1),
-                    0 4px 10px -5px rgba(0, 0, 0, 0.04);
+      to {
+        opacity: 1;
+        transform: scale(1);
+      }
+    }
+
+    /* Slide animations */
+    @keyframes slideInFromRight {
+      from {
+        opacity: 0;
+        transform: translateX(-20px);
       }
 
-      /* Nav item hover animation */
-      .nav-item-hover {
-        position: relative;
-        transition: all var(--animation-fast) var(--ease-out-expo);
+      to {
+        opacity: 1;
+        transform: translateX(0);
+      }
+    }
+
+    @keyframes slideInFromLeft {
+      from {
+        opacity: 0;
+        transform: translateX(20px);
       }
 
-      .nav-item-hover::before {
-        content: '';
-        position: absolute;
-        left: 0;
-        top: 50%;
-        transform: translateY(-50%) scaleY(0);
-        width: 3px;
-        height: 60%;
-        background: var(--color-primary-light);
-        border-radius: 0 4px 4px 0;
-        transition: transform var(--animation-fast) var(--ease-out-expo);
+      to {
+        opacity: 1;
+        transform: translateX(0);
+      }
+    }
+
+    /* Bounce and spring animations */
+    @keyframes bounceIn {
+      0% {
+        opacity: 0;
+        transform: scale(0.3);
       }
 
-      .nav-item-hover:hover::before {
-        transform: translateY(-50%) scaleY(1);
+      50% {
+        transform: scale(1.05);
       }
 
-      /* Dialog backdrop blur transition */
-      .backdrop-blur-transition {
-        backdrop-filter: blur(0px);
-        transition: backdrop-filter var(--animation-normal) ease;
+      70% {
+        transform: scale(0.9);
       }
 
-      .backdrop-blur-transition.active {
-        backdrop-filter: blur(8px);
+      100% {
+        opacity: 1;
+        transform: scale(1);
+      }
+    }
+
+    @keyframes gentleBounce {
+
+      0%,
+      100% {
+        transform: translateY(0);
       }
 
-      /* Counter number animation */
-      .counter-animate {
-        display: inline-block;
-        animation: countUp var(--animation-normal) var(--ease-out-expo) forwards;
+      50% {
+        transform: translateY(-4px);
+      }
+    }
+
+    @keyframes pulse {
+
+      0%,
+      100% {
+        opacity: 1;
       }
 
-      /* Notification badge */
-      .notification-badge {
-        animation: notificationBounce 0.3s var(--ease-spring);
+      50% {
+        opacity: 0.5;
+      }
+    }
+
+    @keyframes shimmer {
+      0% {
+        background-position: -200% 0;
       }
 
-      /* Progress bar animation */
-      .progress-animate {
-        animation: progressFill 1s var(--ease-out-expo) forwards;
+      100% {
+        background-position: 200% 0;
+      }
+    }
+
+    /* Icon animations */
+    @keyframes iconSpin {
+      from {
+        transform: rotate(0deg);
       }
 
-      /* Smooth transition for interactive elements */
-      .interactive {
-        transition: all var(--animation-fast) var(--ease-out-expo);
+      to {
+        transform: rotate(360deg);
+      }
+    }
+
+    @keyframes iconPulse {
+
+      0%,
+      100% {
+        transform: scale(1);
       }
 
-      .interactive:hover {
-        transform: translateY(-1px);
+      50% {
+        transform: scale(1.1);
+      }
+    }
+
+    @keyframes iconWiggle {
+
+      0%,
+      100% {
+        transform: rotate(0deg);
       }
 
-      .interactive:active {
-        transform: translateY(0) scale(0.98);
+      25% {
+        transform: rotate(-5deg);
       }
 
-      /* Switch toggle animation */
-      .switch-thumb {
-        transition: transform var(--animation-fast) var(--ease-out-back);
+      75% {
+        transform: rotate(5deg);
+      }
+    }
+
+    /* Number counter animation */
+    @keyframes countUp {
+      from {
+        opacity: 0;
+        transform: translateY(10px);
       }
 
-      /* Checkbox animation */
-      .checkbox-animate {
-        transition: all var(--animation-fast) var(--ease-spring);
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    /* Stagger list animation */
+    @keyframes staggerFadeIn {
+      from {
+        opacity: 0;
+        transform: translateY(10px);
       }
 
-      .checkbox-animate:checked {
-        animation: bounceIn var(--animation-fast) var(--ease-spring);
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    /* Active indicator slide */
+    @keyframes indicatorSlide {
+      from {
+        transform: scaleY(0);
       }
 
-      /* Toast slide in */
-      .toast-enter {
-        animation: fadeInUp var(--animation-normal) var(--ease-out-expo) forwards;
+      to {
+        transform: scaleY(1);
+      }
+    }
+
+    /* Progress bar fill */
+    @keyframes progressFill {
+      from {
+        width: 0;
+      }
+    }
+
+    /* Notification badge bounce */
+    @keyframes notificationBounce {
+
+      0%,
+      100% {
+        transform: scale(1);
       }
 
-      .toast-exit {
-        animation: fadeInUp var(--animation-fast) var(--ease-out-expo) reverse forwards;
+      50% {
+        transform: scale(1.2);
+      }
+    }
+
+    /* ===== ANIMATION UTILITY CLASSES ===== */
+
+    /* Fade animations */
+    .animate-fade-in {
+      animation: fadeIn var(--animation-normal) var(--ease-out-expo) forwards;
+    }
+
+    .animate-fade-in-up {
+      animation: fadeInUp var(--animation-normal) var(--ease-out-expo) forwards;
+    }
+
+    .animate-fade-in-down {
+      animation: fadeInDown var(--animation-normal) var(--ease-out-expo) forwards;
+    }
+
+    .animate-fade-in-scale {
+      animation: fadeInScale var(--animation-normal) var(--ease-out-expo) forwards;
+    }
+
+    /* Slide animations */
+    .animate-slide-in-right {
+      animation: slideInFromRight var(--animation-normal) var(--ease-out-expo) forwards;
+    }
+
+    .animate-slide-in-left {
+      animation: slideInFromLeft var(--animation-normal) var(--ease-out-expo) forwards;
+    }
+
+    /* Bounce animations */
+    .animate-bounce-in {
+      animation: bounceIn var(--animation-slow) var(--ease-spring) forwards;
+    }
+
+    .animate-gentle-bounce {
+      animation: gentleBounce 2s ease-in-out infinite;
+    }
+
+    /* Skeleton shimmer */
+    .animate-shimmer {
+      background: linear-gradient(90deg, #e2e8f0 25%, #f1f5f9 50%, #e2e8f0 75%);
+      background-size: 200% 100%;
+      animation: shimmer 1.5s infinite;
+    }
+
+    /* Icon animations on hover */
+    .hover-icon-spin:hover svg,
+    .hover-icon-spin:hover .icon {
+      animation: iconSpin 0.5s var(--ease-out-expo);
+    }
+
+    .hover-icon-pulse:hover svg,
+    .hover-icon-pulse:hover .icon {
+      animation: iconPulse 0.3s var(--ease-spring);
+    }
+
+    .hover-icon-wiggle:hover svg,
+    .hover-icon-wiggle:hover .icon {
+      animation: iconWiggle 0.5s ease-in-out;
+    }
+
+    /* Stagger animation delays for lists */
+    .stagger-1 {
+      animation-delay: 50ms;
+    }
+
+    .stagger-2 {
+      animation-delay: 100ms;
+    }
+
+    .stagger-3 {
+      animation-delay: 150ms;
+    }
+
+    .stagger-4 {
+      animation-delay: 200ms;
+    }
+
+    .stagger-5 {
+      animation-delay: 250ms;
+    }
+
+    .stagger-6 {
+      animation-delay: 300ms;
+    }
+
+    .stagger-7 {
+      animation-delay: 350ms;
+    }
+
+    .stagger-8 {
+      animation-delay: 400ms;
+    }
+
+    .stagger-9 {
+      animation-delay: 450ms;
+    }
+
+    .stagger-10 {
+      animation-delay: 500ms;
+    }
+
+    /* Page transition wrapper */
+    .page-transition {
+      animation: fadeInUp var(--animation-slow) var(--ease-out-expo) forwards;
+    }
+
+    /* Card entrance animation */
+    .card-animate {
+      opacity: 0;
+      animation: fadeInUp var(--animation-normal) var(--ease-out-expo) forwards;
+    }
+
+    /* Button press animation */
+    .btn-press:active {
+      transform: scale(0.96);
+      transition: transform 100ms ease;
+    }
+
+    /* Input focus glow */
+    .input-focus-glow:focus {
+      box-shadow: 0 0 0 3px rgba(13, 148, 136, 0.15);
+      transition: box-shadow var(--animation-fast) ease;
+    }
+
+    /* Card hover lift */
+    .card-hover-lift {
+      transition: transform var(--animation-fast) var(--ease-out-expo),
+        box-shadow var(--animation-fast) var(--ease-out-expo);
+    }
+
+    .card-hover-lift:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 25px -5px rgba(0, 0, 0, 0.1),
+        0 4px 10px -5px rgba(0, 0, 0, 0.04);
+    }
+
+    /* Nav item hover animation */
+    .nav-item-hover {
+      position: relative;
+      transition: all var(--animation-fast) var(--ease-out-expo);
+    }
+
+    .nav-item-hover::before {
+      content: '';
+      position: absolute;
+      left: 0;
+      top: 50%;
+      transform: translateY(-50%) scaleY(0);
+      width: 3px;
+      height: 60%;
+      background: var(--color-primary-light);
+      border-radius: 0 4px 4px 0;
+      transition: transform var(--animation-fast) var(--ease-out-expo);
+    }
+
+    .nav-item-hover:hover::before {
+      transform: translateY(-50%) scaleY(1);
+    }
+
+    /* Dialog backdrop blur transition */
+    .backdrop-blur-transition {
+      backdrop-filter: blur(0px);
+      transition: backdrop-filter var(--animation-normal) ease;
+    }
+
+    .backdrop-blur-transition.active {
+      backdrop-filter: blur(8px);
+    }
+
+    /* Counter number animation */
+    .counter-animate {
+      display: inline-block;
+      animation: countUp var(--animation-normal) var(--ease-out-expo) forwards;
+    }
+
+    /* Notification badge */
+    .notification-badge {
+      animation: notificationBounce 0.3s var(--ease-spring);
+    }
+
+    /* Progress bar animation */
+    .progress-animate {
+      animation: progressFill 1s var(--ease-out-expo) forwards;
+    }
+
+    /* Smooth transition for interactive elements */
+    .interactive {
+      transition: all var(--animation-fast) var(--ease-out-expo);
+    }
+
+    .interactive:hover {
+      transform: translateY(-1px);
+    }
+
+    .interactive:active {
+      transform: translateY(0) scale(0.98);
+    }
+
+    /* Switch toggle animation */
+    .switch-thumb {
+      transition: transform var(--animation-fast) var(--ease-out-back);
+    }
+
+    /* Checkbox animation */
+    .checkbox-animate {
+      transition: all var(--animation-fast) var(--ease-spring);
+    }
+
+    .checkbox-animate:checked {
+      animation: bounceIn var(--animation-fast) var(--ease-spring);
+    }
+
+    /* Toast slide in */
+    .toast-enter {
+      animation: fadeInUp var(--animation-normal) var(--ease-out-expo) forwards;
+    }
+
+    .toast-exit {
+      animation: fadeInUp var(--animation-fast) var(--ease-out-expo) reverse forwards;
+    }
+
+    /* Skeleton loading base */
+    .skeleton-base {
+      background: linear-gradient(90deg, #e2e8f0 25%, #f1f5f9 50%, #e2e8f0 75%);
+      background-size: 200% 100%;
+      animation: shimmer 1.5s infinite;
+      border-radius: 4px;
+    }
+
+    /* Spinner animation */
+    .spinner {
+      animation: iconSpin 1s linear infinite;
+    }
+
+    /* Reduced motion support */
+    @media (prefers-reduced-motion: reduce) {
+
+      *,
+      *::before,
+      *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
       }
 
-      /* Skeleton loading base */
-      .skeleton-base {
-        background: linear-gradient(90deg, #e2e8f0 25%, #f1f5f9 50%, #e2e8f0 75%);
-        background-size: 200% 100%;
-        animation: shimmer 1.5s infinite;
-        border-radius: 4px;
-      }
-
-      /* Spinner animation */
+      .animate-shimmer,
       .spinner {
-        animation: iconSpin 1s linear infinite;
+        animation: none !important;
       }
+    }
 
-      /* Reduced motion support */
-      @media (prefers-reduced-motion: reduce) {
-        *,
-        *::before,
-        *::after {
-          animation-duration: 0.01ms !important;
-          animation-iteration-count: 1 !important;
-          transition-duration: 0.01ms !important;
-        }
+    /* ===== ACCESSIBILITY: Focus visible indicators ===== */
 
-        .animate-shimmer,
-        .spinner {
-          animation: none !important;
-        }
-      }
+    /* Skip to main content link */
+    .skip-link {
+      position: absolute;
+      top: -40px;
+      left: 0;
+      right: 0;
+      background: var(--color-primary);
+      color: white;
+      padding: 8px 16px;
+      text-align: center;
+      text-decoration: none;
+      font-weight: 600;
+      z-index: 9999;
+      transition: top 0.2s ease;
+    }
 
-      /* ===== ACCESSIBILITY: Focus visible indicators ===== */
+    .skip-link:focus {
+      top: 0;
+      outline: none;
+    }
 
-      /* Skip to main content link */
-      .skip-link {
-        position: absolute;
-        top: -40px;
-        left: 0;
-        right: 0;
-        background: var(--color-primary);
-        color: white;
-        padding: 8px 16px;
-        text-align: center;
-        text-decoration: none;
-        font-weight: 600;
-        z-index: 9999;
-        transition: top 0.2s ease;
-      }
+    /* Focus visible styles for keyboard navigation */
+    *:focus-visible {
+      outline: 2px solid var(--color-primary);
+      outline-offset: 2px;
+    }
 
-      .skip-link:focus {
-        top: 0;
-        outline: none;
-      }
+    /* Remove outline for mouse users */
+    *:focus:not(:focus-visible) {
+      outline: none;
+    }
 
-      /* Focus visible styles for keyboard navigation */
-      *:focus-visible {
-        outline: 2px solid var(--color-primary);
-        outline-offset: 2px;
-      }
+    /* Enhanced focus styles for interactive elements */
+    button:focus-visible,
+    a:focus-visible,
+    input:focus-visible,
+    select:focus-visible,
+    textarea:focus-visible,
+    [tabindex]:focus-visible {
+      outline: 2px solid var(--color-primary);
+      outline-offset: 2px;
+      box-shadow: 0 0 0 4px rgba(13, 148, 136, 0.2);
+    }
 
-      /* Remove outline for mouse users */
-      *:focus:not(:focus-visible) {
-        outline: none;
-      }
-
-      /* Enhanced focus styles for interactive elements */
-      button:focus-visible,
-      a:focus-visible,
-      input:focus-visible,
-      select:focus-visible,
-      textarea:focus-visible,
-      [tabindex]:focus-visible {
-        outline: 2px solid var(--color-primary);
-        outline-offset: 2px;
-        box-shadow: 0 0 0 4px rgba(244, 63, 94, 0.2);
-      }
-
-      /* Focus styles for cards and clickable areas */
-      .card:focus-visible,
-      [role="button"]:focus-visible {
-        outline: 2px solid var(--color-primary);
-        outline-offset: 2px;
-        box-shadow: 0 0 0 4px rgba(244, 63, 94, 0.15);
-      }
-    </style>
+    /* Focus styles for cards and clickable areas */
+    .card:focus-visible,
+    [role="button"]:focus-visible {
+      outline: 2px solid var(--color-primary);
+      outline-offset: 2px;
+      box-shadow: 0 0 0 4px rgba(13, 148, 136, 0.15);
+    }
+  </style>
   <script type="importmap">
 {
   "imports": {
@@ -506,10 +618,10 @@
 }
 </script>
 </head>
-  <body>
-    <!-- Skip to main content link for accessibility -->
-    <a href="#main-content" class="skip-link">דלג לתוכן הראשי (Skip to main content)</a>
-    <div id="root"></div>
+
+<body>
+  <div id="root"></div>
   <script type="module" src="/index.tsx"></script>
 </body>
+
 </html>

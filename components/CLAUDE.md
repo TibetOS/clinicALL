@@ -251,6 +251,7 @@ import { TimeSlotPicker } from '@/components/ui/time-slot-picker';
 - **Skeleton** - Loading placeholder
 - **Breadcrumb** - Navigation breadcrumb (RTL-aware)
 - **Toast, useToast** - Toast notifications with auto-dismiss
+- **ComingSoon** - Wrapper for disabled buttons/elements with "בקרוב" (Coming soon) tooltip
 
 ### Utility Function
 

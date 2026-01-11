@@ -10,8 +10,6 @@ This directory contains route-level components that correspond to application UR
 | `Pricing.tsx` | Pricing page | `/pricing` |
 | `ClinicLanding.tsx` | Public clinic page | `/c/:slug` |
 | `Booking.tsx` | Booking flow | `/book/:clinicId` |
-| `Services.tsx` | Services page | `/admin/services` |
-| `Inventory.tsx` | Inventory management | `/admin/inventory` |
 | `PatientDetails.tsx` | Patient detail view | `/admin/patients/:id` |
 
 ## Subdirectories

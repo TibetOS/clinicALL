@@ -4,18 +4,7 @@ import {
   CreditCard, ArrowUpRight, Download, Check, XCircle, Sparkles,
   Globe, Image as ImageIcon, Loader2, Trash2, Edit2
 } from 'lucide-react';
-import { Card, Button, Input, Badge, Tabs, TabsList, TabsTrigger, Label, Skeleton } from '../../components/ui';
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from '../../components/ui/alert-dialog';
+import { Card, Button, Input, Badge, Tabs, TabsList, TabsTrigger, Label, Skeleton, ComingSoon } from '../../components/ui';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -35,6 +24,7 @@ export const SettingsPage = () => {
   const [activeTab, setActiveTab] = useState(searchParams.get('tab') || 'profile');
   const [saving, setSaving] = useState(false);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   // Data hooks
   const { profile } = useAuth();
@@ -101,6 +91,11 @@ export const SettingsPage = () => {
     setTimeout(() => setSuccessMessage(null), 3000);
   };
 
+  const showError = (message: string) => {
+    setErrorMessage(message);
+    setTimeout(() => setErrorMessage(null), 5000);
+  };
+
   const handleSaveProfile = async () => {
     setSaving(true);
     const result = await updateClinic({
@@ -112,7 +107,7 @@ export const SettingsPage = () => {
     if (result.success) {
       showSuccess('פרטי האתר נשמרו בהצלחה');
     } else {
-      showSuccess(`שגיאה: ${result.error}`);
+      showError(result.error || 'שגיאה בשמירת הנתונים');
     }
   };
 
@@ -128,7 +123,7 @@ export const SettingsPage = () => {
     if (result.success) {
       showSuccess('פרטי העסק נשמרו בהצלחה');
     } else {
-      showSuccess(`שגיאה: ${result.error}`);
+      showError(result.error || 'שגיאה בשמירת הנתונים');
     }
   };
 
@@ -145,7 +140,7 @@ export const SettingsPage = () => {
     if (result.success) {
       showSuccess('פרטי החיוב נשמרו בהצלחה');
     } else {
-      showSuccess(`שגיאה: ${result.error}`);
+      showError(result.error || 'שגיאה בשמירת הנתונים');
     }
   };
 
@@ -163,6 +158,13 @@ export const SettingsPage = () => {
       {successMessage && (
         <div className="fixed top-6 left-1/2 -translate-x-1/2 z-50 bg-green-600 text-white px-6 py-3 rounded-xl shadow-lg animate-in slide-in-from-top-2 duration-300">
           {successMessage}
+        </div>
+      )}
+
+      {/* Error Toast */}
+      {errorMessage && (
+        <div className="fixed top-6 left-1/2 -translate-x-1/2 z-50 bg-red-600 text-white px-6 py-3 rounded-xl shadow-lg animate-in slide-in-from-top-2 duration-300">
+          {errorMessage}
         </div>
       )}
 
@@ -211,11 +213,11 @@ export const SettingsPage = () => {
                   <div className="space-y-6">
                     <div>
                       <Label>תמונת נושא (Hero Image)</Label>
-                      <div className="h-40 bg-gray-100 rounded-xl border-2 border-dashed border-gray-300 flex items-center justify-center cursor-pointer hover:bg-gray-50 transition-colors relative overflow-hidden group">
+                      <div className="h-40 bg-gray-100 rounded-xl border-2 border-dashed border-gray-300 flex items-center justify-center cursor-not-allowed relative overflow-hidden group opacity-60">
                         <img src={clinic?.coverUrl || "https://images.unsplash.com/photo-1629909613654-28e377c37b09?auto=format&fit=crop&q=80&w=2068"} alt="תמונת נושא נוכחית" className="w-full h-full object-cover opacity-80" />
-                        <div className="absolute inset-0 flex items-center justify-center bg-black/20 group-hover:bg-black/30 transition-colors">
+                        <div className="absolute inset-0 flex items-center justify-center bg-black/20 transition-colors">
                           <span className="bg-white/90 px-4 py-2 rounded-lg text-sm font-medium flex items-center">
-                            <ImageIcon size={16} className="ml-2" /> החלף תמונה
+                            <ImageIcon size={16} className="ml-2" /> החלף תמונה (בקרוב)
                           </span>
                         </div>
                       </div>
@@ -232,7 +234,9 @@ export const SettingsPage = () => {
                               <span className="text-xl font-bold text-gray-400">Logo</span>
                             )}
                           </div>
-                          <Button variant="ghost" size="sm">העלה</Button>
+                          <ComingSoon>
+                            <Button variant="ghost" size="sm">העלה</Button>
+                          </ComingSoon>
                         </div>
                       </div>
                       <div>
@@ -368,7 +372,9 @@ export const SettingsPage = () => {
               <Card className="p-6 rounded-3xl border-stone-100 shadow-soft">
                 <div className="flex justify-between items-center mb-6">
                   <h3 className="text-lg font-bold">צוות המטפלים</h3>
-                  <Button size="sm"><UserPlus size={14} className="ml-2" /> הזמן איש צוות</Button>
+                  <ComingSoon>
+                    <Button size="sm"><UserPlus size={14} className="ml-2" /> הזמן איש צוות</Button>
+                  </ComingSoon>
                 </div>
                 <div className="space-y-4">
                   {staffLoading ? (
@@ -402,14 +408,14 @@ export const SettingsPage = () => {
                               <Button variant="ghost" size="icon"><MoreVertical size={16} /></Button>
                             </DropdownMenuTrigger>
                             <DropdownMenuContent align="start">
-                              <DropdownMenuItem>
+                              <DropdownMenuItem disabled className="opacity-50 cursor-not-allowed">
                                 <Edit2 className="ml-2 h-4 w-4" />
-                                עריכת פרטים
+                                עריכת פרטים (בקרוב)
                               </DropdownMenuItem>
                               <DropdownMenuSeparator />
-                              <DropdownMenuItem className="text-red-600 focus:text-red-600">
+                              <DropdownMenuItem disabled className="opacity-50 cursor-not-allowed text-red-600">
                                 <Trash2 className="ml-2 h-4 w-4" />
-                                הסרה מהצוות
+                                הסרה מהצוות (בקרוב)
                               </DropdownMenuItem>
                             </DropdownMenuContent>
                           </DropdownMenu>
@@ -474,31 +480,16 @@ export const SettingsPage = () => {
                     </div>
 
                     <div className="flex flex-wrap gap-3 mt-6">
-                      <Button variant="outline" size="sm">
-                        <ArrowUpRight size={14} className="ml-2" /> שדרג חבילה
-                      </Button>
-                      <AlertDialog>
-                        <AlertDialogTrigger asChild>
-                          <Button variant="ghost" size="sm" className="text-red-500 hover:text-red-600 hover:bg-red-50">
-                            בטל מנוי
-                          </Button>
-                        </AlertDialogTrigger>
-                        <AlertDialogContent>
-                          <AlertDialogHeader>
-                            <AlertDialogTitle>ביטול מנוי</AlertDialogTitle>
-                            <AlertDialogDescription>
-                              האם אתה בטוח שברצונך לבטל את המנוי?
-                              תאבד גישה לכל התכונות המתקדמות בסוף תקופת החיוב הנוכחית.
-                            </AlertDialogDescription>
-                          </AlertDialogHeader>
-                          <AlertDialogFooter className="flex-row-reverse gap-2">
-                            <AlertDialogCancel>חזור</AlertDialogCancel>
-                            <AlertDialogAction className="bg-red-600 hover:bg-red-700">
-                              בטל מנוי
-                            </AlertDialogAction>
-                          </AlertDialogFooter>
-                        </AlertDialogContent>
-                      </AlertDialog>
+                      <ComingSoon>
+                        <Button variant="outline" size="sm">
+                          <ArrowUpRight size={14} className="ml-2" /> שדרג חבילה
+                        </Button>
+                      </ComingSoon>
+                      <ComingSoon>
+                        <Button variant="ghost" size="sm" className="text-red-500 hover:text-red-600 hover:bg-red-50">
+                          בטל מנוי
+                        </Button>
+                      </ComingSoon>
                     </div>
                   </Card>
                 </div>
@@ -524,9 +515,11 @@ export const SettingsPage = () => {
                       </div>
                     </div>
                   </div>
-                  <Button variant="outline" className="w-full">
-                    <CreditCard size={16} className="ml-2" /> עדכן כרטיס
-                  </Button>
+                  <ComingSoon>
+                    <Button variant="outline" className="w-full">
+                      <CreditCard size={16} className="ml-2" /> עדכן כרטיס
+                    </Button>
+                  </ComingSoon>
                 </Card>
               </div>
 
@@ -545,7 +538,9 @@ export const SettingsPage = () => {
                       <li className="flex items-center gap-2 text-gray-400"><XCircle size={14} /> עוזר AI</li>
                       <li className="flex items-center gap-2 text-gray-400"><XCircle size={14} /> דוחות מתקדמים</li>
                     </ul>
-                    <Button variant="outline" className="w-full">בחר חבילה</Button>
+                    <ComingSoon>
+                      <Button variant="outline" className="w-full">בחר חבילה</Button>
+                    </ComingSoon>
                   </div>
 
                   {/* Professional - Current */}
@@ -574,7 +569,9 @@ export const SettingsPage = () => {
                       <li className="flex items-center gap-2"><Check size={14} className="text-green-500" /> AI ללא הגבלה + התאמה</li>
                       <li className="flex items-center gap-2"><Check size={14} className="text-green-500" /> מנהל לקוח ייעודי</li>
                     </ul>
-                    <Button variant="outline" className="w-full">שדרג עכשיו</Button>
+                    <ComingSoon>
+                      <Button variant="outline" className="w-full">שדרג עכשיו</Button>
+                    </ComingSoon>
                   </div>
                 </div>
               </Card>
@@ -583,9 +580,11 @@ export const SettingsPage = () => {
               <Card className="p-6 rounded-3xl border-stone-100 shadow-soft">
                 <div className="flex justify-between items-center mb-6">
                   <h3 className="text-lg font-bold">היסטוריית חשבוניות</h3>
-                  <Button variant="ghost" size="sm">
-                    <Download size={14} className="ml-2" /> הורד הכל
-                  </Button>
+                  <ComingSoon>
+                    <Button variant="ghost" size="sm">
+                      <Download size={14} className="ml-2" /> הורד הכל
+                    </Button>
+                  </ComingSoon>
                 </div>
                 <div className="overflow-x-auto">
                   <table className="w-full text-sm">
@@ -624,9 +623,11 @@ export const SettingsPage = () => {
                               </Badge>
                             </td>
                             <td className="py-3 px-4">
-                              <Button variant="ghost" size="sm">
-                                <Download size={14} />
-                              </Button>
+                              <ComingSoon>
+                                <Button variant="ghost" size="sm">
+                                  <Download size={14} />
+                                </Button>
+                              </ComingSoon>
                             </td>
                           </tr>
                         ))

@@ -5,12 +5,18 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ## Project Overview
 
 ClinicALL is an aesthetic clinic management system built with React 19, TypeScript, and Vite. It's an RTL (Hebrew) application featuring:
+
 - **Supabase** backend for authentication and data persistence
 - **Google Gemini AI** for AI assistant features
 - Multi-tenant clinic support with public landing pages
 - Token-based health declaration system
 
 The app was originally created with Google AI Studio.
+
+- Always keep files organized and documented in their respective directories.
+- Always keep files, functions and components under 500 lines for maintainability.
+- Always keep code idiomatic and consistent with existing patterns.
+- DO NOT REPEAT YOURSELF - reuse existing components, hooks, and types wherever possible.
 
 ## Development Commands
 
@@ -24,6 +30,7 @@ pnpm preview          # Preview production build
 ## Environment Setup
 
 Create `.env.local` with:
+
 ```
 VITE_GEMINI_API_KEY=your_gemini_api_key
 VITE_SUPABASE_URL=your_supabase_url
@@ -35,6 +42,7 @@ Note: The app works in mock mode without Supabase credentials (uses `data.ts` mo
 ## Architecture
 
 ### Routing (BrowserRouter)
+
 - `/` - Landing page (public)
 - `/pricing` - Pricing page
 - `/login`, `/signup` - Auth pages
@@ -54,6 +62,7 @@ Note: The app works in mock mode without Supabase credentials (uses `data.ts` mo
   - `/admin/settings` - Clinic settings (with `?tab=billing` for billing)
 
 ### Key Directories
+
 - `components/` - Reusable UI components
 - `pages/` - Route-level components
 - `pages/admin/` - Admin dashboard pages (lazy loaded)
@@ -64,6 +73,7 @@ Note: The app works in mock mode without Supabase credentials (uses `data.ts` mo
 - `data.ts` - Mock data fallback
 
 ### Components (`components/ui.tsx`)
+
 - `Button` - With variants (primary, secondary, ghost, destructive, outline) and loading state
 - `Input` - Form input with consistent styling
 - `Label` - Form label
@@ -79,13 +89,16 @@ Note: The app works in mock mode without Supabase credentials (uses `data.ts` mo
 - `cn()` - Class merging utility (clsx + tailwind-merge)
 
 ### Special Components
+
 - `FaceMap` - SVG-based injectable face diagram for clinical notes
 - `AdminLayout` - Dashboard shell with RTL sidebar navigation (defined in `App.tsx`)
 - `ProtectedRoute` - Auth guard for protected routes
 - `ImageSlider` - Image carousel component
 
 ### Custom Hooks (`hooks/`)
+
 Data fetching hooks with Supabase integration and mock fallback:
+
 - `usePatients` - Patient CRUD operations
 - `useAppointments` - Appointment management
 - `useServices` - Service/treatment catalog
@@ -100,29 +113,38 @@ Data fetching hooks with Supabase integration and mock fallback:
 - `useHealthTokens` - Token-based health declaration system
 
 ### Authentication (`contexts/AuthContext.tsx`)
+
 - `AuthProvider` - Wraps app with auth state
 - `useAuth()` - Hook providing: `user`, `profile`, `session`, `loading`, `signIn`, `signUp`, `signOut`, `resetPassword`, `updatePassword`, `isConfigured`
 - User roles: `owner`, `admin`, `staff`, `client`
 
 ### Styling
+
 - Tailwind CSS via CDN (configured in `index.html`)
 - Custom theme with teal primary color (`#0D9488`)
 - Stone color palette for warm neutral backgrounds
 - CSS variables for theming in `index.html`
 
 ### Data Flow
+
 - **Production**: Supabase for auth and data (configured via `lib/supabase.ts`)
 - **Development/Mock**: Falls back to `data.ts` when Supabase not configured
 - `isSupabaseConfigured()` helper checks environment
 
 ### Code Splitting
+
 Admin pages are lazy loaded for better performance:
+
 ```tsx
-const Dashboard = lazy(() => import('./pages/admin/Dashboard').then(m => ({ default: m.Dashboard })));
+const Dashboard = lazy(() =>
+  import("./pages/admin/Dashboard").then((m) => ({ default: m.Dashboard }))
+);
 ```
 
 ### Build Optimization
+
 Vite config includes manual chunks for vendor splitting:
+
 - `vendor-react` - React, React DOM, React Router
 - `vendor-charts` - Recharts
 - `vendor-supabase` - Supabase client
@@ -130,6 +152,7 @@ Vite config includes manual chunks for vendor splitting:
 ## Type Definitions (`types.ts`)
 
 Core types:
+
 - `Patient` - Patient data with health declaration tracking
 - `Appointment` - Appointments with declaration status
 - `Service` - Treatment/service catalog
@@ -162,7 +185,9 @@ Core types:
 ### Code Patterns to Follow
 
 #### Hooks Pattern
+
 When creating data hooks, follow the established pattern in `hooks/`:
+
 ```tsx
 export function useResource(): UseResource {
   const [data, setData] = useState<Type[]>([]);
@@ -180,41 +205,44 @@ export function useResource(): UseResource {
 ```
 
 #### Component Pattern
+
 - Use existing UI components from `components/ui.tsx`
 - Use `cn()` for conditional class merging
 - Keep components RTL-aware (use `ml-*` instead of `mr-*`)
 - Import icons from `lucide-react`
 
 #### State Management
+
 - Use React hooks (`useState`, `useEffect`, `useCallback`)
 - Use `useAuth()` for user/session data
 - No external state libraries - keep it simple
 
 ### Naming Conventions
 
-| Context | Convention | Example |
-|---------|------------|---------|
-| TypeScript types | PascalCase | `Patient`, `AppointmentStatus` |
-| React components | PascalCase | `PatientList`, `AdminLayout` |
-| Hooks | camelCase with `use` prefix | `usePatients`, `useAuth` |
-| Database columns | snake_case | `clinic_id`, `created_at` |
-| App properties | camelCase | `clinicId`, `createdAt` |
+| Context          | Convention                  | Example                        |
+| ---------------- | --------------------------- | ------------------------------ |
+| TypeScript types | PascalCase                  | `Patient`, `AppointmentStatus` |
+| React components | PascalCase                  | `PatientList`, `AdminLayout`   |
+| Hooks            | camelCase with `use` prefix | `usePatients`, `useAuth`       |
+| Database columns | snake_case                  | `clinic_id`, `created_at`      |
+| App properties   | camelCase                   | `clinicId`, `createdAt`        |
 
 ### Database Field Mapping
 
 Always transform between database (snake_case) and app (camelCase):
+
 ```tsx
 // DB → App
 const patient: Patient = {
   id: data.id,
-  clinicId: data.clinic_id,      // Transform snake_case
+  clinicId: data.clinic_id, // Transform snake_case
   lastName: data.last_name,
   createdAt: data.created_at,
 };
 
 // App → DB
 const dbRecord = {
-  clinic_id: patient.clinicId,   // Transform camelCase
+  clinic_id: patient.clinicId, // Transform camelCase
   last_name: patient.lastName,
 };
 ```
@@ -275,14 +303,14 @@ clinicall/
 
 Each major directory contains its own `CLAUDE.md` file with specific guidance:
 
-| Directory | Documentation |
-|-----------|---------------|
-| `components/` | UI component patterns, variants, adding new components |
-| `contexts/` | Context patterns, AuthContext API, adding new contexts |
-| `hooks/` | Hook patterns, CRUD operations, mock mode handling |
-| `lib/` | Library configurations, environment variables |
-| `pages/` | Route structure, page patterns, RTL considerations |
-| `pages/admin/` | Admin page patterns, lazy loading, status labels |
+| Directory      | Documentation                                          |
+| -------------- | ------------------------------------------------------ |
+| `components/`  | UI component patterns, variants, adding new components |
+| `contexts/`    | Context patterns, AuthContext API, adding new contexts |
+| `hooks/`       | Hook patterns, CRUD operations, mock mode handling     |
+| `lib/`         | Library configurations, environment variables          |
+| `pages/`       | Route structure, page patterns, RTL considerations     |
+| `pages/admin/` | Admin page patterns, lazy loading, status labels       |
 
 ### Keeping Documentation Updated
 
@@ -297,6 +325,7 @@ Each major directory contains its own `CLAUDE.md` file with specific guidance:
 7. **Changing existing patterns** → Update the relevant directory's `CLAUDE.md`
 
 **Documentation update checklist**:
+
 - [ ] Add new files to the files table in the directory's `CLAUDE.md`
 - [ ] Update route structure if routes changed
 - [ ] Add new exports/APIs to the documentation
