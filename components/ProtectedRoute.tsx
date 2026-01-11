@@ -4,7 +4,7 @@ import { useAuth } from '../contexts/AuthContext';
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
-  requiredRole?: 'owner' | 'admin' | 'staff';
+  requiredRole?: 'owner' | 'admin';
 }
 
 export function ProtectedRoute({ children, requiredRole }: ProtectedRouteProps) {
@@ -65,12 +65,12 @@ export function ProtectedRoute({ children, requiredRole }: ProtectedRouteProps) 
   }
 
   // Check role hierarchy if required
+  // Roles: owner (app owner) > admin (clinic owner) > client (patient)
   if (requiredRole && profile) {
     const roleHierarchy: Record<string, number> = {
-      owner: 3,
-      admin: 2,
-      staff: 1,
-      client: 0
+      owner: 2,   // App owner (super admin)
+      admin: 1,   // Clinic owner
+      client: 0   // Patient
     };
     const userLevel = roleHierarchy[profile.role] || 0;
     const requiredLevel = roleHierarchy[requiredRole] || 0;

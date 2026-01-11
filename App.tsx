@@ -48,19 +48,19 @@ const AnimatedPage = ({ children }: { children: React.ReactNode }) => (
 );
 
 // Role-protected page wrapper for granular access control
+// Roles: owner (app owner) > admin (clinic owner) > client (patient)
 const RoleProtectedPage = ({
   children,
   requiredRole
 }: {
   children: React.ReactNode;
-  requiredRole: 'owner' | 'admin' | 'staff';
+  requiredRole: 'owner' | 'admin';
 }) => {
   const { profile, loading } = useAuth();
   const roleHierarchy: Record<string, number> = {
-    owner: 3,
-    admin: 2,
-    staff: 1,
-    client: 0
+    owner: 2,   // App owner (super admin)
+    admin: 1,   // Clinic owner
+    client: 0   // Patient
   };
 
   // Wait for profile to load before checking role
@@ -487,8 +487,7 @@ const AdminLayout = ({ children }: { children?: React.ReactNode }) => {
                   <div className="text-sm font-bold text-slate-800">{profile?.full_name || 'ד״ר שרה כהן'}</div>
                   <div className="text-xs text-slate-500">
                     {profile?.role === 'owner' ? 'בעלים' :
-                     profile?.role === 'admin' ? 'מנהל/ת' :
-                     profile?.role === 'staff' ? 'צוות' : 'מנהלת רפואית'}
+                     profile?.role === 'admin' ? 'מנהל/ת' : 'לקוח/ה'}
                   </div>
                </div>
                <div className="h-9 w-9 rounded-full bg-teal-100 text-teal-600 flex items-center justify-center font-bold text-sm ring-2 ring-white shadow-sm">
@@ -717,11 +716,11 @@ function App() {
 
           {/* Admin routes with role-based access control */}
           <Route path="/admin/*" element={
-            <ProtectedRoute requiredRole="staff">
+            <ProtectedRoute requiredRole="admin">
               <AdminLayout>
                 <Suspense fallback={<PageLoader />}>
                   <Routes>
-                    {/* Staff+ can access dashboard, patients, calendar */}
+                    {/* Admin+ can access dashboard, patients, calendar */}
                     <Route path="dashboard" element={<Dashboard />} />
                     <Route path="patients" element={<PatientList />} />
                     <Route path="patients/:id" element={<PatientDetails />} />

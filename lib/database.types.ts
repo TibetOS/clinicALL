@@ -232,7 +232,7 @@ export interface UserRow {
   clinic_id: string;
   email: string;
   full_name: string;
-  role: 'owner' | 'admin' | 'staff' | 'client';
+  role: 'owner' | 'admin' | 'client';
   avatar_url: string | null;
   created_at: string;
   updated_at: string;

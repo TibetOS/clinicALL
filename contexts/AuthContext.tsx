@@ -9,7 +9,7 @@ interface UserProfile {
   id: string;
   email: string;
   full_name: string;
-  role: 'owner' | 'admin' | 'staff' | 'client';
+  role: 'owner' | 'admin' | 'client';
   clinic_id: string;
   avatar_url?: string;
 }

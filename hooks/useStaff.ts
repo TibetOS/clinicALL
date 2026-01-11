@@ -34,7 +34,7 @@ export function useStaff(clinicId?: string): UseStaff {
       let query = supabase
         .from('users')
         .select('id, full_name, role, avatar_url, clinic_id')
-        .in('role', ['owner', 'admin', 'staff']);
+        .in('role', ['owner', 'admin']);
 
       // Filter by clinic if provided
       if (clinicId) {
