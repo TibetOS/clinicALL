@@ -332,7 +332,7 @@ export const ServicesPage = () => {
       {!loading && filteredServices.length === 0 && (
         <Card className="p-12">
           <Empty
-            icon={searchTerm ? Search : Syringe}
+            icon={searchTerm ? <Search className="h-6 w-6 text-muted-foreground" /> : <Syringe className="h-6 w-6 text-muted-foreground" />}
             title={searchTerm ? 'לא נמצאו תוצאות' : 'לא נמצאו טיפולים'}
             description={searchTerm ? 'נסה לשנות את מילות החיפוש' : 'התחל להוסיף טיפולים למרפאה'}
             action={
