@@ -24,8 +24,8 @@ const Dashboard = lazy(() => import('./pages/admin/Dashboard').then(m => ({ defa
 const PatientList = lazy(() => import('./pages/admin/PatientList').then(m => ({ default: m.PatientList })));
 const Calendar = lazy(() => import('./pages/admin/Calendar').then(m => ({ default: m.Calendar })));
 const SettingsPage = lazy(() => import('./pages/admin/SettingsPage').then(m => ({ default: m.SettingsPage })));
-const ServicesPage = lazy(() => import('./pages/Services').then(m => ({ default: m.ServicesPage })));
-const InventoryPage = lazy(() => import('./pages/Inventory').then(m => ({ default: m.InventoryPage })));
+const ServicesPage = lazy(() => import('./pages/admin/Services').then(m => ({ default: m.ServicesPage })));
+const InventoryPage = lazy(() => import('./pages/admin/Inventory').then(m => ({ default: m.InventoryPage })));
 const PatientDetails = lazy(() => import('./pages/PatientDetails').then(m => ({ default: m.PatientDetails })));
 
 // Loading spinner for lazy loaded routes with enhanced animation
@@ -33,7 +33,7 @@ const PageLoader = () => (
   <div className="flex items-center justify-center h-64 animate-fade-in">
     <div className="flex flex-col items-center gap-4">
       <div className="relative">
-        <div className="w-12 h-12 border-4 border-rose-200 rounded-full" />
+        <div className="w-12 h-12 border-4 border-teal-200 rounded-full" />
         <div className="absolute inset-0 w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin" />
       </div>
       <p className="text-gray-500 text-sm animate-pulse">טוען...</p>
@@ -250,7 +250,7 @@ const AdminLayout = ({ children }: { children?: React.ReactNode }) => {
         <div className="h-16 lg:h-20 flex items-center px-6 lg:px-8 border-b border-slate-700/50 shrink-0 justify-between lg:justify-start">
           <div className="flex items-center">
             <Link to="/">
-               <div className="h-10 w-10 rounded-2xl flex items-center justify-center text-white font-bold text-lg ml-3 shadow-lg bg-gradient-to-br from-rose-500 to-rose-600" style={{ boxShadow: '0 4px 14px rgba(244, 63, 94, 0.3)' }}>C</div>
+               <div className="h-10 w-10 rounded-2xl flex items-center justify-center text-white font-bold text-lg ml-3 shadow-lg bg-gradient-to-br from-teal-500 to-teal-600" style={{ boxShadow: '0 4px 14px rgba(13, 148, 136, 0.3)' }}>C</div>
             </Link>
             <div>
                <span className="font-bold text-xl tracking-tight block leading-tight text-white">ClinicALL</span>
@@ -274,7 +274,7 @@ const AdminLayout = ({ children }: { children?: React.ReactNode }) => {
                 className={`
                   flex items-center gap-3 px-4 py-3 text-sm font-medium rounded-xl transition-all duration-200 ease-out group relative transform-gpu
                   ${isActive
-                    ? 'bg-rose-500 text-white shadow-lg scale-100'
+                    ? 'bg-teal-500 text-white shadow-lg scale-100'
                     : 'text-slate-300 hover:bg-slate-700/50 hover:text-white hover:translate-x-1 active:scale-[0.98]'}
                 `}
                 style={{ animationDelay: `${index * 50}ms` }}
@@ -282,7 +282,7 @@ const AdminLayout = ({ children }: { children?: React.ReactNode }) => {
                 {/* Active indicator bar on right with animation */}
                 <div
                   className={`
-                    absolute left-0 top-1/2 -translate-y-1/2 w-1 rounded-l-full bg-rose-300 transition-all duration-300 ease-out
+                    absolute left-0 top-1/2 -translate-y-1/2 w-1 rounded-l-full bg-teal-300 transition-all duration-300 ease-out
                     ${isActive ? 'h-8 opacity-100' : 'h-0 opacity-0'}
                   `}
                   style={{ transitionTimingFunction: 'cubic-bezier(0.34, 1.56, 0.64, 1)' }}
@@ -301,7 +301,7 @@ const AdminLayout = ({ children }: { children?: React.ReactNode }) => {
                   className={`
                     mr-auto h-4 w-4 transition-all duration-200
                     ${isActive
-                      ? 'text-rose-200 opacity-100 translate-x-0'
+                      ? 'text-teal-200 opacity-100 translate-x-0'
                       : 'opacity-0 translate-x-2 group-hover:opacity-50 group-hover:translate-x-0'}
                   `}
                 />
@@ -315,7 +315,7 @@ const AdminLayout = ({ children }: { children?: React.ReactNode }) => {
            {/* Plan Widget - Clickable Link to Settings */}
            <Link to="/admin/settings?tab=billing">
              <div className="bg-gradient-to-br from-slate-700 to-slate-800 rounded-xl p-4 text-white mb-4 shadow-lg relative overflow-hidden group cursor-pointer hover:shadow-xl transition-all transform hover:-translate-y-0.5 ring-1 ring-slate-600/50">
-                <div className="absolute -top-6 -right-6 w-20 h-20 bg-rose-500/20 rounded-full blur-xl group-hover:bg-rose-500/30 transition-colors"></div>
+                <div className="absolute -top-6 -right-6 w-20 h-20 bg-teal-500/20 rounded-full blur-xl group-hover:bg-teal-500/30 transition-colors"></div>
 
                 <div className="flex justify-between items-start mb-2 relative z-10">
                    <div>
@@ -325,11 +325,11 @@ const AdminLayout = ({ children }: { children?: React.ReactNode }) => {
                          <span className="font-bold text-sm">Professional</span>
                       </div>
                    </div>
-                   <Badge variant="success" className="text-[10px] h-5 bg-rose-500 text-white border-none">פעיל</Badge>
+                   <Badge variant="success" className="text-[10px] h-5 bg-teal-500 text-white border-none">פעיל</Badge>
                 </div>
 
                 <div className="w-full bg-slate-600/50 rounded-full h-1.5 mb-2 relative z-10">
-                   <div className="bg-rose-500 h-1.5 rounded-full" style={{ width: '65%' }}></div>
+                   <div className="bg-teal-500 h-1.5 rounded-full" style={{ width: '65%' }}></div>
                 </div>
                 <p className="text-[10px] text-slate-400 relative z-10">65% ניצולת חבילה החודש</p>
              </div>
@@ -477,7 +477,7 @@ const AdminLayout = ({ children }: { children?: React.ReactNode }) => {
                      profile?.role === 'staff' ? 'צוות' : 'מנהלת רפואית'}
                   </div>
                </div>
-               <div className="h-9 w-9 rounded-full bg-rose-100 text-rose-600 flex items-center justify-center font-bold text-sm ring-2 ring-white shadow-sm">
+               <div className="h-9 w-9 rounded-full bg-teal-100 text-teal-600 flex items-center justify-center font-bold text-sm ring-2 ring-white shadow-sm">
                  {profile?.full_name?.charAt(0) || 'ש'}
                </div>
             </div>

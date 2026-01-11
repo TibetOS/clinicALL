@@ -65,7 +65,7 @@ export const Input = React.forwardRef<HTMLInputElement, InputHTMLAttributes<HTML
       <input
         type={type}
         className={cn(
-          'flex h-10 w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-gray-900 ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-gray-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/30 focus-visible:ring-offset-0 focus-visible:border-primary focus-visible:shadow-[0_0_0_3px_rgba(244,63,94,0.1)] disabled:cursor-not-allowed disabled:opacity-50 transition-all duration-200 ease-out',
+          'flex h-10 w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-gray-900 ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-gray-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/30 focus-visible:ring-offset-0 focus-visible:border-primary focus-visible:shadow-[0_0_0_3px_rgba(13,148,136,0.1)] disabled:cursor-not-allowed disabled:opacity-50 transition-all duration-200 ease-out',
           className
         )}
         ref={ref}
@@ -438,4 +438,40 @@ export const useToast = () => {
   );
 
   return { showToast, ToastContainer };
+};
+
+// ComingSoon wrapper - wraps buttons/elements with disabled state and tooltip
+interface ComingSoonProps {
+  children: React.ReactElement<{ className?: string; disabled?: boolean; onClick?: (e: React.MouseEvent) => void }>;
+  message?: string;
+}
+
+export const ComingSoon = ({ children, message = 'בקרוב' }: ComingSoonProps) => {
+  const [showTooltip, setShowTooltip] = React.useState(false);
+
+  // Clone the child and add disabled styling
+  const disabledChild = React.cloneElement(children, {
+    disabled: true,
+    className: cn(children.props.className, 'opacity-60 cursor-not-allowed'),
+    onClick: (e: React.MouseEvent) => e.preventDefault(),
+  });
+
+  return (
+    <div
+      className="relative inline-block"
+      onMouseEnter={() => setShowTooltip(true)}
+      onMouseLeave={() => setShowTooltip(false)}
+    >
+      {disabledChild}
+      {showTooltip && (
+        <div
+          className="absolute z-50 -top-10 left-1/2 -translate-x-1/2 px-3 py-1.5 text-xs font-medium text-white bg-gray-900 rounded-md shadow-lg whitespace-nowrap animate-in fade-in-0 zoom-in-95 duration-150"
+          role="tooltip"
+        >
+          {message}
+          <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-2 h-2 bg-gray-900 rotate-45" />
+        </div>
+      )}
+    </div>
+  );
 };
