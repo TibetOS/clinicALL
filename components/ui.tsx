@@ -1,4 +1,5 @@
 import React, { ButtonHTMLAttributes, InputHTMLAttributes } from 'react';
+import { createPortal } from 'react-dom';
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
 import { Link } from 'react-router-dom';
@@ -268,7 +269,8 @@ export const Dialog = ({ open, onClose, children, title, fullScreen = true }: { 
 
   if (!shouldRender) return null;
 
-  return (
+  // Render via portal at document.body to escape any stacking contexts
+  return createPortal(
     <div
       className={cn(
         "fixed inset-0 z-[100] flex items-center justify-center bg-black/90 backdrop-blur-sm",
@@ -309,7 +311,8 @@ export const Dialog = ({ open, onClose, children, title, fullScreen = true }: { 
           {children}
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 };
 
