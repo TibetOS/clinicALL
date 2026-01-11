@@ -33,12 +33,12 @@ import { usePatients, useAppointments, useServices, useInvoices, useDeclarations
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 
-// Modern Beauty theme colors - Rose + Slate
+// Modern Beauty theme colors - Teal + Slate
 const COLORS = {
-  primary: '#F43F5E',
-  primaryDark: '#E11D48',
-  primaryLight: '#FB7185',
-  accent: '#FFE4E6',
+  primary: '#0D9488',
+  primaryDark: '#0F766E',
+  primaryLight: '#14B8A6',
+  accent: '#CCFBF1',
   slate50: '#F8FAFC',
   slate100: '#F1F5F9',
   slate200: '#E2E8F0',
@@ -94,7 +94,7 @@ export const Dashboard = () => {
     .sort((a, b) => a.time.localeCompare(b.time))
     .map(a => ({
       ...a,
-      avatar: `https://ui-avatars.com/api/?name=${encodeURIComponent(a.patientName)}&background=FFE4E6&color=E11D48`
+      avatar: `https://ui-avatars.com/api/?name=${encodeURIComponent(a.patientName)}&background=CCFBF1&color=0D9488`
     })), [appointments, today]);
 
   // Next appointment (first pending or confirmed)
@@ -284,7 +284,7 @@ export const Dashboard = () => {
     <div className="space-y-6 pb-24 md:pb-12 animate-in fade-in duration-700">
       {/* Success Toast */}
       {successMessage && (
-        <div className="fixed top-6 left-1/2 -translate-x-1/2 z-50 px-6 py-3 rounded-2xl shadow-lg animate-in slide-in-from-top-2 duration-300 text-white font-medium bg-rose-500">
+        <div className="fixed top-6 left-1/2 -translate-x-1/2 z-50 px-6 py-3 rounded-2xl shadow-lg animate-in slide-in-from-top-2 duration-300 text-white font-medium bg-teal-500">
           <div className="flex items-center gap-2">
             <CheckCircle size={18} />
             {successMessage}
@@ -295,7 +295,7 @@ export const Dashboard = () => {
       {/* ========== HEADER: GREETING ========== */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div className="flex items-center gap-3">
-          <div className="flex items-center gap-2 font-medium text-rose-500">
+          <div className="flex items-center gap-2 font-medium text-teal-500">
             <GreetingIcon size={20} />
             <span>{greeting.text},</span>
           </div>
@@ -306,7 +306,7 @@ export const Dashboard = () => {
         <div className="hidden md:flex">
           <Button
             onClick={() => setIsNewApptOpen(true)}
-            className="gap-2 shadow-lg hover:shadow-xl transition-all bg-rose-500 hover:bg-rose-600 text-white"
+            className="gap-2 shadow-lg hover:shadow-xl transition-all bg-teal-500 hover:bg-teal-600 text-white"
           >
             <Plus size={18} /> תור חדש
           </Button>
@@ -320,7 +320,7 @@ export const Dashboard = () => {
             <TooltipTrigger asChild>
               <div className="bg-white rounded-2xl p-4 shadow-sm border border-slate-100 hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 cursor-pointer group card-animate stagger-1">
                 <div className="flex items-center gap-2 mb-1">
-                  <CalendarIcon size={16} className="text-slate-400 group-hover:text-rose-500 transition-colors duration-200" />
+                  <CalendarIcon size={16} className="text-slate-400 group-hover:text-teal-500 transition-colors duration-200" />
                   <span className="text-xs font-medium text-slate-500">תורים היום</span>
                   <Info size={12} className="text-slate-300 opacity-0 group-hover:opacity-100 transition-opacity" />
                 </div>
@@ -352,7 +352,7 @@ export const Dashboard = () => {
             <TooltipTrigger asChild>
               <div className="bg-white rounded-2xl p-4 shadow-sm border border-slate-100 hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 cursor-pointer group card-animate stagger-3">
                 <div className="flex items-center gap-2 mb-1">
-                  <Heart size={16} className="text-rose-500 group-hover:scale-110 transition-transform duration-200" />
+                  <Heart size={16} className="text-teal-500 group-hover:scale-110 transition-transform duration-200" />
                   <span className="text-xs font-medium text-slate-500">הכנסות היום</span>
                   <Info size={12} className="text-slate-300 opacity-0 group-hover:opacity-100 transition-opacity" />
                 </div>
@@ -391,7 +391,7 @@ export const Dashboard = () => {
           {/* ========== NEXT APPOINTMENT (הטיפול הבא) ========== */}
           <Card className="p-6 rounded-3xl border border-slate-100 shadow-sm overflow-hidden relative card-animate stagger-5">
             <div className="flex items-center gap-2 mb-4">
-              <Sparkles size={20} className="text-rose-500 animate-gentle-bounce" />
+              <Sparkles size={20} className="text-teal-500 animate-gentle-bounce" />
               <h2 className="text-lg font-bold text-slate-800">הטיפול הבא</h2>
             </div>
 
@@ -411,11 +411,11 @@ export const Dashboard = () => {
                 >
                   <Avatar className="w-16 h-16 ring-4 ring-white shadow-md">
                     <AvatarImage src={nextAppointment.avatar} alt={nextAppointment.patientName} />
-                    <AvatarFallback className="bg-rose-100 text-rose-700 text-lg">
+                    <AvatarFallback className="bg-teal-100 text-teal-700 text-lg">
                       {nextAppointment.patientName.split(' ').map(n => n[0]).join('')}
                     </AvatarFallback>
                   </Avatar>
-                  <div className="absolute -bottom-1 -right-1 w-6 h-6 rounded-full flex items-center justify-center text-white text-xs font-bold shadow-lg bg-rose-500">
+                  <div className="absolute -bottom-1 -right-1 w-6 h-6 rounded-full flex items-center justify-center text-white text-xs font-bold shadow-lg bg-teal-500">
                     {nextAppointment.time.split(':')[0]}
                   </div>
                 </div>
@@ -427,7 +427,7 @@ export const Dashboard = () => {
                   <p className="font-bold text-lg text-slate-800">{nextAppointment.patientName}</p>
                   <p className="text-sm text-slate-600">{nextAppointment.serviceName}</p>
                   <div className="flex items-center gap-3 mt-2">
-                    <Badge className="border-none bg-rose-100 text-rose-700 gap-1">
+                    <Badge className="border-none bg-teal-100 text-teal-700 gap-1">
                       <Clock size={12} /> {nextAppointment.time}
                     </Badge>
                     <Badge className="border-none bg-slate-100 text-slate-600">
@@ -465,13 +465,13 @@ export const Dashboard = () => {
             ) : (
               /* Empty State - Using Empty component */
               <Empty
-                icon={<Coffee size={32} className="text-rose-500" />}
+                icon={<Coffee size={32} className="text-teal-500" />}
                 title="אין תורים כרגע"
                 description="יום מושלם לפנות ללקוחות ותיקות!"
                 action={
                   <Button
                     variant="outline"
-                    className="gap-2 border-2 border-rose-200 text-rose-600 hover:bg-rose-50"
+                    className="gap-2 border-2 border-teal-200 text-teal-600 hover:bg-teal-50"
                     onClick={() => navigate('/admin/patients')}
                   >
                     <Phone size={16} /> צפייה בלקוחות
@@ -522,9 +522,9 @@ export const Dashboard = () => {
                     }}
                   >
                     <img
-                      src={`https://ui-avatars.com/api/?name=${encodeURIComponent(item.patientName)}&background=FFE4E6&color=E11D48`}
+                      src={`https://ui-avatars.com/api/?name=${encodeURIComponent(item.patientName)}&background=CCFBF1&color=0D9488`}
                       alt={item.patientName}
-                      className="w-10 h-10 rounded-full object-cover ring-2 ring-transparent group-hover:ring-rose-200 transition-all duration-200"
+                      className="w-10 h-10 rounded-full object-cover ring-2 ring-transparent group-hover:ring-teal-200 transition-all duration-200"
                     />
                     <div className="flex-1 min-w-0">
                       <p className="font-medium truncate text-slate-800">{item.patientName}</p>
@@ -534,7 +534,7 @@ export const Dashboard = () => {
                     </div>
                     <Button
                       size="sm"
-                      className="gap-1 shadow-sm bg-rose-500 hover:bg-rose-600 text-white"
+                      className="gap-1 shadow-sm bg-teal-500 hover:bg-teal-600 text-white"
                       disabled={sendingDeclaration === item.patientId}
                       onClick={() => handleSendDeclaration(item.patientId, item.patientName, item.patient?.phone)}
                     >
@@ -588,9 +588,9 @@ export const Dashboard = () => {
                     onClick={() => navigate(`/admin/patients/${item.patientId}`)}
                   >
                     <img
-                      src={`https://ui-avatars.com/api/?name=${encodeURIComponent(item.patientName)}&background=FFE4E6&color=E11D48`}
+                      src={`https://ui-avatars.com/api/?name=${encodeURIComponent(item.patientName)}&background=CCFBF1&color=0D9488`}
                       alt={item.patientName}
-                      className="w-10 h-10 rounded-full object-cover ring-2 ring-transparent group-hover:ring-rose-200 transition-all duration-200"
+                      className="w-10 h-10 rounded-full object-cover ring-2 ring-transparent group-hover:ring-teal-200 transition-all duration-200"
                     />
                     <div className="flex-1 min-w-0">
                       <p className="font-medium truncate text-slate-800">{item.patientName}</p>
@@ -598,7 +598,7 @@ export const Dashboard = () => {
                         {item.serviceName} • לפני {Math.floor((today.getTime() - new Date(item.date).getTime()) / (1000 * 60 * 60 * 24))} ימים
                       </p>
                     </div>
-                    <Badge className="border-none text-xs bg-rose-100 text-rose-700">
+                    <Badge className="border-none text-xs bg-teal-100 text-teal-700">
                       מעקב בוטוקס
                     </Badge>
                     <ChevronLeft size={16} className="text-slate-400 group-hover:translate-x-[-4px] transition-transform duration-200" />
@@ -645,8 +645,8 @@ export const Dashboard = () => {
             onClick={() => navigate('/admin/patients')}
           >
             <div className="flex items-center gap-3">
-              <div className="w-12 h-12 rounded-xl flex items-center justify-center bg-rose-50 group-hover:scale-110 transition-transform duration-200">
-                <Phone size={24} className="text-rose-500" />
+              <div className="w-12 h-12 rounded-xl flex items-center justify-center bg-teal-50 group-hover:scale-110 transition-transform duration-200">
+                <Phone size={24} className="text-teal-500" />
               </div>
               <div className="flex-1">
                 <p className="text-sm font-medium text-slate-500">לביקורת מעקב</p>
@@ -725,7 +725,7 @@ export const Dashboard = () => {
             style={{ transitionDelay: isFabOpen ? '100ms' : '0ms' }}
             onClick={() => { setIsNewApptOpen(true); setIsFabOpen(false); }}
           >
-            <Plus size={18} className="text-rose-500" />
+            <Plus size={18} className="text-teal-500" />
             תור חדש
           </button>
           <button
@@ -749,7 +749,7 @@ export const Dashboard = () => {
         {/* FAB Button */}
         <button
           className={`w-14 h-14 rounded-full shadow-lg flex items-center justify-center transition-all duration-300 transform-gpu active:scale-90 ${
-            isFabOpen ? 'bg-slate-800 rotate-45 shadow-xl' : 'bg-rose-500 hover:bg-rose-600 hover:shadow-xl hover:scale-105'
+            isFabOpen ? 'bg-slate-800 rotate-45 shadow-xl' : 'bg-teal-500 hover:bg-teal-600 hover:shadow-xl hover:scale-105'
           }`}
           onClick={() => setIsFabOpen(!isFabOpen)}
         >
@@ -818,7 +818,7 @@ export const Dashboard = () => {
             <Button
               onClick={handleAddAppointment}
               disabled={saving || !apptForm.patientName || !apptForm.serviceId}
-              className="bg-rose-500 hover:bg-rose-600 text-white"
+              className="bg-teal-500 hover:bg-teal-600 text-white"
             >
               {saving ? 'שומר...' : 'שמור ביומן'}
             </Button>
@@ -870,7 +870,7 @@ export const Dashboard = () => {
             <Button
               onClick={handleWalkIn}
               disabled={saving || !walkInForm.firstName || !walkInForm.phone}
-              className="bg-rose-500 hover:bg-rose-600 text-white"
+              className="bg-teal-500 hover:bg-teal-600 text-white"
             >
               {saving ? 'שומר...' : 'קלוט לקוחה'}
             </Button>
