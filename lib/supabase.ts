@@ -18,6 +18,12 @@ export const supabase = createClient(
       persistSession: true,
       autoRefreshToken: true,
       detectSessionInUrl: true,
+      // Disable navigator lock to prevent AbortError when tabs close or components unmount
+      // The lock function wraps async operations to prevent race conditions across tabs
+      // Using a no-op lock that immediately executes the callback without locking
+      lock: async <R>(_name: string, _acquireTimeout: number, callback: () => Promise<R>): Promise<R> => {
+        return await callback();
+      },
     },
   }
 );
