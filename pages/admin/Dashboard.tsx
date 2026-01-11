@@ -34,20 +34,6 @@ import { usePatients, useAppointments, useServices, useInvoices, useDeclarations
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 
-// Modern Beauty theme colors - Teal + Slate
-const COLORS = {
-  primary: '#0D9488',
-  primaryDark: '#0F766E',
-  primaryLight: '#14B8A6',
-  accent: '#CCFBF1',
-  slate50: '#F8FAFC',
-  slate100: '#F1F5F9',
-  slate200: '#E2E8F0',
-  slate400: '#94A3B8',
-  slate600: '#475569',
-  slate800: '#1E293B',
-};
-
 export const Dashboard = () => {
   const navigate = useNavigate();
   const { profile } = useAuth();
