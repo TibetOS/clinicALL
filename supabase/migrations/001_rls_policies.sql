@@ -104,21 +104,21 @@ CREATE POLICY "services_delete_own_clinic" ON services
 CREATE POLICY "clinical_notes_select_own_clinic" ON clinical_notes
   FOR SELECT
   USING (
-    clinic_id = auth.jwt() ->> 'clinic_id'
+    clinic_id = (auth.jwt() ->> 'clinic_id')::uuid
     AND (auth.jwt() ->> 'role')::text IN ('owner', 'admin')
   );
 
 CREATE POLICY "clinical_notes_insert_own_clinic" ON clinical_notes
   FOR INSERT
   WITH CHECK (
-    clinic_id = auth.jwt() ->> 'clinic_id'
+    clinic_id = (auth.jwt() ->> 'clinic_id')::uuid
     AND (auth.jwt() ->> 'role')::text IN ('owner', 'admin')
   );
 
 CREATE POLICY "clinical_notes_update_own_clinic" ON clinical_notes
   FOR UPDATE
   USING (
-    clinic_id = auth.jwt() ->> 'clinic_id'
+    clinic_id = (auth.jwt() ->> 'clinic_id')::uuid
     AND (auth.jwt() ->> 'role')::text IN ('owner', 'admin')
   );
 
