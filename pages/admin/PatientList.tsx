@@ -1,9 +1,9 @@
 import React, { useState, useMemo } from 'react';
 import {
-  Search, Filter, UserPlus, ChevronLeft, Download,
+  Search, Filter, UserPlus, Download,
   X, CheckSquare, Square, MessageSquare, Trash2, FileDown, FileHeart, Copy,
   Check, Send, Mail, Phone, Clock, AlertCircle, FileCheck, MoreHorizontal,
-  Eye, Edit2, Calendar, Users
+  Eye, Calendar, Users
 } from 'lucide-react';
 import { Card, Button, Input, Badge, Dialog, Label, Skeleton } from '../../components/ui';
 import {
@@ -479,7 +479,7 @@ export const PatientList = () => {
               <tr>
                 <td colSpan={isSelectionMode ? 7 : 6} className="py-12">
                   <Empty
-                    icon={hasActiveFilters ? Search : Users}
+                    icon={hasActiveFilters ? <Search className="h-6 w-6 text-muted-foreground" /> : <Users className="h-6 w-6 text-muted-foreground" />}
                     title={hasActiveFilters ? 'לא נמצאו תוצאות' : 'אין מטופלים'}
                     description={hasActiveFilters ? 'נסה לשנות את מסנני החיפוש' : 'הוסף מטופל חדש כדי להתחיל'}
                     action={
@@ -646,7 +646,7 @@ export const PatientList = () => {
         {!patientsLoading && filteredPatients.length === 0 && (
           <Card className="p-8">
             <Empty
-              icon={hasActiveFilters ? Search : Users}
+              icon={hasActiveFilters ? <Search className="h-6 w-6 text-muted-foreground" /> : <Users className="h-6 w-6 text-muted-foreground" />}
               title={hasActiveFilters ? 'לא נמצאו תוצאות' : 'אין מטופלים'}
               description={hasActiveFilters ? 'נסה לשנות את מסנני החיפוש' : 'הוסף מטופל חדש כדי להתחיל'}
               action={
