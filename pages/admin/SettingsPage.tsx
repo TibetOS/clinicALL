@@ -4,6 +4,7 @@ import {
   CreditCard, ArrowUpRight, Download, Check, XCircle, Sparkles,
   Globe, Image as ImageIcon, Loader2, Trash2, Edit2
 } from 'lucide-react';
+import { toast } from 'sonner';
 import { Card, Button, Input, Badge, Tabs, TabsList, TabsTrigger, Label, Skeleton, ComingSoon } from '../../components/ui';
 import {
   DropdownMenu,
@@ -12,7 +13,6 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '../../components/ui/dropdown-menu';
-import { Separator } from '../../components/ui/separator';
 import { Avatar, AvatarFallback, AvatarImage } from '../../components/ui/avatar';
 import { Progress } from '../../components/ui/progress';
 import { useSearchParams } from 'react-router-dom';
@@ -23,12 +23,10 @@ export const SettingsPage = () => {
   const [searchParams] = useSearchParams();
   const [activeTab, setActiveTab] = useState(searchParams.get('tab') || 'profile');
   const [saving, setSaving] = useState(false);
-  const [successMessage, setSuccessMessage] = useState<string | null>(null);
-  const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   // Data hooks
   const { profile } = useAuth();
-  const { clinic, loading: clinicLoading, updateClinic } = useMyClinic();
+  const { clinic, updateClinic } = useMyClinic();
   const { staff, loading: staffLoading } = useStaff(profile?.clinic_id);
   const { patients } = usePatients();
   const { appointments } = useAppointments();
@@ -86,16 +84,6 @@ export const SettingsPage = () => {
     if (tab) setActiveTab(tab);
   }, [searchParams]);
 
-  const showSuccess = (message: string) => {
-    setSuccessMessage(message);
-    setTimeout(() => setSuccessMessage(null), 3000);
-  };
-
-  const showError = (message: string) => {
-    setErrorMessage(message);
-    setTimeout(() => setErrorMessage(null), 5000);
-  };
-
   const handleSaveProfile = async () => {
     setSaving(true);
     const result = await updateClinic({
@@ -105,9 +93,9 @@ export const SettingsPage = () => {
     });
     setSaving(false);
     if (result.success) {
-      showSuccess('פרטי האתר נשמרו בהצלחה');
+      toast.success('פרטי האתר נשמרו בהצלחה');
     } else {
-      showError(result.error || 'שגיאה בשמירת הנתונים');
+      toast.error(result.error || 'שגיאה בשמירת הנתונים');
     }
   };
 
@@ -121,9 +109,9 @@ export const SettingsPage = () => {
     });
     setSaving(false);
     if (result.success) {
-      showSuccess('פרטי העסק נשמרו בהצלחה');
+      toast.success('פרטי העסק נשמרו בהצלחה');
     } else {
-      showError(result.error || 'שגיאה בשמירת הנתונים');
+      toast.error(result.error || 'שגיאה בשמירת הנתונים');
     }
   };
 
@@ -138,9 +126,9 @@ export const SettingsPage = () => {
     });
     setSaving(false);
     if (result.success) {
-      showSuccess('פרטי החיוב נשמרו בהצלחה');
+      toast.success('פרטי החיוב נשמרו בהצלחה');
     } else {
-      showError(result.error || 'שגיאה בשמירת הנתונים');
+      toast.error(result.error || 'שגיאה בשמירת הנתונים');
     }
   };
 
@@ -154,20 +142,6 @@ export const SettingsPage = () => {
 
   return (
     <div className="max-w-5xl mx-auto animate-in fade-in pb-10">
-      {/* Success Toast */}
-      {successMessage && (
-        <div className="fixed top-6 left-1/2 -translate-x-1/2 z-50 bg-green-600 text-white px-6 py-3 rounded-xl shadow-lg animate-in slide-in-from-top-2 duration-300">
-          {successMessage}
-        </div>
-      )}
-
-      {/* Error Toast */}
-      {errorMessage && (
-        <div className="fixed top-6 left-1/2 -translate-x-1/2 z-50 bg-red-600 text-white px-6 py-3 rounded-xl shadow-lg animate-in slide-in-from-top-2 duration-300">
-          {errorMessage}
-        </div>
-      )}
-
       <div className="flex items-center gap-3 mb-8">
         <div className="p-3 bg-white border border-stone-200 rounded-2xl shadow-sm"><SettingsIcon className="w-6 h-6 text-gray-700" /></div>
         <div>

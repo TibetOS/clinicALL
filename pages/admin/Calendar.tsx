@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
-import { Plus, ChevronLeft, ChevronRight, FileCheck, Clock, AlertCircle, Loader2, MoreHorizontal, Eye, Trash2, Phone, Edit2, X as XIcon, Calendar as CalendarIcon } from 'lucide-react';
+import { Plus, ChevronLeft, ChevronRight, FileCheck, Clock, AlertCircle, Loader2, MoreHorizontal, Eye, Trash2, Phone, Edit2, X as XIcon } from 'lucide-react';
+import { toast } from 'sonner';
 import { Card, Button, Input, Dialog, Label } from '../../components/ui';
 import {
   Tooltip,
@@ -76,7 +77,6 @@ export const Calendar = () => {
     notes: '',
   });
   const [saving, setSaving] = useState(false);
-  const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [appointmentToDelete, setAppointmentToDelete] = useState<Appointment | null>(null);
   const [canceling, setCanceling] = useState(false);
 
@@ -119,11 +119,6 @@ export const Calendar = () => {
     });
   };
 
-  const showSuccess = (message: string) => {
-    setSuccessMessage(message);
-    setTimeout(() => setSuccessMessage(null), 3000);
-  };
-
   const handleCancelAppointment = async () => {
     if (!appointmentToDelete) return;
 
@@ -132,8 +127,10 @@ export const Calendar = () => {
     setCanceling(false);
 
     if (result) {
-      showSuccess('התור בוטל בהצלחה');
+      toast.success('התור בוטל בהצלחה');
       setAppointmentToDelete(null);
+    } else {
+      toast.error('שגיאה בביטול התור');
     }
   };
 
@@ -207,19 +204,14 @@ export const Calendar = () => {
         time: '10:00',
         notes: '',
       });
-      showSuccess('התור נקבע בהצלחה');
+      toast.success('התור נקבע בהצלחה');
+    } else {
+      toast.error('שגיאה בקביעת התור');
     }
   };
 
   return (
     <div className="h-[calc(100vh-140px)] flex flex-col page-transition">
-      {/* Success Toast */}
-      {successMessage && (
-        <div className="fixed top-6 left-1/2 -translate-x-1/2 z-50 bg-green-600 text-white px-6 py-3 rounded-xl shadow-lg animate-in slide-in-from-top-2 duration-300">
-          {successMessage}
-        </div>
-      )}
-
       <div className="flex flex-col sm:flex-row justify-between items-center mb-6 gap-4">
         <div className="flex items-center gap-4 bg-white p-1 rounded-xl shadow-sm border border-gray-200" role="group" aria-label="ניווט בלוח שנה">
           <Button

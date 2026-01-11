@@ -6,6 +6,7 @@ export * from './accordion';
 export * from './alert-dialog';
 export * from './aspect-ratio';
 export * from './avatar';
+export * from './button';
 export * from './checkbox';
 export * from './collapsible';
 export * from './command';
@@ -14,13 +15,17 @@ export * from './dialog';
 export * from './drawer';
 export * from './dropdown-menu';
 export * from './hover-card';
+export * from './label';
+export * from './pagination';
 export * from './popover';
 export * from './progress';
 export * from './radio-group';
 export * from './scroll-area';
 export * from './select';
 export * from './separator';
+export * from './sheet';
 export * from './slider';
+export * from './table';
 export * from './toggle';
 export * from './toggle-group';
 export * from './tooltip';
@@ -29,6 +34,10 @@ export * from './tooltip';
 export * from './calendar';
 export * from './date-picker';
 export * from './field';
+export * from './form';
+
+// shadcn/ui components - notifications
+export * from './sonner';
 
 // shadcn/ui components - custom/blocks
 export * from './empty';

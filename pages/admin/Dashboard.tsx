@@ -1,11 +1,12 @@
 import { useState, useMemo } from 'react';
 import {
-  Calendar as CalendarIcon, FileText, AlertTriangle,
+  Calendar as CalendarIcon, FileText,
   Plus, ChevronLeft, Clock, CheckCircle,
   User, Phone, Gift, Send, Heart, Sparkles,
   Sun, Moon, Coffee, UserCheck, MessageCircle,
-  MoreHorizontal, Eye, PhoneCall, HelpCircle, Info
+  MoreHorizontal, Eye, PhoneCall, Info
 } from 'lucide-react';
+import { toast } from 'sonner';
 import { Card, Button, Input, Badge, Dialog, Label, Skeleton } from '../../components/ui';
 import {
   Tooltip,
@@ -79,7 +80,6 @@ export const Dashboard = () => {
     phone: '',
   });
   const [saving, setSaving] = useState(false);
-  const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
   // ========== COMPUTED VALUES (MEMOIZED FOR PERFORMANCE) ==========
   const today = useMemo(() => new Date(), []);
@@ -197,11 +197,6 @@ export const Dashboard = () => {
   const greeting = getCurrentGreeting();
   const GreetingIcon = greeting.icon;
 
-  const showSuccess = (message: string) => {
-    setSuccessMessage(message);
-    setTimeout(() => setSuccessMessage(null), 3000);
-  };
-
   // Send health declaration
   const handleSendDeclaration = async (patientId: string, patientName: string, patientPhone?: string) => {
     setSendingDeclaration(patientId);
@@ -214,12 +209,14 @@ export const Dashboard = () => {
       if (token && patientPhone) {
         const whatsappLink = generateWhatsAppLink(token.token, patientPhone);
         window.open(whatsappLink, '_blank', 'noopener,noreferrer');
-        showSuccess('הקישור נשלח בהצלחה');
+        toast.success('הקישור נשלח בהצלחה');
       } else if (token) {
         // If no phone, copy link to clipboard
         const link = generateShareLink(token.token);
         await navigator.clipboard.writeText(link);
-        showSuccess('הקישור הועתק ללוח');
+        toast.success('הקישור הועתק ללוח');
+      } else {
+        toast.error('שגיאה ביצירת הקישור');
       }
     } finally {
       setSendingDeclaration(null);
@@ -255,7 +252,9 @@ export const Dashboard = () => {
         date: todayStr,
         time: '10:00',
       });
-      showSuccess('התור נקבע בהצלחה');
+      toast.success('התור נקבע בהצלחה');
+    } else {
+      toast.error('שגיאה בקביעת התור');
     }
   };
 
@@ -275,23 +274,15 @@ export const Dashboard = () => {
     if (result) {
       setIsWalkInOpen(false);
       setWalkInForm({ firstName: '', lastName: '', phone: '' });
-      showSuccess('הלקוחה נקלטה בהצלחה');
+      toast.success('הלקוחה נקלטה בהצלחה');
       navigate(`/admin/patients/${result.id}`);
+    } else {
+      toast.error('שגיאה בקליטת הלקוחה');
     }
   };
 
   return (
     <div className="space-y-6 pb-24 md:pb-12 animate-in fade-in duration-700">
-      {/* Success Toast */}
-      {successMessage && (
-        <div className="fixed top-6 left-1/2 -translate-x-1/2 z-50 px-6 py-3 rounded-2xl shadow-lg animate-in slide-in-from-top-2 duration-300 text-white font-medium bg-teal-500">
-          <div className="flex items-center gap-2">
-            <CheckCircle size={18} />
-            {successMessage}
-          </div>
-        </div>
-      )}
-
       {/* ========== HEADER: GREETING ========== */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div className="flex items-center gap-3">

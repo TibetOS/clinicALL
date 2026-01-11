@@ -2,7 +2,7 @@ import React, { ButtonHTMLAttributes, InputHTMLAttributes } from 'react';
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
 import { Link } from 'react-router-dom';
-import { ChevronLeft, CheckCircle, XCircle, X } from 'lucide-react';
+import { ChevronLeft } from 'lucide-react';
 import { ResponsiveDialog } from './ui/responsive-dialog';
 
 export function cn(...inputs: ClassValue[]) {
@@ -255,99 +255,6 @@ export const Breadcrumb = ({ items }: { items: BreadcrumbItem[] }) => (
     ))}
   </nav>
 );
-
-// Toast notification with auto-dismiss and enhanced animations
-interface ToastProps {
-  type: 'success' | 'error' | 'warning' | 'info';
-  message: string;
-  onClose: () => void;
-  duration?: number;
-}
-
-export const Toast = ({ type, message, onClose, duration = 4000 }: ToastProps) => {
-  const [isExiting, setIsExiting] = React.useState(false);
-
-  React.useEffect(() => {
-    const exitTimer = setTimeout(() => setIsExiting(true), duration - 300);
-    const closeTimer = setTimeout(onClose, duration);
-    return () => {
-      clearTimeout(exitTimer);
-      clearTimeout(closeTimer);
-    };
-  }, [onClose, duration]);
-
-  const handleClose = () => {
-    setIsExiting(true);
-    setTimeout(onClose, 200);
-  };
-
-  const icons = {
-    success: <CheckCircle size={20} className="animate-bounce-in" />,
-    error: <XCircle size={20} className="animate-bounce-in" />,
-    warning: <XCircle size={20} className="animate-bounce-in" />,
-    info: <CheckCircle size={20} className="animate-bounce-in" />,
-  };
-
-  const styles = {
-    success: 'bg-green-600 text-white',
-    error: 'bg-red-600 text-white',
-    warning: 'bg-amber-500 text-white',
-    info: 'bg-blue-600 text-white',
-  };
-
-  return (
-    <div
-      className={cn(
-        "fixed bottom-6 left-1/2 z-[100] flex items-center gap-3 px-4 py-3 rounded-xl shadow-lg transition-all duration-300 transform-gpu",
-        styles[type],
-        isExiting
-          ? "opacity-0 translate-y-4 scale-95 -translate-x-1/2"
-          : "opacity-100 translate-y-0 scale-100 -translate-x-1/2 animate-fade-in-up"
-      )}
-      style={{ transitionTimingFunction: 'cubic-bezier(0.16, 1, 0.3, 1)' }}
-    >
-      {icons[type]}
-      <span className="font-medium">{message}</span>
-      <button
-        onClick={handleClose}
-        className="mr-2 opacity-70 hover:opacity-100 transition-all duration-200 hover:scale-110 active:scale-90"
-        aria-label="סגור"
-      >
-        <X size={16} />
-      </button>
-    </div>
-  );
-};
-
-// Toast container hook for managing multiple toasts
-export const useToast = () => {
-  const [toasts, setToasts] = React.useState<Array<{ id: string; type: ToastProps['type']; message: string }>>([]);
-
-  const showToast = React.useCallback((type: ToastProps['type'], message: string) => {
-    const id = Math.random().toString(36).substr(2, 9);
-    setToasts(prev => [...prev, { id, type, message }]);
-  }, []);
-
-  const removeToast = React.useCallback((id: string) => {
-    setToasts(prev => prev.filter(t => t.id !== id));
-  }, []);
-
-  const ToastContainer = () => (
-    <>
-      {toasts.map((toast, index) => (
-        <div key={toast.id} style={{ bottom: `${24 + index * 60}px` }} className="fixed left-1/2 -translate-x-1/2 z-[100]">
-          <Toast
-            type={toast.type}
-            message={toast.message}
-            onClose={() => removeToast(toast.id)}
-          />
-        </div>
-      ))}
-    </>
-  );
-
-  return { showToast, ToastContainer };
-};
 
 // ComingSoon wrapper - wraps buttons/elements with disabled state and tooltip
 interface ComingSoonProps {

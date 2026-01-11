@@ -11,6 +11,7 @@ import { LoginPage, HealthDeclaration, SignupPage, LandingPage, LockScreen, Rese
 import { ClinicLanding } from './pages/ClinicLanding';
 import { BookingApp } from './pages/Booking';
 import { Button, Badge, Dialog } from './components/ui';
+import { Toaster } from './components/ui/sonner';
 import { useNotifications, useHealthTokens, useActivityLog, useSessionTimeout, formatRemainingTime } from './hooks';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { ProtectedRoute } from './components/ProtectedRoute';
@@ -755,6 +756,7 @@ function App() {
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
         </AuthProvider>
+        <Toaster position="bottom-center" richColors closeButton dir="rtl" />
       </BrowserRouter>
     </ErrorBoundary>
   );

@@ -34,6 +34,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '../../components/ui/avatar'
 import { Empty } from '../../components/ui/empty';
 import { usePatients, useHealthTokens } from '../../hooks';
 import { useNavigate } from 'react-router-dom';
+import { toast } from 'sonner';
 import { Patient, RiskLevel, HealthDeclarationToken, DeclarationStatus } from '../../types';
 
 // Helper for translating status
@@ -143,7 +144,6 @@ export const PatientList = () => {
   const [formData, setFormData] = useState<PatientFormData>(INITIAL_FORM);
   const [filters, setFilters] = useState<FilterState>(INITIAL_FILTERS);
   const [saving, setSaving] = useState(false);
-  const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
   // Health Declaration Dialog State
   const [isHealthDeclarationOpen, setIsHealthDeclarationOpen] = useState(false);
@@ -223,18 +223,13 @@ export const PatientList = () => {
     setIsSelectionMode(false);
     setIsDeleteConfirmOpen(false);
     setIsDeleting(false);
-    showSuccess(`${count} מטופלים נמחקו`);
+    toast.success(`${count} מטופלים נמחקו`);
   };
 
   const handleExportSelected = () => {
     const selectedPatients = filteredPatients.filter(p => selectedIds.has(p.id));
     exportToCSV(selectedPatients, 'patients_selected');
-    showSuccess(`${selectedPatients.length} מטופלים יוצאו ל-CSV`);
-  };
-
-  const showSuccess = (message: string) => {
-    setSuccessMessage(message);
-    setTimeout(() => setSuccessMessage(null), 3000);
+    toast.success(`${selectedPatients.length} מטופלים יוצאו ל-CSV`);
   };
 
   const handleAddPatient = async () => {
@@ -254,7 +249,7 @@ export const PatientList = () => {
     if (result) {
       setIsAddPatientOpen(false);
       setFormData(INITIAL_FORM);
-      showSuccess('המטופל נוסף בהצלחה');
+      toast.success('המטופל נוסף בהצלחה');
     }
   };
 
@@ -305,7 +300,7 @@ export const PatientList = () => {
     const link = generateShareLink(generatedToken.token);
     await navigator.clipboard.writeText(link);
     setLinkCopied(true);
-    showSuccess('הקישור הועתק');
+    toast.success('הקישור הועתק');
     setTimeout(() => setLinkCopied(false), 3000);
   };
 
@@ -325,13 +320,6 @@ export const PatientList = () => {
 
   return (
     <div className="space-y-6 pb-10 page-transition">
-      {/* Success Toast */}
-      {successMessage && (
-        <div className="fixed top-6 left-1/2 -translate-x-1/2 z-50 bg-green-600 text-white px-6 py-3 rounded-xl shadow-lg animate-in slide-in-from-top-2 duration-300">
-          {successMessage}
-        </div>
-      )}
-
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
           <h1 className="text-3xl font-bold tracking-tight text-gray-900">מטופלים</h1>
@@ -413,7 +401,7 @@ export const PatientList = () => {
             className="flex-1 gap-1.5"
             onClick={() => {
               exportToCSV(filteredPatients, 'patients');
-              showSuccess('הקובץ הורד בהצלחה');
+              toast.success('הקובץ הורד בהצלחה');
             }}
           >
             <Download className="h-3 w-3" /> ייצוא

@@ -3,6 +3,7 @@ import {
   Search, Filter, Plus, Package, AlertTriangle,
   ArrowDown, ArrowUp, History, Download
 } from 'lucide-react';
+import { toast } from 'sonner';
 import { Card, Button, Input, Badge, Dialog, Label, ComingSoon } from '../../components/ui';
 import {
   Select,
@@ -55,15 +56,9 @@ export const InventoryPage = () => {
   const [newItem, setNewItem] = useState<NewItemForm>(initialFormState);
   const [adjustment, setAdjustment] = useState<AdjustmentForm | null>(null);
   const [saving, setSaving] = useState(false);
-  const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
   // Use hook for data
   const { inventory, loading, error, updateQuantity, addItem } = useInventory();
-
-  const showSuccess = (message: string) => {
-    setSuccessMessage(message);
-    setTimeout(() => setSuccessMessage(null), 3000);
-  };
 
   const handleAdjustment = async () => {
     if (!adjustment || adjustment.amount <= 0) return;
@@ -78,14 +73,17 @@ export const InventoryPage = () => {
       if (success) {
         setIsAdjustOpen(false);
         setAdjustment(null);
-        showSuccess(
+        toast.success(
           adjustment.adjustmentType === 'add'
             ? `נוספו ${adjustment.amount} יחידות למלאי`
             : `הופחתו ${adjustment.amount} יחידות מהמלאי`
         );
+      } else {
+        toast.error('שגיאה בעדכון המלאי');
       }
     } catch (err) {
       logger.error('Failed to adjust quantity:', err);
+      toast.error('שגיאה בעדכון המלאי');
     } finally {
       setSaving(false);
     }
@@ -95,7 +93,9 @@ export const InventoryPage = () => {
     const newQuantity = Math.max(0, item.quantity + delta);
     const success = await updateQuantity(item.id, newQuantity);
     if (success) {
-      showSuccess(delta > 0 ? `נוספה יחידה אחת` : `הופחתה יחידה אחת`);
+      toast.success(delta > 0 ? `נוספה יחידה אחת` : `הופחתה יחידה אחת`);
+    } else {
+      toast.error('שגיאה בעדכון המלאי');
     }
   };
 
@@ -115,9 +115,10 @@ export const InventoryPage = () => {
       });
       setNewItem(initialFormState);
       setIsAddOpen(false);
-      showSuccess('הפריט נוסף בהצלחה');
+      toast.success('הפריט נוסף בהצלחה');
     } catch (err) {
       logger.error('Failed to add item:', err);
+      toast.error('שגיאה בהוספת הפריט');
     } finally {
       setSaving(false);
     }
@@ -161,13 +162,6 @@ export const InventoryPage = () => {
 
   return (
     <div className="space-y-6 animate-in fade-in duration-500 pb-10">
-      {/* Success Toast */}
-      {successMessage && (
-        <div className="fixed top-6 left-1/2 -translate-x-1/2 z-50 bg-green-600 text-white px-6 py-3 rounded-xl shadow-lg animate-in slide-in-from-top-2 duration-300">
-          {successMessage}
-        </div>
-      )}
-
       {/* Error Display */}
       {error && (
         <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-xl flex items-center gap-3">

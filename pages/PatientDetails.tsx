@@ -45,6 +45,7 @@ import { FaceMap } from '../components/FaceMap';
 import { ImageSlider } from '../components/ImageSlider';
 import { usePatients, useAppointments, useClinicalNotes, useDeclarations } from '../hooks';
 import { useAuth } from '../contexts/AuthContext';
+import { toast } from 'sonner';
 import { InjectionPoint, Declaration, Patient } from '../types';
 
 export const PatientDetails = () => {
@@ -114,7 +115,10 @@ export const PatientDetails = () => {
     setIsDeleting(false);
 
     if (success) {
+      toast.success('המטופל נמחק בהצלחה');
       navigate('/admin/patients');
+    } else {
+      toast.error('שגיאה במחיקת המטופל');
     }
   };
 
@@ -145,19 +149,24 @@ export const PatientDetails = () => {
   const handleSaveNote = async () => {
     if (!noteText && newPoints.length === 0) return;
 
-    await addClinicalNote({
-      patientId: patient.id,
-      date: new Date().toISOString().split('T')[0],
-      providerName: profile?.full_name || 'מטפל/ת',
-      treatmentType: 'טיפול אסתטי',
-      notes: noteText,
-      injectionPoints: newPoints,
-      images: []
-    });
+    try {
+      await addClinicalNote({
+        patientId: patient.id,
+        date: new Date().toISOString().split('T')[0],
+        providerName: profile?.full_name || 'מטפל/ת',
+        treatmentType: 'טיפול אסתטי',
+        notes: noteText,
+        injectionPoints: newPoints,
+        images: []
+      });
 
-    setIsEditing(false);
-    setNoteText('');
-    setNewPoints([]);
+      setIsEditing(false);
+      setNoteText('');
+      setNewPoints([]);
+      toast.success('התיעוד נשמר בהצלחה');
+    } catch {
+      toast.error('שגיאה בשמירת התיעוד');
+    }
   };
 
   return (

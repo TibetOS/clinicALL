@@ -3,7 +3,8 @@ import {
   Plus, Search, Pencil, Trash2, Clock, Banknote,
   Syringe, Sparkles, Heart, Zap, MoreHorizontal, Eye
 } from 'lucide-react';
-import { Card, Button, Input, Badge, Dialog, Label, Skeleton, ComingSoon } from '../../components/ui';
+import { toast } from 'sonner';
+import { Card, Button, Input, Badge, Dialog, Label, Skeleton } from '../../components/ui';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -72,8 +73,6 @@ export const ServicesPage = () => {
   const [selectedService, setSelectedService] = useState<Service | null>(null);
   const [formData, setFormData] = useState<ServiceFormData>(INITIAL_FORM);
   const [saving, setSaving] = useState(false);
-  const [successMessage, setSuccessMessage] = useState<string | null>(null);
-  const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   // Filter services
   const filteredServices = services.filter(s => {
@@ -99,9 +98,9 @@ export const ServicesPage = () => {
     if (result) {
       setIsAddOpen(false);
       setFormData(INITIAL_FORM);
-      showSuccess('הטיפול נוסף בהצלחה');
+      toast.success('הטיפול נוסף בהצלחה');
     } else {
-      showError('שגיאה בהוספת הטיפול');
+      toast.error('שגיאה בהוספת הטיפול');
     }
   };
 
@@ -115,9 +114,9 @@ export const ServicesPage = () => {
       setIsEditOpen(false);
       setSelectedService(null);
       setFormData(INITIAL_FORM);
-      showSuccess('הטיפול עודכן בהצלחה');
+      toast.success('הטיפול עודכן בהצלחה');
     } else {
-      showError('שגיאה בעדכון הטיפול');
+      toast.error('שגיאה בעדכון הטיפול');
     }
   };
 
@@ -130,9 +129,9 @@ export const ServicesPage = () => {
     if (success) {
       setIsDeleteOpen(false);
       setSelectedService(null);
-      showSuccess('הטיפול נמחק בהצלחה');
+      toast.success('הטיפול נמחק בהצלחה');
     } else {
-      showError('שגיאה במחיקת הטיפול');
+      toast.error('שגיאה במחיקת הטיפול');
     }
   };
 
@@ -153,32 +152,8 @@ export const ServicesPage = () => {
     setIsDeleteOpen(true);
   };
 
-  const showSuccess = (message: string) => {
-    setSuccessMessage(message);
-    setTimeout(() => setSuccessMessage(null), 3000);
-  };
-
-  const showError = (message: string) => {
-    setErrorMessage(message);
-    setTimeout(() => setErrorMessage(null), 5000);
-  };
-
   return (
     <div className="space-y-6 animate-in fade-in duration-500 pb-10">
-      {/* Success Toast */}
-      {successMessage && (
-        <div className="fixed top-6 left-1/2 -translate-x-1/2 z-50 bg-green-600 text-white px-6 py-3 rounded-xl shadow-lg animate-in slide-in-from-top-2 duration-300">
-          {successMessage}
-        </div>
-      )}
-
-      {/* Error Toast */}
-      {errorMessage && (
-        <div className="fixed top-6 left-1/2 -translate-x-1/2 z-50 bg-red-600 text-white px-6 py-3 rounded-xl shadow-lg animate-in slide-in-from-top-2 duration-300">
-          {errorMessage}
-        </div>
-      )}
-
       {/* Header */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
