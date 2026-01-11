@@ -64,9 +64,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   // Track if we're already fetching profile to prevent duplicate requests
   const fetchingProfile = useRef(false);
 
-  const fetchProfile = useCallback(async (userId: string) => {
+  const fetchProfile = useCallback(async (userId: string, retryCount = 0) => {
     // Prevent duplicate fetches
-    if (fetchingProfile.current) {
+    if (fetchingProfile.current && retryCount === 0) {
       return;
     }
     fetchingProfile.current = true;
@@ -83,12 +83,36 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       if (!error && data) {
         setProfile(data as UserProfile);
+        logger.info('Profile loaded successfully:', data.full_name);
       } else if (error) {
         logger.error('Error fetching profile:', error);
+        // Retry on AbortError (up to 3 times)
+        if (error.message?.includes('abort') && retryCount < 3) {
+          logger.info(`Retrying profile fetch (attempt ${retryCount + 2})...`);
+          setTimeout(() => {
+            if (isMounted.current) {
+              fetchingProfile.current = false;
+              fetchProfile(userId, retryCount + 1);
+            }
+          }, 500 * (retryCount + 1));
+          return;
+        }
       }
-    } catch (err) {
+    } catch (err: unknown) {
       if (!isMounted.current) return;
-      logger.error('Profile fetch error:', err);
+      const errorMessage = err instanceof Error ? err.message : String(err);
+      logger.error('Profile fetch error:', errorMessage);
+      // Retry on AbortError (up to 3 times)
+      if (errorMessage.includes('abort') && retryCount < 3) {
+        logger.info(`Retrying profile fetch (attempt ${retryCount + 2})...`);
+        setTimeout(() => {
+          if (isMounted.current) {
+            fetchingProfile.current = false;
+            fetchProfile(userId, retryCount + 1);
+          }
+        }, 500 * (retryCount + 1));
+        return;
+      }
     } finally {
       fetchingProfile.current = false;
       if (isMounted.current) {
