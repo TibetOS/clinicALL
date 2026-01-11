@@ -178,8 +178,8 @@ export const SettingsPage = () => {
                   <div className="flex justify-between items-center mb-6">
                     <h3 className="text-lg font-bold">עיצוב עמוד נחיתה</h3>
                     <a href={`/c/${clinic?.slug || 'preview'}`} target="_blank" rel="noopener noreferrer">
-                      <Button variant="outline" size="sm">
-                        <Globe size={14} className="ml-2" /> צפה באתר החי
+                      <Button variant="outline" size="sm" className="gap-2">
+                        צפה באתר החי <Globe size={14} />
                       </Button>
                     </a>
                   </div>
@@ -190,8 +190,8 @@ export const SettingsPage = () => {
                       <div className="h-40 bg-gray-100 rounded-xl border-2 border-dashed border-gray-300 flex items-center justify-center cursor-not-allowed relative overflow-hidden group opacity-60">
                         <img src={clinic?.coverUrl || "https://images.unsplash.com/photo-1629909613654-28e377c37b09?auto=format&fit=crop&q=80&w=2068"} alt="תמונת נושא נוכחית" className="w-full h-full object-cover opacity-80" />
                         <div className="absolute inset-0 flex items-center justify-center bg-black/20 transition-colors">
-                          <span className="bg-white/90 px-4 py-2 rounded-lg text-sm font-medium flex items-center">
-                            <ImageIcon size={16} className="ml-2" /> החלף תמונה (בקרוב)
+                          <span className="bg-white/90 px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-2">
+                            החלף תמונה (בקרוב) <ImageIcon size={16} />
                           </span>
                         </div>
                       </div>
@@ -347,7 +347,7 @@ export const SettingsPage = () => {
                 <div className="flex justify-between items-center mb-6">
                   <h3 className="text-lg font-bold">צוות המטפלים</h3>
                   <ComingSoon>
-                    <Button size="sm"><UserPlus size={14} className="ml-2" /> הזמן איש צוות</Button>
+                    <Button size="sm" className="gap-2">הזמן איש צוות <UserPlus size={14} /></Button>
                   </ComingSoon>
                 </div>
                 <div className="space-y-4">
@@ -382,14 +382,12 @@ export const SettingsPage = () => {
                               <Button variant="ghost" size="icon"><MoreVertical size={16} /></Button>
                             </DropdownMenuTrigger>
                             <DropdownMenuContent align="start">
-                              <DropdownMenuItem disabled className="opacity-50 cursor-not-allowed">
-                                <Edit2 className="ml-2 h-4 w-4" />
-                                עריכת פרטים (בקרוב)
+                              <DropdownMenuItem className="gap-2 opacity-50 cursor-not-allowed" disabled>
+                                עריכת פרטים (בקרוב) <Edit2 className="h-4 w-4" />
                               </DropdownMenuItem>
                               <DropdownMenuSeparator />
-                              <DropdownMenuItem disabled className="opacity-50 cursor-not-allowed text-red-600">
-                                <Trash2 className="ml-2 h-4 w-4" />
-                                הסרה מהצוות (בקרוב)
+                              <DropdownMenuItem className="gap-2 opacity-50 cursor-not-allowed text-red-600" disabled>
+                                הסרה מהצוות (בקרוב) <Trash2 className="h-4 w-4" />
                               </DropdownMenuItem>
                             </DropdownMenuContent>
                           </DropdownMenu>
@@ -455,8 +453,8 @@ export const SettingsPage = () => {
 
                     <div className="flex flex-wrap gap-3 mt-6">
                       <ComingSoon>
-                        <Button variant="outline" size="sm">
-                          <ArrowUpRight size={14} className="ml-2" /> שדרג חבילה
+                        <Button variant="outline" size="sm" className="gap-2">
+                          שדרג חבילה <ArrowUpRight size={14} />
                         </Button>
                       </ComingSoon>
                       <ComingSoon>
@@ -490,8 +488,8 @@ export const SettingsPage = () => {
                     </div>
                   </div>
                   <ComingSoon>
-                    <Button variant="outline" className="w-full">
-                      <CreditCard size={16} className="ml-2" /> עדכן כרטיס
+                    <Button variant="outline" className="w-full gap-2">
+                      עדכן כרטיס <CreditCard size={16} />
                     </Button>
                   </ComingSoon>
                 </Card>
@@ -555,8 +553,8 @@ export const SettingsPage = () => {
                 <div className="flex justify-between items-center mb-6">
                   <h3 className="text-lg font-bold">היסטוריית חשבוניות</h3>
                   <ComingSoon>
-                    <Button variant="ghost" size="sm">
-                      <Download size={14} className="ml-2" /> הורד הכל
+                    <Button variant="ghost" size="sm" className="gap-2">
+                      הורד הכל <Download size={14} />
                     </Button>
                   </ComingSoon>
                 </div>

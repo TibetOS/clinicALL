@@ -160,8 +160,8 @@ export const ServicesPage = () => {
           <h1 className="text-3xl font-bold tracking-tight text-gray-900">טיפולים ומחירון</h1>
           <p className="text-gray-600">ניהול הטיפולים והמחירים המוצעים במרפאה</p>
         </div>
-        <Button className="shadow-sm" onClick={() => { setFormData(INITIAL_FORM); setIsAddOpen(true); }}>
-          <Plus className="ml-2 h-4 w-4" /> הוסף טיפול
+        <Button className="shadow-sm gap-2" onClick={() => { setFormData(INITIAL_FORM); setIsAddOpen(true); }}>
+          הוסף טיפול <Plus className="h-4 w-4" />
         </Button>
       </div>
 
@@ -195,10 +195,9 @@ export const ServicesPage = () => {
                 variant={selectedCategory === cat ? 'primary' : 'outline'}
                 size="sm"
                 onClick={() => setSelectedCategory(cat)}
-                className="whitespace-nowrap"
+                className="whitespace-nowrap gap-1"
               >
-                <Icon size={14} className="ml-1" />
-                {cat}
+                {cat} <Icon size={14} />
               </Button>
             );
           })}
@@ -263,21 +262,18 @@ export const ServicesPage = () => {
                         </Button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="start">
-                        <DropdownMenuItem onClick={() => openEditDialog(service)}>
-                          <Pencil className="ml-2 h-4 w-4" />
-                          עריכה
+                        <DropdownMenuItem className="gap-2" onClick={() => openEditDialog(service)}>
+                          עריכה <Pencil className="h-4 w-4" />
                         </DropdownMenuItem>
-                        <DropdownMenuItem disabled className="opacity-50 cursor-not-allowed">
-                          <Eye className="ml-2 h-4 w-4" />
-                          צפייה בנתונים (בקרוב)
+                        <DropdownMenuItem className="gap-2 opacity-50 cursor-not-allowed" disabled>
+                          צפייה בנתונים (בקרוב) <Eye className="h-4 w-4" />
                         </DropdownMenuItem>
                         <DropdownMenuSeparator />
                         <DropdownMenuItem
-                          className="text-red-600 focus:text-red-600"
+                          className="gap-2 text-red-600 focus:text-red-600"
                           onClick={() => openDeleteDialog(service)}
                         >
-                          <Trash2 className="ml-2 h-4 w-4" />
-                          מחיקה
+                          מחיקה <Trash2 className="h-4 w-4" />
                         </DropdownMenuItem>
                       </DropdownMenuContent>
                     </DropdownMenu>
@@ -312,8 +308,8 @@ export const ServicesPage = () => {
             description={searchTerm ? 'נסה לשנות את מילות החיפוש' : 'התחל להוסיף טיפולים למרפאה'}
             action={
               !searchTerm ? (
-                <Button onClick={() => setIsAddOpen(true)}>
-                  <Plus size={16} className="ml-2" /> הוסף טיפול ראשון
+                <Button className="gap-2" onClick={() => setIsAddOpen(true)}>
+                  הוסף טיפול ראשון <Plus size={16} />
                 </Button>
               ) : undefined
             }

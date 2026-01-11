@@ -337,14 +337,13 @@ export const PatientList = () => {
               setSelectedIds(new Set());
             }}
           >
-            <CheckSquare className="h-4 w-4" />
-            {isSelectionMode ? 'בטל בחירה' : 'בחירה מרובה'}
+            {isSelectionMode ? 'בטל בחירה' : 'בחירה מרובה'} <CheckSquare className="h-4 w-4" />
           </Button>
           <Button variant="outline" className="gap-2" onClick={() => openHealthDeclarationDialog()}>
-            <FileHeart className="h-4 w-4" /> הצהרת בריאות
+            הצהרת בריאות <FileHeart className="h-4 w-4" />
           </Button>
           <Button className="shadow-sm gap-2" onClick={() => setIsAddPatientOpen(true)}>
-            <UserPlus className="h-4 w-4" /> מטופל חדש
+            מטופל חדש <UserPlus className="h-4 w-4" />
           </Button>
         </div>
       </div>
@@ -357,13 +356,13 @@ export const PatientList = () => {
           </span>
           <div className="flex gap-2">
             <Button variant="outline" size="sm" className="gap-1.5" onClick={handleExportSelected}>
-              <FileDown size={16} /> ייצוא ל-CSV
+              ייצוא ל-CSV <FileDown size={16} />
             </Button>
             <Button variant="outline" size="sm" className="gap-1.5">
-              <MessageSquare size={16} /> שלח SMS
+              שלח SMS <MessageSquare size={16} />
             </Button>
             <Button variant="destructive" size="sm" className="gap-1.5" onClick={() => setIsDeleteConfirmOpen(true)}>
-              <Trash2 size={16} /> מחק
+              מחק <Trash2 size={16} />
             </Button>
           </div>
         </div>
@@ -388,7 +387,7 @@ export const PatientList = () => {
             className="flex-1 relative gap-1.5"
             onClick={() => setIsFilterOpen(true)}
           >
-            <Filter className="h-3 w-3" /> סינון
+            סינון <Filter className="h-3 w-3" />
             {hasActiveFilters && (
               <span className="absolute -top-1 -left-1 w-4 h-4 bg-red-500 text-white text-[10px] rounded-full flex items-center justify-center">
                 !
@@ -404,7 +403,7 @@ export const PatientList = () => {
               toast.success('הקובץ הורד בהצלחה');
             }}
           >
-            <Download className="h-3 w-3" /> ייצוא
+            ייצוא <Download className="h-3 w-3" />
           </Button>
         </div>
       </div>
@@ -473,13 +472,11 @@ export const PatientList = () => {
                     action={
                       hasActiveFilters ? (
                         <Button variant="outline" className="gap-2" onClick={() => setFilters(INITIAL_FILTERS)}>
-                          <X className="h-4 w-4" />
-                          נקה סינון
+                          נקה סינון <X className="h-4 w-4" />
                         </Button>
                       ) : (
                         <Button className="gap-2" onClick={() => setIsAddPatientOpen(true)}>
-                          <UserPlus className="h-4 w-4" />
-                          הוסף מטופל
+                          הוסף מטופל <UserPlus className="h-4 w-4" />
                         </Button>
                       )
                     }
@@ -544,8 +541,7 @@ export const PatientList = () => {
                               openHealthDeclarationDialog(patient);
                             }}
                           >
-                            <Send size={12} />
-                            שלח
+                            שלח <Send size={12} />
                           </Button>
                         )}
                       </div>
@@ -566,17 +562,14 @@ export const PatientList = () => {
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="start">
                       <DropdownMenuItem className="gap-2" onClick={() => navigate(`/admin/patients/${patient.id}`)}>
-                        <Eye className="h-4 w-4" />
-                        צפייה בפרופיל
+                        צפייה בפרופיל <Eye className="h-4 w-4" />
                       </DropdownMenuItem>
                       <DropdownMenuItem className="gap-2" onClick={() => navigate(`/admin/patients/${patient.id}?tab=appointments`)}>
-                        <Calendar className="h-4 w-4" />
-                        קביעת תור
+                        קביעת תור <Calendar className="h-4 w-4" />
                       </DropdownMenuItem>
                       {(patient.declarationStatus === 'none' || patient.declarationStatus === 'expired') && (
                         <DropdownMenuItem className="gap-2" onClick={() => openHealthDeclarationDialog(patient)}>
-                          <FileHeart className="h-4 w-4" />
-                          שלח הצהרת בריאות
+                          שלח הצהרת בריאות <FileHeart className="h-4 w-4" />
                         </DropdownMenuItem>
                       )}
                       <DropdownMenuSeparator />
@@ -587,8 +580,7 @@ export const PatientList = () => {
                           setIsDeleteConfirmOpen(true);
                         }}
                       >
-                        <Trash2 className="h-4 w-4" />
-                        מחיקה
+                        מחיקה <Trash2 className="h-4 w-4" />
                       </DropdownMenuItem>
                     </DropdownMenuContent>
                   </DropdownMenu>
@@ -640,13 +632,11 @@ export const PatientList = () => {
               action={
                 hasActiveFilters ? (
                   <Button variant="outline" className="gap-2" onClick={() => setFilters(INITIAL_FILTERS)}>
-                    <X className="h-4 w-4" />
-                    נקה סינון
+                    נקה סינון <X className="h-4 w-4" />
                   </Button>
                 ) : (
                   <Button className="gap-2" onClick={() => setIsAddPatientOpen(true)}>
-                    <UserPlus className="h-4 w-4" />
-                    הוסף מטופל
+                    הוסף מטופל <UserPlus className="h-4 w-4" />
                   </Button>
                 )
               }
@@ -721,8 +711,7 @@ export const PatientList = () => {
                   openHealthDeclarationDialog(patient);
                 }}
               >
-                <Send size={14} />
-                שלח הצהרת בריאות
+                שלח הצהרת בריאות <Send size={14} />
               </Button>
             )}
           </Card>
@@ -888,7 +877,7 @@ export const PatientList = () => {
               onClick={() => setFilters(INITIAL_FILTERS)}
               disabled={!hasActiveFilters}
             >
-              <X size={16} /> נקה סינון
+              נקה סינון <X size={16} />
             </Button>
             <Button onClick={() => setIsFilterOpen(false)}>
               החל סינון ({filteredPatients.length} תוצאות)

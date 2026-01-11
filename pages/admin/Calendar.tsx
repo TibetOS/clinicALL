@@ -264,8 +264,8 @@ export const Calendar = () => {
               שבוע
             </button>
           </div>
-          <Button onClick={() => openNewApptDialog()} className="shadow-sm" aria-label="קביעת תור חדש">
-            <Plus size={16} className="ml-2" /> תור חדש
+          <Button onClick={() => openNewApptDialog()} className="shadow-sm gap-2" aria-label="קביעת תור חדש">
+            תור חדש <Plus size={16} />
           </Button>
         </div>
       </div>
@@ -375,25 +375,21 @@ export const Calendar = () => {
                                     </Button>
                                   </DropdownMenuTrigger>
                                   <DropdownMenuContent align="end">
-                                    <DropdownMenuItem>
-                                      <Eye className="ml-2 h-4 w-4" />
-                                      צפייה בפרטים
+                                    <DropdownMenuItem className="gap-2">
+                                      צפייה בפרטים <Eye className="h-4 w-4" />
                                     </DropdownMenuItem>
-                                    <DropdownMenuItem>
-                                      <Edit2 className="ml-2 h-4 w-4" />
-                                      עריכה
+                                    <DropdownMenuItem className="gap-2">
+                                      עריכה <Edit2 className="h-4 w-4" />
                                     </DropdownMenuItem>
-                                    <DropdownMenuItem>
-                                      <Phone className="ml-2 h-4 w-4" />
-                                      התקשר ללקוח
+                                    <DropdownMenuItem className="gap-2">
+                                      התקשר ללקוח <Phone className="h-4 w-4" />
                                     </DropdownMenuItem>
                                     <DropdownMenuSeparator />
                                     <DropdownMenuItem
-                                      className="text-red-600 focus:text-red-600"
+                                      className="gap-2 text-red-600 focus:text-red-600"
                                       onClick={() => setAppointmentToDelete(appt)}
                                     >
-                                      <Trash2 className="ml-2 h-4 w-4" />
-                                      ביטול תור
+                                      ביטול תור <Trash2 className="h-4 w-4" />
                                     </DropdownMenuItem>
                                   </DropdownMenuContent>
                                 </DropdownMenu>

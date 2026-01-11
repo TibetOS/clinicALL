@@ -180,10 +180,10 @@ export const InventoryPage = () => {
         </div>
         <div className="flex gap-2">
             <ComingSoon>
-              <Button variant="outline"><Download size={16} className="ml-2"/> ייצוא</Button>
+              <Button variant="outline" className="gap-2">ייצוא <Download size={16} /></Button>
             </ComingSoon>
-            <Button className="shadow-sm" onClick={() => setIsAddOpen(true)}>
-            <Plus className="ml-2 h-4 w-4" /> קליטת סחורה
+            <Button className="shadow-sm gap-2" onClick={() => setIsAddOpen(true)}>
+            קליטת סחורה <Plus className="h-4 w-4" />
             </Button>
         </div>
       </div>
@@ -256,7 +256,7 @@ export const InventoryPage = () => {
         </div>
         <div className="flex gap-2 w-full sm:w-auto">
           <ComingSoon>
-            <Button variant="outline" size="sm" className="flex-1"><Filter className="ml-2 h-3 w-3" /> סינון</Button>
+            <Button variant="outline" size="sm" className="flex-1 gap-1">סינון <Filter className="h-3 w-3" /></Button>
           </ComingSoon>
         </div>
       </div>
@@ -295,8 +295,8 @@ export const InventoryPage = () => {
                           description={searchTerm ? 'נסה לשנות את מונחי החיפוש' : 'הוסף פריט חדש כדי להתחיל'}
                           action={
                             !searchTerm ? (
-                              <Button onClick={() => setIsAddOpen(true)}>
-                                <Plus size={16} className="ml-2" /> קליטת סחורה
+                              <Button className="gap-2" onClick={() => setIsAddOpen(true)}>
+                                קליטת סחורה <Plus size={16} />
                               </Button>
                             ) : undefined
                           }
