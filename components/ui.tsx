@@ -271,9 +271,9 @@ export const Dialog = ({ open, onClose, children, title, fullScreen = true }: { 
   return (
     <div
       className={cn(
-        "fixed inset-0 z-50 flex items-center justify-center transition-all duration-200",
+        "fixed inset-0 z-[100] flex items-center justify-center transition-all duration-200",
         fullScreen ? "p-0 sm:p-4 md:p-8" : "p-4",
-        isAnimating ? "bg-black/80 backdrop-blur-sm" : "bg-black/0 backdrop-blur-none"
+        isAnimating ? "bg-black/90 backdrop-blur-sm" : "bg-black/0 backdrop-blur-none"
       )}
       onClick={onClose}
       role="presentation"
