@@ -4,6 +4,7 @@ import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
 import { Link } from 'react-router-dom';
 import { ChevronLeft, CheckCircle, XCircle, X } from 'lucide-react';
+import { Drawer as DrawerPrimitive } from 'vaul';
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
@@ -193,49 +194,63 @@ export const Badge = React.forwardRef<HTMLDivElement, BadgeProps>(
 );
 Badge.displayName = 'Badge';
 
-// Modal/Dialog with focus trap, ARIA, and enhanced animations
+// Hook to detect mobile screen
+function useIsMobile(breakpoint = 640) {
+  const [isMobile, setIsMobile] = React.useState(
+    typeof window !== 'undefined' ? window.innerWidth < breakpoint : false
+  );
+
+  React.useEffect(() => {
+    const mediaQuery = window.matchMedia(`(max-width: ${breakpoint - 1}px)`);
+    const handleChange = (e: MediaQueryListEvent) => setIsMobile(e.matches);
+
+    setIsMobile(mediaQuery.matches);
+    mediaQuery.addEventListener('change', handleChange);
+    return () => mediaQuery.removeEventListener('change', handleChange);
+  }, [breakpoint]);
+
+  return isMobile;
+}
+
+// Responsive Modal/Dialog - uses Drawer on mobile, Dialog on desktop
 // fullScreen prop makes the dialog take up most of the viewport for a more immersive experience
 export const Dialog = ({ open, onClose, children, title, fullScreen = true }: { open: boolean; onClose: () => void; children?: React.ReactNode; title?: string; fullScreen?: boolean }) => {
+  const isMobile = useIsMobile();
   const dialogRef = React.useRef<HTMLDivElement>(null);
   const titleId = React.useId();
   const [isAnimating, setIsAnimating] = React.useState(false);
   const [shouldRender, setShouldRender] = React.useState(false);
 
-  // Handle animation states
+  // Handle animation states (for desktop dialog)
   React.useEffect(() => {
+    if (isMobile) return; // Drawer handles its own animations
+
     if (open) {
       setShouldRender(true);
-      // Small delay to trigger enter animation
       requestAnimationFrame(() => setIsAnimating(true));
     } else {
       setIsAnimating(false);
-      // Wait for exit animation before unmounting
       const timer = setTimeout(() => setShouldRender(false), 200);
       return () => clearTimeout(timer);
     }
-  }, [open]);
+  }, [open, isMobile]);
 
-  // Focus trap and escape key handler
+  // Focus trap and escape key handler (for desktop dialog)
   React.useEffect(() => {
-    if (!open) return;
+    if (isMobile || !open) return;
 
     const dialog = dialogRef.current;
     if (!dialog) return;
 
-    // Store previously focused element
     const previouslyFocused = document.activeElement as HTMLElement;
-
-    // Focus the dialog after animation starts
     const focusTimer = setTimeout(() => dialog.focus(), 50);
 
-    // Handle escape key
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
         onClose();
         return;
       }
 
-      // Focus trap
       if (e.key === 'Tab') {
         const focusableElements = dialog.querySelectorAll<HTMLElement>(
           'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
@@ -254,22 +269,50 @@ export const Dialog = ({ open, onClose, children, title, fullScreen = true }: { 
     };
 
     document.addEventListener('keydown', handleKeyDown);
-
-    // Prevent body scroll
     document.body.style.overflow = 'hidden';
 
     return () => {
       clearTimeout(focusTimer);
       document.removeEventListener('keydown', handleKeyDown);
       document.body.style.overflow = '';
-      // Restore focus to previously focused element
       previouslyFocused?.focus();
     };
-  }, [open, onClose]);
+  }, [open, onClose, isMobile]);
 
+  // Mobile: Use Drawer (bottom sheet)
+  if (isMobile) {
+    return (
+      <DrawerPrimitive.Root open={open} onOpenChange={(isOpen) => !isOpen && onClose()}>
+        <DrawerPrimitive.Portal>
+          <DrawerPrimitive.Overlay className="fixed inset-0 z-[100] bg-black/80" />
+          <DrawerPrimitive.Content className="fixed inset-x-0 bottom-0 z-[100] mt-24 flex h-[85vh] flex-col rounded-t-xl border-t bg-white">
+            <div className="mx-auto mt-4 h-1.5 w-12 rounded-full bg-gray-300" />
+            <div className="flex items-center justify-between p-4 border-b">
+              {title && (
+                <DrawerPrimitive.Title className="text-lg font-bold text-gray-900">
+                  {title}
+                </DrawerPrimitive.Title>
+              )}
+              <button
+                onClick={onClose}
+                className="text-gray-500 hover:text-gray-900 bg-gray-100 p-1.5 rounded-full hover:bg-gray-200"
+                aria-label="סגור חלון"
+              >
+                <X size={18} />
+              </button>
+            </div>
+            <div className="flex-1 overflow-y-auto p-4">
+              {children}
+            </div>
+          </DrawerPrimitive.Content>
+        </DrawerPrimitive.Portal>
+      </DrawerPrimitive.Root>
+    );
+  }
+
+  // Desktop: Use Dialog (centered modal)
   if (!shouldRender) return null;
 
-  // Render via portal at document.body to escape any stacking contexts
   return createPortal(
     <div
       className={cn(
@@ -304,7 +347,7 @@ export const Dialog = ({ open, onClose, children, title, fullScreen = true }: { 
             className="text-gray-500 hover:text-gray-900 transition-all duration-200 bg-gray-100 p-1.5 rounded-full hover:bg-gray-200 hover:rotate-90 focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 active:scale-90"
             aria-label="סגור חלון"
           >
-            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+            <X size={20} />
           </button>
         </div>
         <div className="p-6 overflow-y-auto">
