@@ -1,5 +1,4 @@
 import React from 'react';
-import { Link } from 'react-router-dom';
 import { Sparkles } from 'lucide-react';
 
 export const LandingFooter: React.FC = () => {
@@ -22,7 +21,7 @@ export const LandingFooter: React.FC = () => {
             <h3 className="font-bold text-white mb-4">מוצר</h3>
             <ul className="space-y-2 text-sm">
               <li><a href="#features" className="hover:text-teal-400 transition-colors">פיצ'רים</a></li>
-              <li><Link to="/pricing" className="hover:text-teal-400 transition-colors">מחירון</Link></li>
+              <li><a href="#pricing" className="hover:text-teal-400 transition-colors">מחירון</a></li>
               <li><a href="#solutions" className="hover:text-teal-400 transition-colors">אינטגרציות</a></li>
               <li><a href="#" className="hover:text-teal-400 transition-colors">עדכונים</a></li>
             </ul>

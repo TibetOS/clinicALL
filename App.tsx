@@ -9,7 +9,6 @@ import {
 } from 'lucide-react';
 import { LoginPage, HealthDeclaration, SignupPage, LandingPage, LockScreen, ResetPasswordPage } from './pages/Public';
 import { ClinicLanding } from './pages/ClinicLanding';
-import { PricingPage } from './pages/Pricing';
 import { BookingApp } from './pages/Booking';
 import { Button, Badge, Dialog } from './components/ui';
 import { useNotifications, useHealthTokens, useActivityLog, useSessionTimeout, formatRemainingTime } from './hooks';
@@ -686,7 +685,6 @@ function App() {
         <AuthProvider>
         <Routes>
           <Route path="/" element={<LandingPage />} />
-          <Route path="/pricing" element={<PricingPage />} />
           <Route path="/login" element={<LoginPage />} />
           <Route path="/signup" element={<SignupPage />} />
           <Route path="/reset-password" element={<ResetPasswordPage />} />
