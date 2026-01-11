@@ -92,7 +92,6 @@ function getRoleLabel(role: string): string {
   const labels: Record<string, string> = {
     owner: 'בעלים',
     admin: 'מנהל/ת',
-    staff: 'צוות',
   };
   return labels[role] || role;
 }

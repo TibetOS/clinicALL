@@ -116,7 +116,7 @@ Data fetching hooks with Supabase integration and mock fallback:
 
 - `AuthProvider` - Wraps app with auth state
 - `useAuth()` - Hook providing: `user`, `profile`, `session`, `loading`, `signIn`, `signUp`, `signOut`, `resetPassword`, `updatePassword`, `isConfigured`
-- User roles: `owner`, `admin`, `staff`, `client`
+- User roles: `owner` (app owner), `admin` (clinic owner), `client` (patient)
 
 ### Styling
 
@@ -254,7 +254,7 @@ This is a **healthcare application** - handle data carefully:
 1. **Patient data is PII**: Never log patient names, emails, phones, or health info
 2. **Health declarations are sensitive**: Treat as confidential medical records
 3. **Token security**: Health declaration tokens (`/health/:token`) provide unauthenticated access - validate expiration
-4. **Role-based access**: Check user roles (`owner`, `admin`, `staff`, `client`) for protected operations
+4. **Role-based access**: Check user roles (`owner`, `admin`, `client`) for protected operations
 5. **Input validation**: Sanitize all user inputs, especially in forms
 
 ### Testing Changes

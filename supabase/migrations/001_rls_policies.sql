@@ -100,26 +100,26 @@ CREATE POLICY "services_delete_own_clinic" ON services
 -- CLINICAL NOTES TABLE (PHI - Protected Health Information)
 -- ============================================================================
 
--- Only clinical staff can access clinical notes
+-- Only clinic owners and admins can access clinical notes
 CREATE POLICY "clinical_notes_select_own_clinic" ON clinical_notes
   FOR SELECT
   USING (
     clinic_id = auth.jwt() ->> 'clinic_id'
-    AND (auth.jwt() ->> 'role')::text IN ('owner', 'admin', 'staff')
+    AND (auth.jwt() ->> 'role')::text IN ('owner', 'admin')
   );
 
 CREATE POLICY "clinical_notes_insert_own_clinic" ON clinical_notes
   FOR INSERT
   WITH CHECK (
     clinic_id = auth.jwt() ->> 'clinic_id'
-    AND (auth.jwt() ->> 'role')::text IN ('owner', 'admin', 'staff')
+    AND (auth.jwt() ->> 'role')::text IN ('owner', 'admin')
   );
 
 CREATE POLICY "clinical_notes_update_own_clinic" ON clinical_notes
   FOR UPDATE
   USING (
     clinic_id = auth.jwt() ->> 'clinic_id'
-    AND (auth.jwt() ->> 'role')::text IN ('owner', 'admin', 'staff')
+    AND (auth.jwt() ->> 'role')::text IN ('owner', 'admin')
   );
 
 -- Only owners can delete clinical notes (audit trail requirement)
