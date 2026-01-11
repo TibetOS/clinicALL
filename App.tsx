@@ -55,7 +55,7 @@ const RoleProtectedPage = ({
   children: React.ReactNode;
   requiredRole: 'owner' | 'admin' | 'staff';
 }) => {
-  const { profile } = useAuth();
+  const { profile, loading } = useAuth();
   const roleHierarchy: Record<string, number> = {
     owner: 3,
     admin: 2,
@@ -63,7 +63,22 @@ const RoleProtectedPage = ({
     client: 0
   };
 
-  const userLevel = roleHierarchy[profile?.role || 'client'] || 0;
+  // Wait for profile to load before checking role
+  if (loading || !profile) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="flex flex-col items-center gap-4">
+          <div className="relative">
+            <div className="w-10 h-10 border-4 border-teal-200 rounded-full" />
+            <div className="absolute inset-0 w-10 h-10 border-4 border-primary border-t-transparent rounded-full animate-spin" />
+          </div>
+          <p className="text-gray-500 text-sm">בודק הרשאות...</p>
+        </div>
+      </div>
+    );
+  }
+
+  const userLevel = roleHierarchy[profile.role] || 0;
   const requiredLevel = roleHierarchy[requiredRole] || 0;
 
   if (userLevel < requiredLevel) {
