@@ -296,7 +296,7 @@ export const InventoryPage = () => {
                     <tr>
                       <td colSpan={8} className="px-6 py-12">
                         <Empty
-                          icon={searchTerm ? Search : Package}
+                          icon={searchTerm ? <Search className="h-6 w-6 text-muted-foreground" /> : <Package className="h-6 w-6 text-muted-foreground" />}
                           title={searchTerm ? 'לא נמצאו תוצאות' : 'אין פריטים במלאי'}
                           description={searchTerm ? 'נסה לשנות את מונחי החיפוש' : 'הוסף פריט חדש כדי להתחיל'}
                           action={
