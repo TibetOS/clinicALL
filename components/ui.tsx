@@ -287,7 +287,7 @@ export const Dialog = ({ open, onClose, children, title, fullScreen = true }: { 
         className={cn(
           "bg-white border border-gray-200 p-0 shadow-2xl flex flex-col outline-none transition-all duration-200 transform-gpu",
           fullScreen
-            ? "w-full h-full sm:h-auto sm:max-h-[90vh] sm:w-auto sm:min-w-[600px] sm:max-w-[900px] sm:rounded-xl"
+            ? "w-full h-full sm:h-auto sm:max-h-[90vh] sm:w-[90vw] sm:max-w-[900px] sm:rounded-xl"
             : "w-full max-w-lg rounded-xl max-h-[90vh]",
           isAnimating
             ? "opacity-100 scale-100 translate-y-0"
