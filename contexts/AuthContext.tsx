@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
+import { createContext, useContext, useEffect, useState, useRef, useCallback, ReactNode } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase, isSupabaseConfigured } from '../lib/supabase';
 import { createLogger } from '../lib/logger';
@@ -59,7 +59,47 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true);
   const isConfigured = isSupabaseConfigured();
 
+  // Track component mount state to prevent state updates after unmount
+  const isMounted = useRef(true);
+  // Track if we're already fetching profile to prevent duplicate requests
+  const fetchingProfile = useRef(false);
+
+  const fetchProfile = useCallback(async (userId: string) => {
+    // Prevent duplicate fetches
+    if (fetchingProfile.current) {
+      return;
+    }
+    fetchingProfile.current = true;
+
+    try {
+      const { data, error } = await supabase
+        .from('users')
+        .select('*')
+        .eq('id', userId)
+        .single();
+
+      // Only update state if component is still mounted
+      if (!isMounted.current) return;
+
+      if (!error && data) {
+        setProfile(data as UserProfile);
+      } else if (error) {
+        logger.error('Error fetching profile:', error);
+      }
+    } catch (err) {
+      if (!isMounted.current) return;
+      logger.error('Profile fetch error:', err);
+    } finally {
+      fetchingProfile.current = false;
+      if (isMounted.current) {
+        setLoading(false);
+      }
+    }
+  }, []);
+
   useEffect(() => {
+    isMounted.current = true;
+
     if (!isConfigured) {
       setLoading(false);
       return;
@@ -67,14 +107,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     // Timeout to prevent infinite loading
     const timeoutId = setTimeout(() => {
-      logger.warn('Auth initialization timed out');
-      setLoading(false);
+      if (isMounted.current) {
+        logger.warn('Auth initialization timed out');
+        setLoading(false);
+      }
     }, 5000);
 
     // Get initial session with error handling
     const initAuth = async () => {
       try {
         const { data: { session }, error } = await supabase.auth.getSession();
+
+        if (!isMounted.current) return;
         clearTimeout(timeoutId);
 
         if (error) {
@@ -93,6 +137,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         }
       } catch (err) {
         clearTimeout(timeoutId);
+        if (!isMounted.current) return;
         logger.error('Auth initialization error:', err);
         setLoading(false);
       }
@@ -103,6 +148,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     // Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (_event, session) => {
+        if (!isMounted.current) return;
+
         setSession(session);
         setUser(session?.user ?? null);
 
@@ -116,30 +163,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     );
 
     return () => {
+      isMounted.current = false;
       clearTimeout(timeoutId);
       subscription.unsubscribe();
     };
-  }, [isConfigured]);
-
-  const fetchProfile = async (userId: string) => {
-    try {
-      const { data, error } = await supabase
-        .from('users')
-        .select('*')
-        .eq('id', userId)
-        .single();
-
-      if (!error && data) {
-        setProfile(data as UserProfile);
-      } else if (error) {
-        logger.error('Error fetching profile:', error);
-      }
-    } catch (err) {
-      logger.error('Profile fetch error:', err);
-    } finally {
-      setLoading(false);
-    }
-  };
+  }, [isConfigured, fetchProfile]);
 
   const signIn = async (email: string, password: string) => {
     if (!isConfigured) {
