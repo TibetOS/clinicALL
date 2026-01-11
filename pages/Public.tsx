@@ -3,11 +3,9 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Button, Input, Card, Badge, Label, Switch } from '../components/ui';
 import {
   Check, ChevronLeft, ChevronRight, Globe, Building2, User, MapPin,
-  FileBadge, Lock, ArrowLeft, Star, Calendar, Smartphone, Zap, TrendingUp,
-  Sparkles, Image as ImageIcon, Palette, Heart, Shield, FileText, Clock,
+  Lock, ArrowLeft, Star, Sparkles, Palette, Heart, Shield, FileText, Clock,
   CheckCircle2, AlertCircle, Loader2, UserCheck, PenTool, Eraser, Eye, EyeOff, Mail, KeyRound,
-  XCircle, Type, Phone, MessageCircle, Instagram, Facebook, Briefcase, Award,
-  Languages, Users, HelpCircle, FileCheck
+  XCircle, Type, Phone, MessageCircle, Instagram, Facebook, Award
 } from 'lucide-react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { MOCK_PATIENTS } from '../data';
@@ -19,106 +17,30 @@ import { isValidEmail, isValidIsraeliPhone, isStrongPassword } from '../lib/vali
 import { loginAttemptLimiter } from '../lib/rateLimiter';
 
 // -- LANDING PAGE --
+import {
+  LandingHeader,
+  LandingHero,
+  TrustSection,
+  FeaturesSection,
+  IntegrationsSection,
+  PricingSection,
+  FAQSection,
+  LandingFooter
+} from '../components/landing';
+
 export const LandingPage = () => {
   return (
-    <div className="min-h-screen bg-white">
-      {/* Navbar */}
-      <nav className="border-b bg-white/80 backdrop-blur-md sticky top-0 z-50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
-           <div className="flex items-center gap-2">
-              <div className="h-8 w-8 bg-primary rounded-lg flex items-center justify-center text-white font-bold shadow-sm">C</div>
-              <span className="font-bold text-xl text-gray-900 tracking-tight">ClinicALL</span>
-           </div>
-           <div className="hidden md:flex items-center gap-8 text-sm font-medium text-gray-600">
-              <a href="#features" className="hover:text-primary">פיצ׳רים</a>
-              <Link to="/pricing" className="hover:text-primary">מחירים</Link>
-              <a href="#" className="hover:text-primary">אודות</a>
-           </div>
-           <div className="flex items-center gap-3">
-              <Link to="/login">
-                <Button variant="ghost">התחבר</Button>
-              </Link>
-              <Link to="/signup">
-                <Button className="shadow-md">נסה חינם</Button>
-              </Link>
-           </div>
-        </div>
-      </nav>
-
-      {/* Hero Section */}
-      <section className="pt-20 pb-32 overflow-hidden relative">
-         <div className="max-w-7xl mx-auto px-4 sm:px-6 relative z-10">
-            <div className="text-center max-w-3xl mx-auto mb-12">
-               <Badge className="mb-4 bg-primary/10 text-primary hover:bg-primary/20 border-primary/20 py-1.5 px-4 text-sm">
-                  חדש! בונה אתרים לקליניקות ב-5 דקות ✨
-               </Badge>
-               <h1 className="text-5xl md:text-6xl font-bold text-gray-900 mb-6 leading-tight">
-                  יותר ממערכת ניהול.<br/>
-                  <span className="text-primary">הנוכחות הדיגיטלית</span> המלאה שלך.
-               </h1>
-               <p className="text-xl text-gray-600 mb-8 leading-relaxed">
-                  בנה אתר תדמית מהמם, נהל יומן תורים חכם, ושמור על קשר עם המטופלים - הכל בפלטפורמה אחת שמותאמת לאסתטיקה.
-               </p>
-               <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                  <Link to="/signup">
-                    <Button size="lg" className="h-14 px-8 text-lg shadow-xl shadow-primary/20">
-                       <span className="flex items-center justify-center gap-2">בנה את הקליניקה שלך בחינם <ArrowLeft size={18} /></span>
-                    </Button>
-                  </Link>
-                  <Button variant="outline" size="lg" className="h-14 px-8 text-lg bg-white">
-                     ראה דוגמה חיה
-                  </Button>
-               </div>
-               <p className="mt-4 text-sm text-gray-500">ללא צורך בכרטיס אשראי • התקנה מיידית</p>
-            </div>
-         </div>
-         
-         {/* Background Decor */}
-         <div className="absolute top-0 left-0 right-0 h-full -z-10 overflow-hidden">
-            <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[1000px] h-[600px] bg-primary/5 rounded-[100%] blur-3xl"></div>
-            <div className="absolute bottom-0 right-0 w-[800px] h-[800px] bg-blue-100/30 rounded-full blur-3xl translate-y-1/2"></div>
-         </div>
-      </section>
-
-      {/* Features Grid */}
-      <section id="features" className="py-24 bg-gray-50">
-         <div className="max-w-7xl mx-auto px-4 sm:px-6">
-            <div className="text-center max-w-2xl mx-auto mb-16">
-               <h2 className="text-3xl font-bold text-gray-900 mb-4">כל מה שצריך כדי לנהל ולהצמיח</h2>
-               <p className="text-gray-600 text-lg">בחרנו בקפידה את הכלים החשובים ביותר למרפאות אסתטיקה ואיגדנו אותם במקום אחד.</p>
-            </div>
-            
-            <div className="grid md:grid-cols-3 gap-8">
-               {[
-                  { icon: Globe, title: 'אתר תדמית מעוצב', desc: 'עמוד נחיתה יוקרתי לקליניקה שלך, כולל גלריית עבודות, מחירון ומידע על הצוות.' },
-                  { icon: Calendar, title: 'יומן תורים חכם', desc: 'מניעת כפילויות, תזכורות אוטומטיות ב-SMS ושיבוץ חכם של חדרי טיפול.' },
-                  { icon: FileBadge, title: 'תיק רפואי דיגיטלי', desc: 'טפסים דיגיטליים, היסטוריית טיפולים, צילומי לפני/אחרי ומעקב מדויק.' },
-                  { icon: Zap, title: 'שיווק ואוטומציה', desc: 'שליחת קמפיינים, מועדון לקוחות, ושימור לקוחות אוטומטי להגדלת המכירות.' },
-                  { icon: Smartphone, title: 'אפליקציה למטופלים', desc: 'אזור אישי למטופלים לזימון תורים, צפייה בהיסטוריה ומילוי הצהרות בריאות.' },
-                  { icon: TrendingUp, title: 'דוחות וניהול פיננסי', desc: 'מעקב אחר הכנסות, מלאי, הפקת חשבוניות ודוחות ביצועים בזמן אמת.' }
-               ].map((f, i) => (
-                  <Card key={i} className="p-6 hover:shadow-lg transition-shadow border-none shadow-sm">
-                     <div className="h-12 w-12 bg-primary/10 rounded-xl flex items-center justify-center text-primary mb-4">
-                        <f.icon size={24} />
-                     </div>
-                     <h3 className="text-xl font-bold text-gray-900 mb-2">{f.title}</h3>
-                     <p className="text-gray-500 leading-relaxed">{f.desc}</p>
-                  </Card>
-               ))}
-            </div>
-         </div>
-      </section>
-
-      <footer className="bg-gray-900 text-gray-400 py-12">
-         <div className="max-w-7xl mx-auto px-4 sm:px-6 text-center">
-             <div className="flex justify-center items-center gap-2 mb-4 text-white">
-               <div className="h-8 w-8 bg-primary rounded-lg flex items-center justify-center font-bold">C</div>
-               <span className="font-bold text-xl">ClinicALL</span>
-            </div>
-            <p className="max-w-sm mx-auto mb-6">מערכת הניהול המתקדמת ביותר לקליניקות אסתטיות. חכמה, פשוטה ומעוצבת.</p>
-            <div className="text-sm">© {new Date().getFullYear()} ClinicALL. כל הזכויות שמורות.</div>
-         </div>
-      </footer>
+    <div className="min-h-screen bg-stone-50 font-['Heebo','Inter',sans-serif] text-gray-900 selection:bg-teal-100 selection:text-teal-900">
+      <LandingHeader />
+      <main>
+        <LandingHero />
+        <TrustSection />
+        <FeaturesSection />
+        <IntegrationsSection />
+        <PricingSection />
+        <FAQSection />
+      </main>
+      <LandingFooter />
     </div>
   );
 };
