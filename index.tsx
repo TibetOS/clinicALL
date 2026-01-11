@@ -9,8 +9,7 @@ if (!rootElement) {
 }
 
 const root = ReactDOM.createRoot(rootElement);
-root.render(
-  <React.StrictMode>
-    <App />
-  </React.StrictMode>
-);
+// Note: StrictMode removed to prevent Supabase auth double-initialization issues
+// StrictMode causes components to mount twice, which conflicts with Supabase's
+// browser tab lock mechanism, causing AbortError and auth failures
+root.render(<App />);

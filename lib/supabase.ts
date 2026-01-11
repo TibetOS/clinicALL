@@ -18,11 +18,6 @@ export const supabase = createClient(
       persistSession: true,
       autoRefreshToken: true,
       detectSessionInUrl: true,
-      // Use localStorage directly to avoid lock issues with React Strict Mode
-      storage: typeof window !== 'undefined' ? window.localStorage : undefined,
-      // Disable cross-tab lock to prevent AbortError
-      storageKey: 'clinicall-auth',
-      flowType: 'implicit',
     },
   }
 );
