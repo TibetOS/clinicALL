@@ -193,7 +193,8 @@ export const Badge = React.forwardRef<HTMLDivElement, BadgeProps>(
 Badge.displayName = 'Badge';
 
 // Modal/Dialog with focus trap, ARIA, and enhanced animations
-export const Dialog = ({ open, onClose, children, title }: { open: boolean; onClose: () => void; children?: React.ReactNode; title?: string }) => {
+// fullScreen prop makes the dialog take up most of the viewport for a more immersive experience
+export const Dialog = ({ open, onClose, children, title, fullScreen = true }: { open: boolean; onClose: () => void; children?: React.ReactNode; title?: string; fullScreen?: boolean }) => {
   const dialogRef = React.useRef<HTMLDivElement>(null);
   const titleId = React.useId();
   const [isAnimating, setIsAnimating] = React.useState(false);
@@ -270,8 +271,9 @@ export const Dialog = ({ open, onClose, children, title }: { open: boolean; onCl
   return (
     <div
       className={cn(
-        "fixed inset-0 z-50 flex items-center justify-center p-4 transition-all duration-200",
-        isAnimating ? "bg-black/60 backdrop-blur-sm" : "bg-black/0 backdrop-blur-none"
+        "fixed inset-0 z-50 flex items-center justify-center transition-all duration-200",
+        fullScreen ? "p-0 sm:p-4 md:p-8" : "p-4",
+        isAnimating ? "bg-black/80 backdrop-blur-sm" : "bg-black/0 backdrop-blur-none"
       )}
       onClick={onClose}
       role="presentation"
@@ -283,7 +285,10 @@ export const Dialog = ({ open, onClose, children, title }: { open: boolean; onCl
         aria-labelledby={title ? titleId : undefined}
         tabIndex={-1}
         className={cn(
-          "w-full max-w-lg rounded-xl bg-white border border-gray-200 p-0 shadow-2xl flex flex-col max-h-[90vh] outline-none transition-all duration-200 transform-gpu",
+          "bg-white border border-gray-200 p-0 shadow-2xl flex flex-col outline-none transition-all duration-200 transform-gpu",
+          fullScreen
+            ? "w-full h-full sm:h-auto sm:max-h-[90vh] sm:w-auto sm:min-w-[600px] sm:max-w-[900px] sm:rounded-xl"
+            : "w-full max-w-lg rounded-xl max-h-[90vh]",
           isAnimating
             ? "opacity-100 scale-100 translate-y-0"
             : "opacity-0 scale-95 translate-y-4"
