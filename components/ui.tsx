@@ -1,10 +1,9 @@
 import React, { ButtonHTMLAttributes, InputHTMLAttributes } from 'react';
-import { createPortal } from 'react-dom';
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
 import { Link } from 'react-router-dom';
 import { ChevronLeft, CheckCircle, XCircle, X } from 'lucide-react';
-import { Drawer as DrawerPrimitive } from 'vaul';
+import { ResponsiveDialog } from './ui/responsive-dialog';
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
@@ -194,168 +193,28 @@ export const Badge = React.forwardRef<HTMLDivElement, BadgeProps>(
 );
 Badge.displayName = 'Badge';
 
-// Hook to detect mobile screen
-function useIsMobile(breakpoint = 640) {
-  const [isMobile, setIsMobile] = React.useState(
-    typeof window !== 'undefined' ? window.innerWidth < breakpoint : false
-  );
-
-  React.useEffect(() => {
-    const mediaQuery = window.matchMedia(`(max-width: ${breakpoint - 1}px)`);
-    const handleChange = (e: MediaQueryListEvent) => setIsMobile(e.matches);
-
-    setIsMobile(mediaQuery.matches);
-    mediaQuery.addEventListener('change', handleChange);
-    return () => mediaQuery.removeEventListener('change', handleChange);
-  }, [breakpoint]);
-
-  return isMobile;
-}
-
-// Responsive Modal/Dialog - uses Drawer on mobile, Dialog on desktop
-// fullScreen prop makes the dialog take up most of the viewport for a more immersive experience
-export const Dialog = ({ open, onClose, children, title, fullScreen = true }: { open: boolean; onClose: () => void; children?: React.ReactNode; title?: string; fullScreen?: boolean }) => {
-  const isMobile = useIsMobile();
-  const dialogRef = React.useRef<HTMLDivElement>(null);
-  const titleId = React.useId();
-  const [isAnimating, setIsAnimating] = React.useState(false);
-  const [shouldRender, setShouldRender] = React.useState(false);
-
-  // Handle animation states (for desktop dialog)
-  React.useEffect(() => {
-    if (isMobile) return; // Drawer handles its own animations
-
-    if (open) {
-      setShouldRender(true);
-      requestAnimationFrame(() => setIsAnimating(true));
-    } else {
-      setIsAnimating(false);
-      const timer = setTimeout(() => setShouldRender(false), 200);
-      return () => clearTimeout(timer);
-    }
-  }, [open, isMobile]);
-
-  // Focus trap and escape key handler (for desktop dialog)
-  React.useEffect(() => {
-    if (isMobile || !open) return;
-
-    const dialog = dialogRef.current;
-    if (!dialog) return;
-
-    const previouslyFocused = document.activeElement as HTMLElement;
-    const focusTimer = setTimeout(() => dialog.focus(), 50);
-
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') {
-        onClose();
-        return;
-      }
-
-      if (e.key === 'Tab') {
-        const focusableElements = dialog.querySelectorAll<HTMLElement>(
-          'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
-        );
-        const firstElement = focusableElements[0];
-        const lastElement = focusableElements[focusableElements.length - 1];
-
-        if (e.shiftKey && document.activeElement === firstElement) {
-          e.preventDefault();
-          lastElement?.focus();
-        } else if (!e.shiftKey && document.activeElement === lastElement) {
-          e.preventDefault();
-          firstElement?.focus();
-        }
-      }
-    };
-
-    document.addEventListener('keydown', handleKeyDown);
-    document.body.style.overflow = 'hidden';
-
-    return () => {
-      clearTimeout(focusTimer);
-      document.removeEventListener('keydown', handleKeyDown);
-      document.body.style.overflow = '';
-      previouslyFocused?.focus();
-    };
-  }, [open, onClose, isMobile]);
-
-  // Mobile: Use Drawer (bottom sheet)
-  if (isMobile) {
-    return (
-      <DrawerPrimitive.Root open={open} onOpenChange={(isOpen) => !isOpen && onClose()}>
-        <DrawerPrimitive.Portal>
-          <DrawerPrimitive.Overlay className="fixed inset-0 z-[100] bg-black/80" />
-          <DrawerPrimitive.Content className="fixed inset-x-0 bottom-0 z-[100] mt-24 flex h-[85vh] flex-col rounded-t-xl border-t bg-white">
-            <div className="mx-auto mt-4 h-1.5 w-12 rounded-full bg-gray-300" />
-            <div className="flex items-center justify-between p-4 border-b">
-              {title && (
-                <DrawerPrimitive.Title className="text-lg font-bold text-gray-900">
-                  {title}
-                </DrawerPrimitive.Title>
-              )}
-              <button
-                onClick={onClose}
-                className="text-gray-500 hover:text-gray-900 bg-gray-100 p-1.5 rounded-full hover:bg-gray-200"
-                aria-label="סגור חלון"
-              >
-                <X size={18} />
-              </button>
-            </div>
-            <div className="flex-1 overflow-y-auto p-4">
-              {children}
-            </div>
-          </DrawerPrimitive.Content>
-        </DrawerPrimitive.Portal>
-      </DrawerPrimitive.Root>
-    );
-  }
-
-  // Desktop: Use Dialog (centered modal)
-  if (!shouldRender) return null;
-
-  return createPortal(
-    <div
-      className={cn(
-        "fixed inset-0 z-[100] flex items-center justify-center bg-black/90 backdrop-blur-sm",
-        fullScreen ? "p-0 sm:p-4 md:p-8" : "p-4"
-      )}
-      onClick={onClose}
-      role="presentation"
+// Responsive Modal/Dialog - uses shadcn/ui Dialog on desktop, Drawer on mobile
+// Wrapper to maintain backward compatibility with existing usage
+export const Dialog = ({
+  open,
+  onClose,
+  children,
+  title
+}: {
+  open: boolean;
+  onClose: () => void;
+  children?: React.ReactNode;
+  title?: string;
+  fullScreen?: boolean; // kept for backward compatibility, no longer used
+}) => {
+  return (
+    <ResponsiveDialog
+      open={open}
+      onOpenChange={(isOpen) => !isOpen && onClose()}
+      title={title}
     >
-      <div
-        ref={dialogRef}
-        role="dialog"
-        aria-modal="true"
-        aria-labelledby={title ? titleId : undefined}
-        tabIndex={-1}
-        className={cn(
-          "bg-white border border-gray-200 p-0 shadow-2xl flex flex-col outline-none transition-all duration-200 transform-gpu",
-          fullScreen
-            ? "w-full h-full sm:h-auto sm:max-h-[90vh] sm:w-[90vw] sm:max-w-[900px] sm:rounded-xl"
-            : "w-full max-w-lg rounded-xl max-h-[90vh]",
-          isAnimating
-            ? "opacity-100 scale-100 translate-y-0"
-            : "opacity-0 scale-95 translate-y-4"
-        )}
-        style={{ transitionTimingFunction: 'cubic-bezier(0.16, 1, 0.3, 1)' }}
-        onClick={(e) => e.stopPropagation()}
-      >
-        <div className="flex items-center justify-between p-6 border-b">
-          {title && <h2 id={titleId} className="text-xl font-bold text-gray-900">{title}</h2>}
-          <button
-            onClick={onClose}
-            className="text-gray-500 hover:text-gray-900 transition-all duration-200 bg-gray-100 p-1.5 rounded-full hover:bg-gray-200 hover:rotate-90 focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 active:scale-90"
-            aria-label="סגור חלון"
-          >
-            <X size={20} />
-          </button>
-        </div>
-        <div className="p-6 overflow-y-auto">
-          {children}
-        </div>
-      </div>
-    </div>,
-    document.body
+      {children}
+    </ResponsiveDialog>
   );
 };
 

@@ -34,3 +34,4 @@ export * from './field';
 export * from './empty';
 export * from './calendar-appointment';
 export * from './time-slot-picker';
+export * from './responsive-dialog';
