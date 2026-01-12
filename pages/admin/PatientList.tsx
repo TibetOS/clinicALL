@@ -36,16 +36,8 @@ import { usePatients, useHealthTokens } from '../../hooks';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import { Patient, RiskLevel, HealthDeclarationToken, DeclarationStatus } from '../../types';
-
-// Helper for translating status
-const getStatusLabel = (status: string) => {
-  const map: Record<string, string> = {
-    'low': 'נמוך',
-    'medium': 'בינוני',
-    'high': 'גבוה',
-  };
-  return map[status] || status;
-};
+import { getRiskLevelLabel, getRiskLevelVariant } from '../../lib/status-helpers';
+import { exportToCSV } from '../../lib/csv-export';
 
 // Helper for declaration status
 const getDeclarationStatusConfig = (status?: DeclarationStatus) => {
@@ -94,44 +86,19 @@ const INITIAL_FILTERS: FilterState = {
   hasUpcomingAppointment: 'all',
 };
 
-// SECURITY: Sanitize CSV values to prevent formula injection
-// Characters =, +, -, @, tab, carriage return can execute formulas in Excel
-const sanitizeCSVValue = (value: string): string => {
-  if (!value) return '';
-  // If value starts with dangerous characters, prefix with single quote
-  if (/^[=+\-@\t\r]/.test(value)) {
-    return `'${value}`;
-  }
-  // Escape quotes and wrap in quotes if contains comma, quote, or newline
-  if (/[",\n]/.test(value)) {
-    return `"${value.replace(/"/g, '""')}"`;
-  }
-  return value;
-};
-
-// CSV Export utility
-const exportToCSV = (patients: Patient[], filename: string) => {
+// Patient CSV export helper
+const exportPatientsToCsv = (patients: Patient[], filename: string) => {
   const headers = ['שם', 'טלפון', 'אימייל', 'ביקור אחרון', 'תור קרוב', 'רמת סיכון', 'תאריך הצטרפות'];
   const rows = patients.map(p => [
-    sanitizeCSVValue(p.name),
-    sanitizeCSVValue(p.phone),
-    sanitizeCSVValue(p.email),
+    p.name,
+    p.phone,
+    p.email,
     p.lastVisit ? new Date(p.lastVisit).toLocaleDateString('he-IL') : '',
     p.upcomingAppointment ? new Date(p.upcomingAppointment).toLocaleDateString('he-IL') : '',
-    getStatusLabel(p.riskLevel),
+    getRiskLevelLabel(p.riskLevel),
     p.memberSince ? new Date(p.memberSince).toLocaleDateString('he-IL') : '',
   ]);
-
-  // Add BOM for Hebrew support in Excel
-  const BOM = '\uFEFF';
-  const csvContent = BOM + [headers, ...rows].map(row => row.join(',')).join('\n');
-  const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-  const url = URL.createObjectURL(blob);
-  const link = document.createElement('a');
-  link.href = url;
-  link.download = `${filename}_${new Date().toISOString().split('T')[0]}.csv`;
-  link.click();
-  URL.revokeObjectURL(url);
+  exportToCSV(headers, rows, { filename });
 };
 
 // Health Declaration Form Data
@@ -262,7 +229,7 @@ export const PatientList = () => {
 
   const handleExportSelected = () => {
     const selectedPatients = filteredPatients.filter(p => selectedIds.has(p.id));
-    exportToCSV(selectedPatients, 'patients_selected');
+    exportPatientsToCsv(selectedPatients, 'patients_selected');
     toast.success(`${selectedPatients.length} מטופלים יוצאו ל-CSV`);
   };
 
@@ -444,7 +411,7 @@ export const PatientList = () => {
             size="sm"
             className="flex-1 gap-1.5"
             onClick={() => {
-              exportToCSV(filteredPatients, 'patients');
+              exportPatientsToCsv(filteredPatients, 'patients');
               toast.success('הקובץ הורד בהצלחה');
             }}
           >
@@ -594,8 +561,8 @@ export const PatientList = () => {
                   })()}
                 </td>
                 <td className="px-6 py-4">
-                  <Badge variant={patient.riskLevel === 'high' ? 'destructive' : patient.riskLevel === 'medium' ? 'warning' : 'success'}>
-                    {getStatusLabel(patient.riskLevel)}
+                  <Badge variant={getRiskLevelVariant(patient.riskLevel)}>
+                    {getRiskLevelLabel(patient.riskLevel)}
                   </Badge>
                 </td>
                 <td className="px-6 py-4">
@@ -720,8 +687,8 @@ export const PatientList = () => {
                   <div className="text-sm text-gray-600">{patient.phone}</div>
                 </div>
               </div>
-              <Badge variant={patient.riskLevel === 'high' ? 'destructive' : patient.riskLevel === 'medium' ? 'warning' : 'success'}>
-                {getStatusLabel(patient.riskLevel)}
+              <Badge variant={getRiskLevelVariant(patient.riskLevel)}>
+                {getRiskLevelLabel(patient.riskLevel)}
               </Badge>
             </div>
 

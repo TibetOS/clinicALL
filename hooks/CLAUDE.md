@@ -21,6 +21,9 @@ This directory contains custom React hooks for data fetching and state managemen
 | `useStaff.ts` | Staff management |
 | `useBooking.ts` | Public booking flow |
 | `useHealthTokens.ts` | Token-based health declaration system |
+| `useActivityLog.ts` | Activity logging for audit trail |
+| `useSessionTimeout.ts` | HIPAA-compliant session timeout |
+| `useDialogState.ts` | Dialog/modal state management |
 
 ## Hook Pattern
 
@@ -153,6 +156,54 @@ const { data, error } = await supabase.from('table').update({ ... }).eq('id', id
 // Delete
 const { error } = await supabase.from('table').delete().eq('id', id);
 ```
+
+## useDialogState Hook
+
+A utility hook for managing dialog/modal open state, reducing boilerplate in admin pages.
+
+### Basic Usage
+
+```tsx
+import { useDialogState } from '../hooks';
+
+function MyPage() {
+  const addDialog = useDialogState();
+
+  return (
+    <>
+      <Button onClick={addDialog.open}>Add Item</Button>
+      <Dialog open={addDialog.isOpen} onClose={addDialog.close} title="Add">
+        {/* Form content */}
+      </Dialog>
+    </>
+  );
+}
+```
+
+### With Associated Data
+
+```tsx
+const editDialog = useDialogState<Service>();
+
+// Open with data
+<Button onClick={() => editDialog.openWith(service)}>Edit</Button>
+
+// Access data in dialog
+<Dialog open={editDialog.isOpen} onClose={editDialog.close}>
+  {editDialog.data && <EditForm service={editDialog.data} />}
+</Dialog>
+```
+
+### API
+
+| Property/Method | Description |
+|-----------------|-------------|
+| `isOpen` | Whether dialog is open |
+| `data` | Associated data (when using generic type) |
+| `open()` | Open the dialog |
+| `openWith(data)` | Open with associated data |
+| `close()` | Close and clear data |
+| `toggle()` | Toggle open/closed |
 
 ## Dependencies
 
