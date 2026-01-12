@@ -126,11 +126,17 @@ export function useAppointments(options?: UseAppointmentsOptions): UseAppointmen
     }
 
     try {
-      const { data, error: fetchError } = await supabase
+      let query = supabase
         .from('appointments')
         .select('*')
-        .eq('id', id)
-        .single();
+        .eq('id', id);
+
+      // Filter by clinic_id for multi-tenant isolation
+      if (profile?.clinic_id) {
+        query = query.eq('clinic_id', profile.clinic_id);
+      }
+
+      const { data, error: fetchError } = await query.single();
 
       if (fetchError) throw fetchError;
 
@@ -152,7 +158,7 @@ export function useAppointments(options?: UseAppointmentsOptions): UseAppointmen
       logger.error('Error fetching appointment:', err);
       return null;
     }
-  }, []);
+  }, [profile?.clinic_id]);
 
   const addAppointment = useCallback(async (appointment: AppointmentInput): Promise<Appointment | null> => {
     if (!isSupabaseConfigured()) {
@@ -231,12 +237,17 @@ export function useAppointments(options?: UseAppointmentsOptions): UseAppointmen
       if (updates.status !== undefined) dbUpdates.status = updates.status;
       if (updates.notes !== undefined) dbUpdates.notes = updates.notes;
 
-      const { data, error: updateError } = await supabase
+      let query = supabase
         .from('appointments')
         .update(dbUpdates)
-        .eq('id', id)
-        .select('*')
-        .single();
+        .eq('id', id);
+
+      // Filter by clinic_id for multi-tenant isolation
+      if (profile?.clinic_id) {
+        query = query.eq('clinic_id', profile.clinic_id);
+      }
+
+      const { data, error: updateError } = await query.select('*').single();
 
       if (updateError) throw updateError;
 
@@ -262,7 +273,7 @@ export function useAppointments(options?: UseAppointmentsOptions): UseAppointmen
       setError(getErrorMessage(err) || 'Failed to update appointment');
       return null;
     }
-  }, [appointments]);
+  }, [profile?.clinic_id]);
 
   const updateStatus = useCallback(async (id: string, status: AppointmentStatus): Promise<boolean> => {
     const result = await updateAppointment(id, { status });
@@ -277,10 +288,17 @@ export function useAppointments(options?: UseAppointmentsOptions): UseAppointmen
     }
 
     try {
-      const { error: deleteError } = await supabase
+      let query = supabase
         .from('appointments')
         .delete()
         .eq('id', id);
+
+      // Filter by clinic_id for multi-tenant isolation
+      if (profile?.clinic_id) {
+        query = query.eq('clinic_id', profile.clinic_id);
+      }
+
+      const { error: deleteError } = await query;
 
       if (deleteError) throw deleteError;
 
@@ -291,7 +309,7 @@ export function useAppointments(options?: UseAppointmentsOptions): UseAppointmen
       setError(getErrorMessage(err) || 'Failed to delete appointment');
       return false;
     }
-  }, []);
+  }, [profile?.clinic_id]);
 
   // Fetch appointments on mount
   useEffect(() => {
