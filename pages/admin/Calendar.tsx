@@ -134,6 +134,12 @@ export const Calendar = () => {
   };
 
   const openNewApptDialog = (day?: Date, hour?: number) => {
+    // Show loading toast if services haven't loaded yet
+    if (servicesLoading) {
+      toast.info('טוען טיפולים...');
+      return;
+    }
+
     if (day && hour !== undefined) {
       setApptForm(prev => ({
         ...prev,
