@@ -61,12 +61,11 @@ export const Calendar = () => {
   const [view, setView] = useState<'week' | 'day'>(() =>
     typeof window !== 'undefined' && window.innerWidth < 768 ? 'day' : 'week'
   );
-  const { appointments, addAppointment, updateAppointment, loading, error } = useAppointments();
+  const { appointments, addAppointment, updateAppointment, fetchAppointments, loading, error } = useAppointments();
   const { services, loading: servicesLoading } = useServices();
   const { addNotification } = useNotifications();
   const { patients } = usePatients();
   const [isNewApptOpen, setIsNewApptOpen] = useState(false);
-  const [, setSelectedSlot] = useState<{ date: Date; hour: number } | null>(null);
 
   // Form state
   const [apptForm, setApptForm] = useState({
@@ -135,6 +134,12 @@ export const Calendar = () => {
   };
 
   const openNewApptDialog = (day?: Date, hour?: number) => {
+    // Show loading toast if services haven't loaded yet
+    if (servicesLoading) {
+      toast.info('טוען טיפולים...');
+      return;
+    }
+
     if (day && hour !== undefined) {
       setApptForm(prev => ({
         ...prev,
@@ -274,7 +279,10 @@ export const Calendar = () => {
       {error && (
         <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg mb-4 flex items-center gap-2">
           <AlertCircle size={18} />
-          <span>{error}</span>
+          <span>שגיאה בטעינת תורים: {error}</span>
+          <Button variant="ghost" size="sm" className="mr-auto" onClick={() => fetchAppointments()}>
+            נסה שוב
+          </Button>
         </div>
       )}
 
@@ -442,7 +450,7 @@ export const Calendar = () => {
       </Card>
 
       {/* New Appointment Dialog */}
-      <Dialog open={isNewApptOpen} onClose={() => { setIsNewApptOpen(false); setSelectedSlot(null); }} title="קביעת תור חדש">
+      <Dialog open={isNewApptOpen} onClose={() => setIsNewApptOpen(false)} title="קביעת תור חדש">
         <div className="space-y-4">
           <div>
             <Label>שם המטופל</Label>
@@ -503,7 +511,7 @@ export const Calendar = () => {
             />
           </div>
           <div className="flex justify-end gap-3 pt-4 border-t mt-4">
-            <Button variant="ghost" onClick={() => { setIsNewApptOpen(false); setSelectedSlot(null); }} disabled={saving}>
+            <Button variant="ghost" onClick={() => setIsNewApptOpen(false)} disabled={saving}>
               ביטול
             </Button>
             <Button
