@@ -1,8 +1,8 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import {
   Settings as SettingsIcon, UserPlus, MoreVertical, Crown,
   CreditCard, ArrowUpRight, Download, Check, XCircle, Sparkles,
-  Globe, Image as ImageIcon, Loader2, Trash2, Edit2
+  Globe, Image as ImageIcon, Loader2, Trash2, Edit2, AlertCircle
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { Card, Button, Input, Badge, Tabs, TabsList, TabsTrigger, Label, Skeleton, ComingSoon } from '../../components/ui';
@@ -19,14 +19,24 @@ import { useSearchParams } from 'react-router-dom';
 import { useMyClinic, useStaff, usePatients, useAppointments, useInvoices } from '../../hooks';
 import { useAuth } from '../../contexts/AuthContext';
 
+// Validate slug contains only URL-safe characters
+const isValidSlug = (slug: string): boolean => {
+  return /^[a-z0-9-]+$/.test(slug);
+};
+
 export const SettingsPage = () => {
   const [searchParams] = useSearchParams();
   const [activeTab, setActiveTab] = useState(searchParams.get('tab') || 'profile');
-  const [saving, setSaving] = useState(false);
+
+  // Separate saving states per form to avoid cross-tab interference
+  const [profileSaving, setProfileSaving] = useState(false);
+  const [businessSaving, setBusinessSaving] = useState(false);
+  const [billingSaving, setBillingSaving] = useState(false);
+  const [slugError, setSlugError] = useState<string | null>(null);
 
   // Data hooks
   const { profile } = useAuth();
-  const { clinic, updateClinic } = useMyClinic();
+  const { clinic, loading: clinicLoading, error: clinicError, updateClinic } = useMyClinic();
   const { staff, loading: staffLoading } = useStaff(profile?.clinic_id);
   const { patients } = usePatients();
   const { appointments } = useAppointments();
@@ -84,39 +94,47 @@ export const SettingsPage = () => {
     if (tab) setActiveTab(tab);
   }, [searchParams]);
 
-  const handleSaveProfile = async () => {
-    setSaving(true);
+  const handleSaveProfile = useCallback(async () => {
+    // Validate slug before saving
+    const slug = profileForm.slug.trim().toLowerCase();
+    if (slug && !isValidSlug(slug)) {
+      setSlugError('כתובת URL יכולה להכיל רק אותיות קטנות באנגלית, מספרים ומקפים');
+      return;
+    }
+    setSlugError(null);
+
+    setProfileSaving(true);
     const result = await updateClinic({
       description: profileForm.description,
-      slug: profileForm.slug,
+      slug: slug,
       brandColor: profileForm.brandColor,
     });
-    setSaving(false);
+    setProfileSaving(false);
     if (result.success) {
       toast.success('פרטי האתר נשמרו בהצלחה');
     } else {
       toast.error(result.error || 'שגיאה בשמירת הנתונים');
     }
-  };
+  }, [profileForm, updateClinic]);
 
-  const handleSaveBusiness = async () => {
-    setSaving(true);
+  const handleSaveBusiness = useCallback(async () => {
+    setBusinessSaving(true);
     const result = await updateClinic({
       name: businessForm.businessName,
       businessId: businessForm.taxId,
       address: businessForm.address,
       phone: businessForm.phone,
     });
-    setSaving(false);
+    setBusinessSaving(false);
     if (result.success) {
       toast.success('פרטי העסק נשמרו בהצלחה');
     } else {
       toast.error(result.error || 'שגיאה בשמירת הנתונים');
     }
-  };
+  }, [businessForm, updateClinic]);
 
-  const handleSaveBilling = async () => {
-    setSaving(true);
+  const handleSaveBilling = useCallback(async () => {
+    setBillingSaving(true);
     // Billing info would typically go to a separate billing_info table
     // For now, we update the clinic with the available fields
     const result = await updateClinic({
@@ -124,13 +142,13 @@ export const SettingsPage = () => {
       businessId: billingForm.billingTaxId,
       address: billingForm.billingAddress,
     });
-    setSaving(false);
+    setBillingSaving(false);
     if (result.success) {
       toast.success('פרטי החיוב נשמרו בהצלחה');
     } else {
       toast.error(result.error || 'שגיאה בשמירת הנתונים');
     }
-  };
+  }, [billingForm, updateClinic]);
 
   // Calculate usage stats from real data
   const activePatients = patients.length;
@@ -139,6 +157,55 @@ export const SettingsPage = () => {
     const now = new Date();
     return apptDate.getMonth() === now.getMonth() && apptDate.getFullYear() === now.getFullYear();
   }).length;
+
+  // Show loading skeleton while clinic data loads
+  if (clinicLoading) {
+    return (
+      <div className="max-w-5xl mx-auto animate-in fade-in pb-10">
+        <div className="flex items-center gap-3 mb-8">
+          <Skeleton className="w-12 h-12 rounded-2xl" />
+          <div className="space-y-2">
+            <Skeleton className="h-8 w-48" />
+            <Skeleton className="h-4 w-64" />
+          </div>
+        </div>
+        <div className="space-y-6">
+          <Skeleton className="h-12 w-full max-w-md" />
+          <Skeleton className="h-64 w-full rounded-3xl" />
+          <Skeleton className="h-48 w-full rounded-3xl" />
+        </div>
+      </div>
+    );
+  }
+
+  // Show error if clinic data failed to load
+  if (clinicError) {
+    return (
+      <div className="max-w-5xl mx-auto animate-in fade-in pb-10">
+        <div className="flex items-center gap-3 mb-8">
+          <div className="p-3 bg-white border border-stone-200 rounded-2xl shadow-sm"><SettingsIcon className="w-6 h-6 text-gray-700" /></div>
+          <div>
+            <h1 className="text-2xl md:text-3xl font-bold text-gray-900">הגדרות מרפאה</h1>
+            <p className="text-muted-foreground text-sm">התאמת המערכת לצרכי הקליניקה האסתטית</p>
+          </div>
+        </div>
+        <Card className="p-6 rounded-3xl border-red-200 bg-red-50">
+          <div className="flex items-center gap-3 text-red-700">
+            <AlertCircle className="w-5 h-5" />
+            <p className="font-medium">שגיאה בטעינת נתוני המרפאה</p>
+          </div>
+          <p className="mt-2 text-sm text-red-600">{clinicError}</p>
+          <Button
+            variant="outline"
+            className="mt-4"
+            onClick={() => window.location.reload()}
+          >
+            נסה שוב
+          </Button>
+        </Card>
+      </div>
+    );
+  }
 
   return (
     <div className="max-w-5xl mx-auto animate-in fade-in pb-10">
@@ -214,22 +281,27 @@ export const SettingsPage = () => {
                         </div>
                       </div>
                       <div>
-                        <Label>צבע מותג</Label>
+                        <Label htmlFor="brand-color">צבע מותג</Label>
                         <div className="flex items-center gap-2 border p-2 rounded-lg bg-white">
                           <input
+                            id="brand-color"
+                            name="brand-color"
                             type="color"
+                            aria-label="צבע מותג"
                             value={profileForm.brandColor}
                             onChange={(e) => setProfileForm(prev => ({ ...prev, brandColor: e.target.value }))}
                             className="w-8 h-8 rounded border-0 cursor-pointer"
                           />
-                          <span className="text-sm font-mono">{profileForm.brandColor}</span>
+                          <span className="text-sm font-mono" aria-hidden="true">{profileForm.brandColor}</span>
                         </div>
                       </div>
                     </div>
 
                     <div>
-                      <Label>תיאור אודות (יופיע בדף הבית)</Label>
+                      <Label htmlFor="clinic-description">תיאור אודות (יופיע בדף הבית)</Label>
                       <textarea
+                        id="clinic-description"
+                        name="clinic-description"
                         className="w-full min-h-[100px] border border-gray-200 rounded-lg p-3 text-sm"
                         placeholder="ספרי על הקליניקה שלך..."
                         value={profileForm.description}
@@ -239,26 +311,40 @@ export const SettingsPage = () => {
                   </div>
 
                   <div className="mt-6 pt-6 border-t flex justify-end">
-                    <Button onClick={handleSaveProfile} disabled={saving}>
-                      {saving ? 'שומר...' : 'שמור שינויים'}
+                    <Button onClick={handleSaveProfile} disabled={profileSaving}>
+                      {profileSaving ? 'שומר...' : 'שמור שינויים'}
                     </Button>
                   </div>
                 </Card>
 
                 <Card className="p-6 rounded-3xl border-stone-100 shadow-soft">
                   <h3 className="text-lg font-bold mb-4">כתובת ה-URL שלך</h3>
-                  <div className="flex gap-2 items-center bg-gray-50 p-3 rounded-xl border border-gray-200">
+                  <div className={`flex gap-2 items-center bg-gray-50 p-3 rounded-xl border ${slugError ? 'border-red-300' : 'border-gray-200'}`}>
                     <Globe size={18} className="text-gray-400" />
                     <span className="text-gray-500 text-sm">clinicall.com/c/</span>
                     <input
+                      id="clinic-slug"
+                      name="clinic-slug"
                       type="text"
                       className="bg-transparent font-bold text-gray-900 border-none outline-none flex-1"
+                      placeholder="your-clinic-name"
+                      aria-describedby={slugError ? "slug-error" : "slug-hint"}
                       value={profileForm.slug}
-                      onChange={(e) => setProfileForm(prev => ({ ...prev, slug: e.target.value }))}
+                      onChange={(e) => {
+                        setProfileForm(prev => ({ ...prev, slug: e.target.value }));
+                        setSlugError(null); // Clear error on change
+                      }}
                     />
                     <Button size="sm" variant="ghost"><Check size={16} /></Button>
                   </div>
-                  <p className="text-xs text-gray-500 mt-2">שינוי הכתובת עלול לשבור קישורים קיימים ששלחת למטופלים.</p>
+                  {slugError ? (
+                    <p id="slug-error" className="text-xs text-red-600 mt-2 flex items-center gap-1">
+                      <AlertCircle size={12} />
+                      {slugError}
+                    </p>
+                  ) : (
+                    <p id="slug-hint" className="text-xs text-gray-500 mt-2">שינוי הכתובת עלול לשבור קישורים קיימים ששלחת למטופלים.</p>
+                  )}
                 </Card>
               </div>
 
@@ -326,14 +412,17 @@ export const SettingsPage = () => {
                         name="email"
                         autoComplete="email"
                         value={businessForm.email}
-                        onChange={(e) => setBusinessForm(prev => ({ ...prev, email: e.target.value }))}
+                        readOnly
+                        disabled
+                        className="bg-gray-50 text-gray-500"
                       />
+                      <p className="text-xs text-gray-400 mt-1">האימייל מוגדר בפרופיל המשתמש</p>
                     </div>
                   </div>
                 </div>
                 <div className="mt-6 pt-6 border-t flex justify-end">
-                  <Button onClick={handleSaveBusiness} disabled={saving}>
-                    {saving ? 'שומר...' : 'שמור שינויים'}
+                  <Button onClick={handleSaveBusiness} disabled={businessSaving}>
+                    {businessSaving ? 'שומר...' : 'שמור שינויים'}
                   </Button>
                 </div>
               </Card>
@@ -652,8 +741,8 @@ export const SettingsPage = () => {
                   </div>
                 </div>
                 <div className="mt-6 pt-6 border-t flex justify-end">
-                  <Button onClick={handleSaveBilling} disabled={saving}>
-                    {saving ? 'שומר...' : 'שמור שינויים'}
+                  <Button onClick={handleSaveBilling} disabled={billingSaving}>
+                    {billingSaving ? 'שומר...' : 'שמור שינויים'}
                   </Button>
                 </div>
               </Card>
