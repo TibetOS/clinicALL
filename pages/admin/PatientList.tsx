@@ -1,9 +1,9 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import {
   Search, Filter, UserPlus, Download,
   X, CheckSquare, Square, MessageSquare, Trash2, FileDown, FileHeart, Copy,
   Check, Send, Mail, Phone, Clock, AlertCircle, FileCheck, MoreHorizontal,
-  Eye, Calendar, Users
+  Eye, Calendar, Users, ChevronLeft, ChevronRight
 } from 'lucide-react';
 import { Card, Button, Input, Badge, Dialog, Label, Skeleton } from '../../components/ui';
 import {
@@ -137,7 +137,14 @@ const INITIAL_HEALTH_FORM: HealthDeclarationFormData = {
 export const PatientList = () => {
   const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState('');
-  const { patients, loading: patientsLoading, addPatient, updatePatient, deletePatient } = usePatients();
+  const [debouncedSearch, setDebouncedSearch] = useState('');
+  const { patients, loading: patientsLoading, error, pagination, setPage, addPatient, updatePatient, deletePatient, fetchPatients } = usePatients();
+
+  // Debounce search to prevent excessive filtering on every keystroke
+  useEffect(() => {
+    const timer = setTimeout(() => setDebouncedSearch(searchTerm), 300);
+    return () => clearTimeout(timer);
+  }, [searchTerm]);
   const { createToken, generateShareLink, generateWhatsAppLink, generateEmailLink } = useHealthTokens();
   const [isAddPatientOpen, setIsAddPatientOpen] = useState(false);
   const [isFilterOpen, setIsFilterOpen] = useState(false);
@@ -163,9 +170,9 @@ export const PatientList = () => {
   // Filter patients based on search and filters
   const filteredPatients = useMemo(() => {
     return patients.filter(p => {
-      // Text search
-      const matchesSearch = p.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        p.phone.includes(searchTerm);
+      // Text search (using debounced value for performance)
+      const matchesSearch = p.name.toLowerCase().includes(debouncedSearch.toLowerCase()) ||
+        p.phone.includes(debouncedSearch);
       if (!matchesSearch) return false;
 
       // Risk level filter
@@ -185,7 +192,7 @@ export const PatientList = () => {
 
       return true;
     });
-  }, [patients, searchTerm, filters]);
+  }, [patients, debouncedSearch, filters]);
 
   // Check if any filters are active
   const hasActiveFilters = filters.riskLevel !== 'all' ||
@@ -215,15 +222,27 @@ export const PatientList = () => {
 
   const handleBulkDelete = async () => {
     setIsDeleting(true);
-    const count = selectedIds.size;
-    for (const id of selectedIds) {
-      await deletePatient(id);
+    const idsArray = Array.from(selectedIds);
+
+    // Use Promise.allSettled for better error handling
+    const results = await Promise.allSettled(
+      idsArray.map(id => deletePatient(id))
+    );
+
+    const failures = results.filter(r => r.status === 'rejected');
+    const successCount = results.length - failures.length;
+
+    if (failures.length > 0) {
+      toast.error(`נמחקו ${successCount} מטופלים, ${failures.length} נכשלו`);
+    } else {
+      toast.success(`${successCount} מטופלים נמחקו בהצלחה`);
     }
+
     setSelectedIds(new Set());
     setIsSelectionMode(false);
     setIsDeleteConfirmOpen(false);
     setIsDeleting(false);
-    toast.success(`${count} מטופלים נמחקו`);
+    fetchPatients(); // Refresh the list
   };
 
   const handleExportSelected = () => {
@@ -347,6 +366,17 @@ export const PatientList = () => {
           </Button>
         </div>
       </div>
+
+      {/* Error Banner */}
+      {error && (
+        <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg flex items-center gap-2">
+          <AlertCircle size={18} />
+          <span>שגיאה בטעינת מטופלים: {error}</span>
+          <Button variant="ghost" size="sm" className="mr-auto" onClick={() => fetchPatients()}>
+            נסה שוב
+          </Button>
+        </div>
+      )}
 
       {/* Selection Mode Actions Bar */}
       {isSelectionMode && selectedIds.size > 0 && (
@@ -717,6 +747,37 @@ export const PatientList = () => {
           </Card>
         ))}
       </div>
+
+      {/* Pagination */}
+      {!patientsLoading && pagination.totalPages > 1 && (
+        <div className="flex items-center justify-between bg-white px-4 py-3 border border-gray-200 rounded-xl">
+          <div className="text-sm text-gray-600">
+            עמוד {pagination.page} מתוך {pagination.totalPages} ({pagination.totalCount} מטופלים)
+          </div>
+          <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setPage(pagination.page - 1)}
+              disabled={!pagination.hasPrevPage}
+              className="gap-1"
+            >
+              <ChevronRight size={16} />
+              הקודם
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setPage(pagination.page + 1)}
+              disabled={!pagination.hasNextPage}
+              className="gap-1"
+            >
+              הבא
+              <ChevronLeft size={16} />
+            </Button>
+          </div>
+        </div>
+      )}
 
       {/* Add Patient Dialog */}
       <Dialog open={isAddPatientOpen} onClose={() => setIsAddPatientOpen(false)} title="הוספת מטופל חדש">

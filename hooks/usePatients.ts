@@ -24,11 +24,23 @@ interface PatientInput {
   pendingDeclarationToken?: string;
 }
 
+const ITEMS_PER_PAGE = 50;
+
+interface PaginationState {
+  page: number;
+  totalCount: number;
+  totalPages: number;
+  hasNextPage: boolean;
+  hasPrevPage: boolean;
+}
+
 interface UsePatients {
   patients: Patient[];
   loading: boolean;
   error: string | null;
-  fetchPatients: () => Promise<void>;
+  pagination: PaginationState;
+  fetchPatients: (page?: number) => Promise<void>;
+  setPage: (page: number) => void;
   getPatient: (id: string) => Promise<Patient | null>;
   addPatient: (patient: PatientInput) => Promise<Patient | null>;
   updatePatient: (id: string, updates: Partial<PatientInput>) => Promise<Patient | null>;
@@ -63,12 +75,28 @@ export function usePatients(): UsePatients {
   const [patients, setPatients] = useState<Patient[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [page, setPage] = useState(1);
+  const [totalCount, setTotalCount] = useState(0);
   const { profile } = useAuth();
 
-  const fetchPatients = useCallback(async () => {
+  const pagination: PaginationState = {
+    page,
+    totalCount,
+    totalPages: Math.ceil(totalCount / ITEMS_PER_PAGE),
+    hasNextPage: page < Math.ceil(totalCount / ITEMS_PER_PAGE),
+    hasPrevPage: page > 1,
+  };
+
+  const fetchPatients = useCallback(async (requestedPage?: number) => {
+    const targetPage = requestedPage ?? page;
+
     if (!isSupabaseConfigured()) {
-      // Return mock data in dev mode
-      setPatients(MOCK_PATIENTS);
+      // Return mock data in dev mode (paginated)
+      const start = (targetPage - 1) * ITEMS_PER_PAGE;
+      const paginatedMock = MOCK_PATIENTS.slice(start, start + ITEMS_PER_PAGE);
+      setPatients(paginatedMock);
+      setTotalCount(MOCK_PATIENTS.length);
+      setPage(targetPage);
       setLoading(false);
       return;
     }
@@ -77,9 +105,10 @@ export function usePatients(): UsePatients {
     setError(null);
 
     try {
+      // Build query with count
       let query = supabase
         .from('patients')
-        .select('*')
+        .select('*', { count: 'exact' })
         .order('created_at', { ascending: false });
 
       // Filter by clinic_id for multi-tenant isolation
@@ -87,7 +116,12 @@ export function usePatients(): UsePatients {
         query = query.eq('clinic_id', profile.clinic_id);
       }
 
-      const { data, error: fetchError } = await query;
+      // Add pagination range
+      const from = (targetPage - 1) * ITEMS_PER_PAGE;
+      const to = from + ITEMS_PER_PAGE - 1;
+      query = query.range(from, to);
+
+      const { data, error: fetchError, count } = await query;
 
       if (fetchError) throw fetchError;
 
@@ -95,13 +129,15 @@ export function usePatients(): UsePatients {
       const transformedPatients: Patient[] = (data as PatientRow[] || []).map(transformPatientRow);
 
       setPatients(transformedPatients);
+      setTotalCount(count ?? 0);
+      setPage(targetPage);
     } catch (err) {
       setError(getErrorMessage(err) || 'Failed to fetch patients');
       logger.error('Error fetching patients:', err);
     } finally {
       setLoading(false);
     }
-  }, [profile?.clinic_id]);
+  }, [profile?.clinic_id, page]);
 
   const getPatient = useCallback(async (id: string): Promise<Patient | null> => {
     if (!isSupabaseConfigured()) {
@@ -109,11 +145,17 @@ export function usePatients(): UsePatients {
     }
 
     try {
-      const { data, error: fetchError } = await supabase
+      let query = supabase
         .from('patients')
         .select('*')
-        .eq('id', id)
-        .single();
+        .eq('id', id);
+
+      // Filter by clinic_id for multi-tenant isolation
+      if (profile?.clinic_id) {
+        query = query.eq('clinic_id', profile.clinic_id);
+      }
+
+      const { data, error: fetchError } = await query.single();
 
       if (fetchError) throw fetchError;
 
@@ -122,7 +164,7 @@ export function usePatients(): UsePatients {
       logger.error('Error fetching patient:', err);
       return null;
     }
-  }, []);
+  }, [profile?.clinic_id]);
 
   const addPatient = useCallback(async (patient: PatientInput): Promise<Patient | null> => {
     if (!isSupabaseConfigured()) {
@@ -255,7 +297,9 @@ export function usePatients(): UsePatients {
     patients,
     loading,
     error,
+    pagination,
     fetchPatients,
+    setPage: (newPage: number) => fetchPatients(newPage),
     getPatient,
     addPatient,
     updatePatient,
