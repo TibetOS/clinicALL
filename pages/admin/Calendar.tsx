@@ -1,5 +1,5 @@
-import { useState, useEffect } from 'react';
-import { Plus, ChevronLeft, ChevronRight, FileCheck, Clock, AlertCircle, Loader2, MoreHorizontal, Eye, Trash2, Phone, Edit2, X as XIcon } from 'lucide-react';
+import { useState, useEffect, useMemo, useCallback } from 'react';
+import { Plus, ChevronLeft, ChevronRight, FileCheck, Clock, AlertCircle, Loader2, MoreHorizontal, Eye, Trash2, Phone, Edit2, X as XIcon, CalendarDays } from 'lucide-react';
 import { toast } from 'sonner';
 import { Card, Button, Input, Dialog, Label } from '../../components/ui';
 import {
@@ -90,33 +90,56 @@ export const Calendar = () => {
     return () => window.removeEventListener('resize', handleResize);
   }, [view]);
 
+  // Debounce date changes to avoid excessive fetches when navigating quickly
+  const [debouncedDate, setDebouncedDate] = useState(currentDate);
+  useEffect(() => {
+    const timer = setTimeout(() => setDebouncedDate(currentDate), 150);
+    return () => clearTimeout(timer);
+  }, [currentDate]);
+
   // Helper to format hours
   const hours = Array.from({ length: 13 }, (_, i) => i + 8); // 08:00 - 20:00
 
-  // Helper to get days of week
-  const getDaysOfWeek = (date: Date) => {
-    const start = new Date(date);
+  // Memoized week days calculation
+  const weekDays = useMemo(() => {
+    const start = new Date(debouncedDate);
     start.setDate(start.getDate() - start.getDay()); // Sunday
     return Array.from({ length: 7 }, (_, i) => {
       const d = new Date(start);
       d.setDate(d.getDate() + i);
       return d;
     });
-  };
+  }, [debouncedDate]);
 
-  const weekDays = getDaysOfWeek(currentDate);
-
-  const getAppointmentsForSlot = (day: Date, hour: number) => {
-    return appointments.filter(a => {
-      const apptDate = new Date(a.date);
-      const apptHour = parseInt(a.time.split(':')[0] ?? '0', 10);
-      return (
-        apptDate.getDate() === day.getDate() &&
-        apptDate.getMonth() === day.getMonth() &&
-        apptHour === hour
-      );
+  // Memoized appointments grouped by date and hour for O(1) lookup
+  const appointmentsBySlot = useMemo(() => {
+    const map = new Map<string, Appointment[]>();
+    appointments.forEach(appt => {
+      const apptDate = new Date(appt.date);
+      const apptHour = parseInt(appt.time.split(':')[0] ?? '0', 10);
+      const key = `${apptDate.getFullYear()}-${apptDate.getMonth()}-${apptDate.getDate()}-${apptHour}`;
+      const existing = map.get(key) || [];
+      existing.push(appt);
+      map.set(key, existing);
     });
-  };
+    return map;
+  }, [appointments]);
+
+  // Memoized appointment counts per day for week view badges
+  const appointmentCountByDay = useMemo(() => {
+    const counts = new Map<string, number>();
+    appointments.forEach(appt => {
+      const apptDate = new Date(appt.date);
+      const key = `${apptDate.getFullYear()}-${apptDate.getMonth()}-${apptDate.getDate()}`;
+      counts.set(key, (counts.get(key) || 0) + 1);
+    });
+    return counts;
+  }, [appointments]);
+
+  const getAppointmentsForSlot = useCallback((day: Date, hour: number): Appointment[] => {
+    const key = `${day.getFullYear()}-${day.getMonth()}-${day.getDate()}-${hour}`;
+    return appointmentsBySlot.get(key) || [];
+  }, [appointmentsBySlot]);
 
   const handleCancelAppointment = async () => {
     if (!appointmentToDelete) return;
@@ -291,14 +314,26 @@ export const Calendar = () => {
         {/* Header Row */}
         <div className="flex border-b border-gray-100">
           <div className="w-14 border-l border-gray-100 shrink-0 bg-gray-50"></div>
-          {weekDays.map((day, i) => (
-            <div key={i} className={`flex-1 text-center py-3 border-l border-gray-100 ${day.toDateString() === new Date().toDateString() ? 'bg-primary/5' : ''}`}>
-              <div className="text-xs text-gray-500 mb-1">{day.toLocaleDateString('he-IL', { weekday: 'short' })}</div>
-              <div className={`text-lg font-bold inline-flex items-center justify-center w-8 h-8 rounded-full ${day.toDateString() === new Date().toDateString() ? 'bg-primary text-white shadow-md' : 'text-gray-900'}`}>
-                {day.getDate()}
+          {weekDays.map((day, i) => {
+            const dayKey = `${day.getFullYear()}-${day.getMonth()}-${day.getDate()}`;
+            const count = appointmentCountByDay.get(dayKey) || 0;
+            const isToday = day.toDateString() === new Date().toDateString();
+            return (
+              <div key={i} className={`flex-1 text-center py-3 border-l border-gray-100 ${isToday ? 'bg-primary/5' : ''}`}>
+                <div className="text-xs text-gray-500 mb-1">{day.toLocaleDateString('he-IL', { weekday: 'short' })}</div>
+                <div className="flex items-center justify-center gap-1.5">
+                  <div className={`text-lg font-bold inline-flex items-center justify-center w-8 h-8 rounded-full ${isToday ? 'bg-primary text-white shadow-md' : 'text-gray-900'}`}>
+                    {day.getDate()}
+                  </div>
+                  {count > 0 && (
+                    <span className="text-xs bg-primary/10 text-primary px-1.5 py-0.5 rounded-full font-medium" title={`${count} תורים`}>
+                      {count}
+                    </span>
+                  )}
+                </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
 
         {/* Time Grid */}
@@ -312,6 +347,18 @@ export const Calendar = () => {
               </div>
             </div>
           )}
+
+          {/* Empty State */}
+          {!loading && appointments.length === 0 && (
+            <div className="absolute inset-0 flex items-center justify-center bg-gray-50/50 z-30 pointer-events-none">
+              <div className="text-center p-8">
+                <CalendarDays className="w-16 h-16 text-gray-300 mx-auto mb-4" />
+                <h3 className="text-lg font-medium text-gray-600 mb-2">אין תורים מתוכננים</h3>
+                <p className="text-gray-400 text-sm mb-4">לחץ על משבצת כדי להוסיף תור חדש</p>
+              </div>
+            </div>
+          )}
+
           {hours.map(hour => (
             <div key={hour} className="flex min-h-[80px]" role="row">
               <div className="w-14 border-l border-b border-gray-100 bg-gray-50 text-xs text-gray-500 text-center pt-2 relative" role="rowheader">
@@ -330,6 +377,7 @@ export const Calendar = () => {
                     <button
                       className="absolute inset-0 w-full h-full opacity-0 group-hover:opacity-100 flex items-center justify-center z-10"
                       onClick={() => openNewApptDialog(day, hour)}
+                      aria-label={`הוסף תור ב${day.toLocaleDateString('he-IL', { weekday: 'long' })} ${hour}:00`}
                     >
                       <Plus className="text-primary bg-white rounded-full shadow-sm p-1 w-6 h-6 border border-gray-100" />
                     </button>
@@ -341,7 +389,10 @@ export const Calendar = () => {
                         <Popover key={appt.id}>
                           <PopoverTrigger asChild>
                             <div
-                              className={`absolute left-1 right-1 p-2 rounded-lg text-xs shadow-sm border-l-4 cursor-pointer z-20 hover:scale-[1.02] transition-transform
+                              role="button"
+                              tabIndex={0}
+                              aria-label={`תור: ${appt.patientName}, ${appt.serviceName}, ${appt.time}`}
+                              className={`absolute left-1 right-1 p-2 rounded-lg text-xs shadow-sm border-l-4 cursor-pointer z-20 hover:scale-[1.02] transition-transform focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-1
                                  ${appt.status === 'confirmed' ? 'bg-green-50 border-green-500 text-green-800' :
                                    appt.status === 'pending' ? 'bg-amber-50 border-amber-500 text-amber-800' : 'bg-gray-100 border-gray-400 text-gray-700'}
                               `}
@@ -378,7 +429,7 @@ export const Calendar = () => {
                                 </div>
                                 <DropdownMenu>
                                   <DropdownMenuTrigger asChild>
-                                    <Button variant="ghost" size="icon" className="h-6 w-6">
+                                    <Button variant="ghost" size="icon" className="h-6 w-6" aria-label="אפשרויות נוספות">
                                       <MoreHorizontal className="h-4 w-4" />
                                     </Button>
                                   </DropdownMenuTrigger>
