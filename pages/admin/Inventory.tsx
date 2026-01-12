@@ -1,33 +1,14 @@
 import { useState, useMemo } from 'react';
-import {
-  Search, Filter, Plus, Package, AlertTriangle,
-  History, Download, ChevronDown, ChevronUp, ShoppingCart, X
-} from 'lucide-react';
+import { Plus, AlertTriangle, Download, ShoppingCart } from 'lucide-react';
 import { toast } from 'sonner';
-import {
-  Card, Button, Input, Label,
-  Alert, AlertTitle, AlertDescription,
-} from '../../components/ui';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '../../components/ui/select';
-import { Progress } from '../../components/ui/progress';
+import { Button, Alert, AlertTitle, AlertDescription } from '../../components/ui';
 import { useInventory } from '../../hooks';
 import { InventoryItem } from '../../types';
 import { createLogger } from '../../lib/logger';
 
 // Extracted components and helpers
 import {
-  CATEGORIES,
-  STATUS_OPTIONS,
-  SORT_OPTIONS,
   DEFAULT_SORT_OPTION,
-  SortField,
-  SortDirection,
   SortOption,
   ItemForm,
   AdjustmentForm,
@@ -36,6 +17,8 @@ import {
   exportInventoryToCsv,
 } from './inventory/inventory-helpers';
 import { InventoryTable } from './inventory/InventoryTable';
+import { InventoryStatusCards } from './inventory/InventoryStatusCards';
+import { InventoryFilters } from './inventory/InventoryFilters';
 import {
   AddItemDialog,
   EditItemDialog,
@@ -359,136 +342,27 @@ export const InventoryPage = () => {
       </div>
 
       {/* Status Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <Card className={`p-4 border-l-4 border-l-red-500 transition-all ${
-          criticalCount > 0 ? 'bg-red-50 ring-2 ring-red-200 shadow-lg' : 'bg-red-50/20'
-        }`}>
-          <div className="flex items-center gap-4 mb-3">
-            <div className={`p-3 bg-white rounded-full shadow-sm text-red-500 ${criticalCount > 0 ? 'animate-pulse' : ''}`}>
-              <AlertTriangle size={24} className={criticalCount > 0 ? 'animate-bounce' : ''}/>
-            </div>
-            <div>
-              <p className="text-sm font-medium text-gray-600">פריטים במלאי קריטי</p>
-              <h3 className={`text-2xl font-bold ${criticalCount > 0 ? 'text-red-600' : 'text-gray-900'}`}>{criticalCount}</h3>
-            </div>
-          </div>
-          <Progress value={inventory.length > 0 ? (criticalCount / inventory.length) * 100 : 0} className="h-2" indicatorClassName="bg-red-500" />
-        </Card>
-        <Card className={`p-4 border-l-4 border-l-yellow-500 transition-all ${
-          lowStockCount > 0 ? 'bg-yellow-50 ring-2 ring-yellow-200 shadow-lg' : 'bg-yellow-50/20'
-        }`}>
-          <div className="flex items-center gap-4 mb-3">
-            <div className={`p-3 bg-white rounded-full shadow-sm text-yellow-600 ${lowStockCount > 0 ? 'animate-pulse' : ''}`}>
-              <Package size={24}/>
-            </div>
-            <div>
-              <p className="text-sm font-medium text-gray-600">פריטים במלאי נמוך</p>
-              <h3 className={`text-2xl font-bold ${lowStockCount > 0 ? 'text-yellow-600' : 'text-gray-900'}`}>{lowStockCount}</h3>
-            </div>
-          </div>
-          <Progress value={inventory.length > 0 ? (lowStockCount / inventory.length) * 100 : 0} className="h-2" indicatorClassName="bg-yellow-500" />
-        </Card>
-        <Card className="p-4 border-l-4 border-l-blue-500 bg-blue-50/20">
-          <div className="flex items-center gap-4 mb-3">
-            <div className="p-3 bg-white rounded-full shadow-sm text-blue-600"><History size={24}/></div>
-            <div>
-              <p className="text-sm font-medium text-gray-600">סה״כ יחידות במלאי</p>
-              <h3 className="text-2xl font-bold text-gray-900">{totalQuantity.toLocaleString()}</h3>
-            </div>
-          </div>
-          <Progress value={100} className="h-2" indicatorClassName="bg-blue-500" />
-        </Card>
-        <Card className="p-4 border-l-4 border-l-green-500 bg-green-50/20">
-          <div className="flex items-center gap-4 mb-3">
-            <div className="p-3 bg-white rounded-full shadow-sm text-green-600">₪</div>
-            <div>
-              <p className="text-sm font-medium text-gray-600">שווי מלאי</p>
-              <h3 className="text-2xl font-bold text-gray-900">₪{totalValue.toLocaleString()}</h3>
-            </div>
-          </div>
-          <Progress value={100} className="h-2" indicatorClassName="bg-green-500" />
-        </Card>
-      </div>
+      <InventoryStatusCards
+        criticalCount={criticalCount}
+        lowStockCount={lowStockCount}
+        totalQuantity={totalQuantity}
+        totalValue={totalValue}
+        totalItems={inventory.length}
+      />
 
       {/* Search and Filters */}
-      <div className="bg-white p-4 rounded-xl shadow-sm border border-gray-200 space-y-4">
-        <div className="flex flex-col sm:flex-row gap-4 items-center">
-          <div className="relative w-full sm:w-96">
-            <Search className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input
-              placeholder="חיפוש לפי שם, מק״ט או אצווה..."
-              className="pr-9"
-              name="search"
-              autoComplete="off"
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-            />
-          </div>
-          <div className="flex gap-2 w-full sm:w-auto">
-            <Button
-              variant={showFilters ? 'primary' : 'outline'}
-              size="sm"
-              className="flex-1 sm:flex-none gap-1"
-              onClick={() => setShowFilters(!showFilters)}
-            >
-              סינון <Filter className="h-3 w-3" />
-              {showFilters ? <ChevronUp className="h-3 w-3" /> : <ChevronDown className="h-3 w-3" />}
-            </Button>
-            <Select value={`${sortOption.field}-${sortOption.direction}`} onValueChange={(value) => {
-              const [field, direction] = value.split('-') as [SortField, SortDirection];
-              const found = SORT_OPTIONS.find(o => o.field === field && o.direction === direction);
-              if (found) setSortOption(found);
-            }}>
-              <SelectTrigger className="w-48">
-                <SelectValue placeholder="מיון" />
-              </SelectTrigger>
-              <SelectContent>
-                {SORT_OPTIONS.map(opt => (
-                  <SelectItem key={`${opt.field}-${opt.direction}`} value={`${opt.field}-${opt.direction}`}>
-                    {opt.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-        </div>
-
-        {showFilters && (
-          <div className="flex flex-wrap gap-4 pt-4 border-t">
-            <div className="w-48">
-              <Label className="text-xs text-gray-500">קטגוריה</Label>
-              <Select value={categoryFilter} onValueChange={setCategoryFilter}>
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {CATEGORIES.map(cat => (
-                    <SelectItem key={cat.value} value={cat.value}>{cat.label}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="w-48">
-              <Label className="text-xs text-gray-500">סטטוס</Label>
-              <Select value={statusFilter} onValueChange={setStatusFilter}>
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {STATUS_OPTIONS.map(opt => (
-                    <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            {(categoryFilter !== 'all' || statusFilter !== 'all') && (
-              <Button variant="ghost" size="sm" className="self-end" onClick={() => { setCategoryFilter('all'); setStatusFilter('all'); }}>
-                <X className="h-4 w-4 ml-1" /> נקה סינון
-              </Button>
-            )}
-          </div>
-        )}
-      </div>
+      <InventoryFilters
+        searchTerm={searchTerm}
+        onSearchChange={setSearchTerm}
+        categoryFilter={categoryFilter}
+        onCategoryChange={setCategoryFilter}
+        statusFilter={statusFilter}
+        onStatusChange={setStatusFilter}
+        sortOption={sortOption}
+        onSortChange={setSortOption}
+        showFilters={showFilters}
+        onToggleFilters={() => setShowFilters(!showFilters)}
+      />
 
       {/* Batch Actions */}
       {selectedItems.size > 0 && (
