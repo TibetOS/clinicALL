@@ -11,6 +11,41 @@ This directory contains reusable UI components for the ClinicALL application.
 | `ProtectedRoute.tsx` | Auth guard wrapper for protected routes |
 | `ImageSlider.tsx` | Image carousel/slider component |
 | `ui/` | shadcn/ui components directory (Radix-based) |
+| `layout/` | Admin dashboard layout components (see `layout/CLAUDE.md`) |
+| `ErrorBoundary.tsx` | React error boundary for graceful error handling |
+
+## Layout Components (`layout/`)
+
+Admin dashboard layout components including sidebar, header, and dialogs. See `layout/CLAUDE.md` for detailed documentation.
+
+| File | Description |
+|------|-------------|
+| `AdminLayout.tsx` | Main layout wrapper composing sidebar, header, and dialogs |
+| `AdminSidebar.tsx` | Sidebar navigation with plan widget and logout |
+| `AdminHeader.tsx` | Header with menu toggle, notifications, and user profile |
+| `PageLoader.tsx` | Loading spinner for lazy-loaded routes |
+| `RoleProtectedPage.tsx` | Role-based access control wrapper |
+| `dialogs/` | Dialog components (LogoutDialog, SessionTimeoutDialog, DeclarationShareDialog) |
+
+### Usage
+
+```tsx
+import { AdminLayout, PageLoader, RoleProtectedPage } from './components/layout';
+
+// In App.tsx routes:
+<AdminLayout>
+  <Suspense fallback={<PageLoader />}>
+    <Routes>
+      <Route path="dashboard" element={<Dashboard />} />
+      <Route path="settings" element={
+        <RoleProtectedPage requiredRole="owner">
+          <SettingsPage />
+        </RoleProtectedPage>
+      } />
+    </Routes>
+  </Suspense>
+</AdminLayout>
+```
 
 ## shadcn/ui Components (`ui/`)
 
