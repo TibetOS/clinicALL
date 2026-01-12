@@ -2,23 +2,72 @@ import { useState, useEffect, useMemo, useCallback } from 'react';
 import { AlertCircle } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button, Alert, AlertTitle, AlertDescription } from '../../components/ui';
-import { useAppointments, useServices, useNotifications, usePatients } from '../../hooks';
+import { useAppointments, useServices, useNotifications, usePatients, useStaff } from '../../hooks';
 import { Appointment } from '../../types';
-import { CalendarHeader } from './calendar/CalendarHeader';
+import { CalendarHeader, CalendarView } from './calendar/CalendarHeader';
 import { CalendarGrid } from './calendar/CalendarGrid';
+import { MonthView } from './calendar/MonthView';
+import { MultiPractitionerView } from './calendar/MultiPractitionerView';
 import { AppointmentFormDialog, AppointmentFormData } from './calendar/AppointmentFormDialog';
 import { CancelAppointmentDialog } from './calendar/CancelAppointmentDialog';
+import { ConflictWarningDialog } from './calendar/ConflictWarningDialog';
+import { EditAppointmentDialog } from './calendar/EditAppointmentDialog';
+import { useTimeSlots, useDragDrop } from './calendar/hooks';
 
 export const Calendar = () => {
   // Default to day view on mobile
   const [currentDate, setCurrentDate] = useState(new Date());
-  const [view, setView] = useState<'week' | 'day'>(() =>
+  const [view, setView] = useState<CalendarView>(() =>
     typeof window !== 'undefined' && window.innerWidth < 768 ? 'day' : 'week'
   );
-  const { appointments, addAppointment, updateAppointment, fetchAppointments, loading, error } = useAppointments();
+  const { appointments, addAppointment, addRecurringAppointment, updateAppointment, fetchAppointments, loading, error } = useAppointments();
   const { services, loading: servicesLoading, error: servicesError } = useServices();
   const { addNotification } = useNotifications();
   const { patients, error: patientsError } = usePatients();
+  const { staff, loading: staffLoading } = useStaff();
+
+  // Use extracted hooks for time slots and drag-and-drop
+  const {
+    hours,
+    appointmentCountByDay,
+    getAppointmentsForSlot,
+    checkConflict,
+  } = useTimeSlots({ appointments });
+
+  // Reschedule callback for drag-and-drop
+  const handleReschedule = useCallback(async (
+    appointmentId: string,
+    newDate: string,
+    newTime: string
+  ): Promise<boolean> => {
+    const result = await updateAppointment(appointmentId, {
+      date: newDate,
+      time: newTime,
+    });
+    if (result) {
+      toast.success('התור הוזז בהצלחה');
+      return true;
+    } else {
+      toast.error('שגיאה בהזזת התור');
+      return false;
+    }
+  }, [updateAppointment]);
+
+  const {
+    activeId,
+    conflict,
+    showConflictDialog,
+    pendingMove,
+    handleDragStart,
+    handleDragOver,
+    handleDragEnd,
+    handleConflictConfirm,
+    handleConflictCancel,
+  } = useDragDrop({
+    appointments,
+    checkConflict,
+    onReschedule: handleReschedule,
+  });
   const [isNewApptOpen, setIsNewApptOpen] = useState(false);
 
   // Form state
@@ -28,10 +77,13 @@ export const Calendar = () => {
     date: new Date().toISOString().split('T')[0] ?? '',
     time: '10:00',
     notes: '',
+    recurrenceType: 'none',
   });
   const [saving, setSaving] = useState(false);
   const [appointmentToDelete, setAppointmentToDelete] = useState<Appointment | null>(null);
   const [canceling, setCanceling] = useState(false);
+  const [appointmentToEdit, setAppointmentToEdit] = useState<Appointment | null>(null);
+  const [savingEdit, setSavingEdit] = useState(false);
 
   // Auto-switch to day view on mobile resize
   useEffect(() => {
@@ -51,9 +103,6 @@ export const Calendar = () => {
     return () => clearTimeout(timer);
   }, [currentDate]);
 
-  // Helper to format hours
-  const hours = Array.from({ length: 13 }, (_, i) => i + 8); // 08:00 - 20:00
-
   // Memoized week days calculation
   const weekDays = useMemo(() => {
     const start = new Date(debouncedDate);
@@ -65,35 +114,69 @@ export const Calendar = () => {
     });
   }, [debouncedDate]);
 
-  // Memoized appointments grouped by date and hour for O(1) lookup
-  const appointmentsBySlot = useMemo(() => {
-    const map = new Map<string, Appointment[]>();
-    appointments.forEach(appt => {
-      const apptDate = new Date(appt.date);
-      const apptHour = parseInt(appt.time.split(':')[0] ?? '0', 10);
-      const key = `${apptDate.getFullYear()}-${apptDate.getMonth()}-${apptDate.getDate()}-${apptHour}`;
-      const existing = map.get(key) || [];
-      existing.push(appt);
-      map.set(key, existing);
-    });
-    return map;
-  }, [appointments]);
+  // Keyboard shortcuts
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Don't handle shortcuts when typing in inputs, textareas, or when dialogs are open
+      const target = e.target as HTMLElement;
+      const isInputFocused = target.tagName === 'INPUT' ||
+        target.tagName === 'TEXTAREA' ||
+        target.isContentEditable;
+      const isDialogOpen = isNewApptOpen || !!appointmentToDelete || !!appointmentToEdit || showConflictDialog;
 
-  // Memoized appointment counts per day for week view badges
-  const appointmentCountByDay = useMemo(() => {
-    const counts = new Map<string, number>();
-    appointments.forEach(appt => {
-      const apptDate = new Date(appt.date);
-      const key = `${apptDate.getFullYear()}-${apptDate.getMonth()}-${apptDate.getDate()}`;
-      counts.set(key, (counts.get(key) || 0) + 1);
-    });
-    return counts;
-  }, [appointments]);
+      if (isInputFocused || isDialogOpen) return;
 
-  const getAppointmentsForSlot = useCallback((day: Date, hour: number): Appointment[] => {
-    const key = `${day.getFullYear()}-${day.getMonth()}-${day.getDate()}-${hour}`;
-    return appointmentsBySlot.get(key) || [];
-  }, [appointmentsBySlot]);
+      // Navigation helper - accounts for RTL
+      const navigate = (direction: 'prev' | 'next') => {
+        const newDate = new Date(currentDate);
+        // In RTL, ArrowRight means "previous" (visual direction)
+        const isPrev = direction === 'prev';
+        const delta = view === 'day' ? 1 : view === 'week' ? 7 : 30;
+        newDate.setDate(newDate.getDate() + (isPrev ? -delta : delta));
+        setCurrentDate(newDate);
+      };
+
+      switch (e.key.toLowerCase()) {
+        case 't':
+          // Go to today
+          setCurrentDate(new Date());
+          break;
+        case 'n':
+          // New appointment
+          openNewApptDialog();
+          break;
+        case 'd':
+          // Day view
+          setView('day');
+          break;
+        case 'w':
+          // Week view (only on desktop)
+          if (window.innerWidth >= 768) {
+            setView('week');
+          }
+          break;
+        case 'm':
+          // Month view
+          setView('month');
+          break;
+        case 'p':
+          // Practitioners/Team view
+          setView('team');
+          break;
+        case 'arrowleft':
+          // In RTL, left arrow goes forward (next)
+          navigate('next');
+          break;
+        case 'arrowright':
+          // In RTL, right arrow goes backward (prev)
+          navigate('prev');
+          break;
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [currentDate, view, isNewApptOpen, appointmentToDelete, appointmentToEdit, showConflictDialog]);
 
   const handleCancelAppointment = async () => {
     if (!appointmentToDelete) return;
@@ -107,6 +190,30 @@ export const Calendar = () => {
       setAppointmentToDelete(null);
     } else {
       toast.error('שגיאה בביטול התור');
+    }
+  };
+
+  const handleEditAppointment = async (
+    appointmentId: string,
+    updates: {
+      serviceId: string;
+      serviceName: string;
+      date: string;
+      time: string;
+      duration: number;
+      notes?: string;
+      status: import('../../types').AppointmentStatus;
+    }
+  ) => {
+    setSavingEdit(true);
+    const result = await updateAppointment(appointmentId, updates);
+    setSavingEdit(false);
+
+    if (result) {
+      toast.success('התור עודכן בהצלחה');
+      setAppointmentToEdit(null);
+    } else {
+      toast.error('שגיאה בעדכון התור');
     }
   };
 
@@ -138,7 +245,7 @@ export const Calendar = () => {
       p => p.name.toLowerCase() === apptForm.patientName.toLowerCase()
     );
 
-    const result = await addAppointment({
+    const appointmentInput = {
       patientId: existingPatient?.id || `walk-in-${Date.now()}`,
       patientName: apptForm.patientName,
       serviceId: apptForm.serviceId,
@@ -146,13 +253,30 @@ export const Calendar = () => {
       date: apptForm.date,
       time: apptForm.time,
       duration: service?.duration || 30,
-      status: 'pending',
+      status: 'pending' as const,
       notes: apptForm.notes,
-    });
+    };
+
+    // Use recurring or single appointment based on recurrence type
+    let result: Appointment | Appointment[] | null;
+    if (apptForm.recurrenceType !== 'none') {
+      const recurrence = {
+        type: apptForm.recurrenceType,
+        endDate: apptForm.recurrenceEndDate,
+        count: apptForm.recurrenceCount,
+      };
+      result = await addRecurringAppointment(appointmentInput, recurrence);
+    } else {
+      result = await addAppointment(appointmentInput);
+    }
 
     setSaving(false);
 
-    if (result) {
+    // Check if we got results (single appointment or array of appointments)
+    const hasResult = Array.isArray(result) ? result.length > 0 : result !== null;
+    const firstAppointment = Array.isArray(result) ? result[0] : result;
+
+    if (hasResult && firstAppointment) {
       // Check if patient needs a health declaration
       const needsDeclaration = !existingPatient ||
         existingPatient.declarationStatus === 'none' ||
@@ -166,7 +290,7 @@ export const Calendar = () => {
           type: 'info',
           action: 'send_declaration',
           metadata: {
-            appointmentId: result.id,
+            appointmentId: firstAppointment.id,
             patientId: existingPatient?.id,
             patientName: apptForm.patientName,
             patientPhone: existingPatient?.phone,
@@ -185,8 +309,15 @@ export const Calendar = () => {
         date: new Date().toISOString().split('T')[0] ?? '',
         time: '10:00',
         notes: '',
+        recurrenceType: 'none',
       });
-      toast.success('התור נקבע בהצלחה');
+
+      // Show appropriate success message
+      if (Array.isArray(result) && result.length > 1) {
+        toast.success(`${result.length} תורים נקבעו בהצלחה`);
+      } else {
+        toast.success('התור נקבע בהצלחה');
+      }
     } else {
       toast.error('שגיאה בקביעת התור');
     }
@@ -228,16 +359,53 @@ export const Calendar = () => {
         </Alert>
       )}
 
-      <CalendarGrid
-        weekDays={weekDays}
-        hours={hours}
-        loading={loading}
-        appointments={appointments}
-        appointmentCountByDay={appointmentCountByDay}
-        getAppointmentsForSlot={getAppointmentsForSlot}
-        onSlotClick={openNewApptDialog}
-        onCancelRequest={setAppointmentToDelete}
-      />
+      {view === 'month' ? (
+        <MonthView
+          currentDate={currentDate}
+          appointments={appointments}
+          onDayClick={(date) => {
+            setCurrentDate(date);
+            setView('day');
+          }}
+        />
+      ) : view === 'team' ? (
+        <MultiPractitionerView
+          date={currentDate}
+          appointments={appointments}
+          staff={staff}
+          loading={loading || staffLoading}
+          hours={hours}
+          onSlotClick={openNewApptDialog}
+          onCancelRequest={setAppointmentToDelete}
+          onEditRequest={setAppointmentToEdit}
+          onViewDetails={(appt) => {
+            toast.info(`${appt.patientName} - ${appt.serviceName}`, {
+              description: `${new Date(appt.date).toLocaleDateString('he-IL')} בשעה ${appt.time}`,
+            });
+          }}
+        />
+      ) : (
+        <CalendarGrid
+          weekDays={weekDays}
+          hours={hours}
+          loading={loading}
+          appointments={appointments}
+          appointmentCountByDay={appointmentCountByDay}
+          getAppointmentsForSlot={getAppointmentsForSlot}
+          onSlotClick={openNewApptDialog}
+          onCancelRequest={setAppointmentToDelete}
+          onEditRequest={setAppointmentToEdit}
+          onViewDetails={(appt) => {
+            toast.info(`${appt.patientName} - ${appt.serviceName}`, {
+              description: `${new Date(appt.date).toLocaleDateString('he-IL')} בשעה ${appt.time}`,
+            });
+          }}
+          activeId={activeId}
+          onDragStart={handleDragStart}
+          onDragOver={handleDragOver}
+          onDragEnd={handleDragEnd}
+        />
+      )}
 
       <AppointmentFormDialog
         open={isNewApptOpen}
@@ -248,6 +416,7 @@ export const Calendar = () => {
         servicesLoading={servicesLoading}
         saving={saving}
         onSave={handleAddAppointment}
+        patients={patients}
       />
 
       <CancelAppointmentDialog
@@ -255,6 +424,25 @@ export const Calendar = () => {
         canceling={canceling}
         onCancel={handleCancelAppointment}
         onClose={() => setAppointmentToDelete(null)}
+      />
+
+      <EditAppointmentDialog
+        appointment={appointmentToEdit}
+        open={!!appointmentToEdit}
+        onClose={() => setAppointmentToEdit(null)}
+        services={services}
+        servicesLoading={servicesLoading}
+        saving={savingEdit}
+        onSave={handleEditAppointment}
+      />
+
+      <ConflictWarningDialog
+        open={showConflictDialog}
+        onClose={handleConflictCancel}
+        onConfirm={handleConflictConfirm}
+        conflict={conflict}
+        newTime={pendingMove?.newTime ?? ''}
+        newDate={pendingMove?.newDate ?? ''}
       />
     </div>
   );

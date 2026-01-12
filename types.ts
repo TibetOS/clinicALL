@@ -259,6 +259,15 @@ export interface HealthDeclarationToken {
   usedAt?: string; // ISO Date - when the form was submitted
 }
 
+// Recurring appointment patterns
+export type RecurrenceType = 'none' | 'weekly' | 'biweekly' | 'monthly';
+
+export interface RecurrencePattern {
+  type: RecurrenceType;
+  endDate?: string; // ISO date string - when to stop creating appointments
+  count?: number; // Number of occurrences (alternative to endDate)
+}
+
 // Activity Log for healthcare compliance audit trail
 export type ActivityAction = 'view' | 'create' | 'update' | 'delete' | 'export' | 'login' | 'logout' | 'send_declaration';
 export type ActivityResourceType =

@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
-import { Appointment, AppointmentStatus, AppointmentDeclarationStatus } from '../types';
+import { Appointment, AppointmentStatus, AppointmentDeclarationStatus, RecurrencePattern } from '../types';
 import { createLogger } from '../lib/logger';
 import { AppointmentRow, AppointmentRowUpdate, getErrorMessage } from '../lib/database.types';
 
@@ -40,6 +40,7 @@ interface UseAppointments {
   setPage: (page: number) => void;
   getAppointment: (id: string) => Promise<Appointment | null>;
   addAppointment: (appointment: AppointmentInput) => Promise<Appointment | null>;
+  addRecurringAppointment: (appointment: AppointmentInput, recurrence: RecurrencePattern) => Promise<Appointment[]>;
   updateAppointment: (id: string, updates: Partial<AppointmentInput>) => Promise<Appointment | null>;
   deleteAppointment: (id: string) => Promise<boolean>;
   updateStatus: (id: string, status: AppointmentStatus) => Promise<boolean>;
@@ -198,6 +199,117 @@ export function useAppointments(options?: UseAppointmentsOptions): UseAppointmen
     }
   }, [profile?.clinic_id]);
 
+  // Calculate recurring appointment dates
+  const calculateRecurringDates = useCallback((
+    startDate: string,
+    recurrence: RecurrencePattern
+  ): string[] => {
+    const dates: string[] = [startDate];
+    const start = new Date(startDate);
+
+    // Determine number of occurrences
+    let maxOccurrences = recurrence.count || 52; // Default max 1 year of weekly
+    if (recurrence.endDate) {
+      const end = new Date(recurrence.endDate);
+      // Calculate approximate number based on pattern
+      const daysDiff = Math.floor((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24));
+      switch (recurrence.type) {
+        case 'weekly':
+          maxOccurrences = Math.floor(daysDiff / 7) + 1;
+          break;
+        case 'biweekly':
+          maxOccurrences = Math.floor(daysDiff / 14) + 1;
+          break;
+        case 'monthly':
+          maxOccurrences = Math.floor(daysDiff / 30) + 1;
+          break;
+      }
+    }
+
+    // Generate dates based on pattern
+    for (let i = 1; i < maxOccurrences; i++) {
+      const nextDate = new Date(start);
+      switch (recurrence.type) {
+        case 'weekly':
+          nextDate.setDate(nextDate.getDate() + (7 * i));
+          break;
+        case 'biweekly':
+          nextDate.setDate(nextDate.getDate() + (14 * i));
+          break;
+        case 'monthly':
+          nextDate.setMonth(nextDate.getMonth() + i);
+          break;
+      }
+
+      // Check if we've passed the end date
+      if (recurrence.endDate && nextDate > new Date(recurrence.endDate)) {
+        break;
+      }
+
+      dates.push(nextDate.toISOString().split('T')[0]!);
+    }
+
+    return dates;
+  }, []);
+
+  const addRecurringAppointment = useCallback(async (
+    appointment: AppointmentInput,
+    recurrence: RecurrencePattern
+  ): Promise<Appointment[]> => {
+    if (recurrence.type === 'none') {
+      const result = await addAppointment(appointment);
+      return result ? [result] : [];
+    }
+
+    const dates = calculateRecurringDates(appointment.date, recurrence);
+    const createdAppointments: Appointment[] = [];
+
+    try {
+      // Create all appointments in a batch
+      const appointmentsToCreate = dates.map(date => ({
+        clinic_id: profile?.clinic_id,
+        patient_id: appointment.patientId,
+        patient_name: appointment.patientName,
+        service_id: appointment.serviceId,
+        service_name: appointment.serviceName,
+        date,
+        time: appointment.time,
+        duration: appointment.duration,
+        status: appointment.status || 'pending',
+        notes: appointment.notes,
+      }));
+
+      const { data, error: insertError } = await supabase
+        .from('appointments')
+        .insert(appointmentsToCreate)
+        .select('*');
+
+      if (insertError) throw insertError;
+
+      const transformedAppointments: Appointment[] = (data as AppointmentRow[] || []).map((a) => ({
+        id: a.id,
+        patientId: a.patient_id,
+        patientName: a.patient_name || '',
+        serviceId: a.service_id,
+        serviceName: a.service_name || '',
+        date: a.date,
+        time: a.time,
+        duration: a.duration,
+        status: a.status || 'pending',
+        notes: a.notes ?? undefined,
+        declarationStatus: a.declaration_status ?? undefined,
+        declarationTokenId: a.declaration_token_id ?? undefined,
+      }));
+
+      setAppointments(prev => [...prev, ...transformedAppointments]);
+      return transformedAppointments;
+    } catch (err) {
+      logger.error('Error adding recurring appointments:', err);
+      setError(getErrorMessage(err) || 'Failed to add recurring appointments');
+      return createdAppointments;
+    }
+  }, [profile?.clinic_id, addAppointment, calculateRecurringDates]);
+
   const updateAppointment = useCallback(async (id: string, updates: Partial<AppointmentInput>): Promise<Appointment | null> => {
     try {
       const dbUpdates: AppointmentRowUpdate = {};
@@ -297,6 +409,7 @@ export function useAppointments(options?: UseAppointmentsOptions): UseAppointmen
     setPage,
     getAppointment,
     addAppointment,
+    addRecurringAppointment,
     updateAppointment,
     deleteAppointment,
     updateStatus,

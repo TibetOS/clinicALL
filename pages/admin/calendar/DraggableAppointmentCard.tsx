@@ -1,4 +1,6 @@
-import { MoreHorizontal, Eye, Trash2, Phone, Edit2 } from 'lucide-react';
+import { useDraggable } from '@dnd-kit/core';
+import { CSS } from '@dnd-kit/utilities';
+import { GripVertical, MoreHorizontal, Eye, Trash2, Phone, Edit2 } from 'lucide-react';
 import { Button } from '../../../components/ui';
 import {
   Tooltip,
@@ -21,34 +23,73 @@ import {
 import { Appointment } from '../../../types';
 import { getDeclarationIndicator } from './calendar-helpers';
 
-export type AppointmentCardProps = {
+export type DraggableAppointmentCardProps = {
   appointment: Appointment;
   onCancelRequest: (appointment: Appointment) => void;
   onEditRequest: (appointment: Appointment) => void;
   onViewDetails: (appointment: Appointment) => void;
+  isDragging?: boolean;
 };
 
-export function AppointmentCard({ appointment, onCancelRequest, onEditRequest, onViewDetails }: AppointmentCardProps) {
+export function DraggableAppointmentCard({
+  appointment,
+  onCancelRequest,
+  onEditRequest,
+  onViewDetails,
+}: DraggableAppointmentCardProps) {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    isDragging,
+  } = useDraggable({
+    id: appointment.id,
+    data: {
+      appointment,
+    },
+  });
+
   const declIndicator = getDeclarationIndicator(appointment.declarationStatus);
+
+  const style = {
+    top: `${(parseInt(appointment.time.split(':')[1] ?? '0', 10) / 60) * 100}%`,
+    height: `${(appointment.duration / 60) * 100}%`,
+    minHeight: '40px',
+    transform: CSS.Translate.toString(transform),
+    opacity: isDragging ? 0.5 : 1,
+    zIndex: isDragging ? 50 : 20,
+  };
+
+  const statusClasses: Record<string, string> = {
+    confirmed: 'bg-green-50 border-green-500 text-green-800',
+    pending: 'bg-amber-50 border-amber-500 text-amber-800',
+    completed: 'bg-blue-50 border-blue-500 text-blue-800',
+    cancelled: 'bg-gray-100 border-gray-400 text-gray-700',
+    'no-show': 'bg-red-50 border-red-400 text-red-800',
+  };
+
+  const statusClass = statusClasses[appointment.status] ?? statusClasses.pending;
 
   return (
     <Popover>
       <PopoverTrigger asChild>
         <div
-          role="button"
-          tabIndex={0}
+          ref={setNodeRef}
           aria-label={`תור: ${appointment.patientName}, ${appointment.serviceName}, ${appointment.time}`}
-          className={`absolute left-1 right-1 p-2 rounded-lg text-xs shadow-sm border-l-4 cursor-pointer z-20 hover:scale-[1.02] transition-transform focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-1
-             ${appointment.status === 'confirmed' ? 'bg-green-50 border-green-500 text-green-800' :
-               appointment.status === 'pending' ? 'bg-amber-50 border-amber-500 text-amber-800' : 'bg-gray-100 border-gray-400 text-gray-700'}
-          `}
-          style={{
-            top: `${(parseInt(appointment.time.split(':')[1] ?? '0', 10) / 60) * 100}%`,
-            height: `${(appointment.duration / 60) * 100}%`,
-            minHeight: '40px'
-          }}
+          className={`absolute left-1 right-1 p-2 rounded-lg text-xs shadow-sm border-l-4 cursor-grab z-20 hover:scale-[1.02] transition-all focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-1 ${statusClass} ${isDragging ? 'cursor-grabbing shadow-lg ring-2 ring-primary' : ''}`}
+          style={style}
+          {...attributes}
         >
           <div className="flex items-center gap-1">
+            {/* Drag Handle */}
+            <div
+              {...listeners}
+              className="cursor-grab active:cursor-grabbing p-0.5 -mr-1 rounded hover:bg-black/5 transition-colors"
+              aria-label="גרור כדי לשנות זמן"
+            >
+              <GripVertical className="h-3 w-3 text-gray-400" />
+            </div>
             <span className="font-bold truncate flex-1">{appointment.patientName}</span>
             {declIndicator && (
               <TooltipProvider>
@@ -63,7 +104,7 @@ export function AppointmentCard({ appointment, onCancelRequest, onEditRequest, o
               </TooltipProvider>
             )}
           </div>
-          <div className="truncate opacity-80">{appointment.serviceName}</div>
+          <div className="truncate opacity-80 mr-4">{appointment.serviceName}</div>
         </div>
       </PopoverTrigger>
       <PopoverContent className="w-72" align="start">
@@ -89,7 +130,6 @@ export function AppointmentCard({ appointment, onCancelRequest, onEditRequest, o
                 <DropdownMenuItem
                   className="gap-2"
                   onClick={() => {
-                    // TODO: Integrate with patient phone from patient data
                     if (appointment.patientId) {
                       window.open(`tel:${appointment.patientId}`, '_blank');
                     }
@@ -133,6 +173,10 @@ export function AppointmentCard({ appointment, onCancelRequest, onEditRequest, o
               <p className="text-gray-700">{appointment.notes}</p>
             </div>
           )}
+          <div className="text-xs text-gray-400 border-t pt-2 flex items-center gap-1">
+            <GripVertical className="h-3 w-3" />
+            <span>גרור כדי לשנות זמן</span>
+          </div>
         </div>
       </PopoverContent>
     </Popover>
