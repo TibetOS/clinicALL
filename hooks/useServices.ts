@@ -22,7 +22,7 @@ interface UseServices {
   services: Service[];
   loading: boolean;
   error: string | null;
-  fetchServices: () => Promise<void>;
+  fetchServices: (includeInactive?: boolean) => Promise<void>;
   getService: (id: string) => Promise<Service | null>;
   addService: (service: ServiceInput) => Promise<Service | null>;
   updateService: (id: string, updates: Partial<ServiceInput>) => Promise<Service | null>;
@@ -36,10 +36,11 @@ export function useServices(): UseServices {
   const [error, setError] = useState<string | null>(null);
   const { profile } = useAuth();
 
-  const fetchServices = useCallback(async () => {
+  const fetchServices = useCallback(async (includeInactive = false) => {
     if (!isSupabaseConfigured()) {
-      // Return mock data in dev mode
-      setServices(MOCK_SERVICES);
+      // Return mock data in dev mode (add isActive: true to mock services)
+      const mockWithActive = MOCK_SERVICES.map(s => ({ ...s, isActive: true }));
+      setServices(mockWithActive);
       setLoading(false);
       return;
     }
@@ -48,12 +49,17 @@ export function useServices(): UseServices {
     setError(null);
 
     try {
-      const { data, error: fetchError } = await supabase
+      let query = supabase
         .from('services')
         .select('*')
-        .eq('is_active', true)
         .order('category', { ascending: true })
         .order('name', { ascending: true });
+
+      if (!includeInactive) {
+        query = query.eq('is_active', true);
+      }
+
+      const { data, error: fetchError } = await query;
 
       if (fetchError) throw fetchError;
 
@@ -66,6 +72,7 @@ export function useServices(): UseServices {
         price: s.price || 0,
         category: s.category,
         image: s.image ?? undefined,
+        isActive: s.is_active,
       }));
 
       setServices(transformedServices);
@@ -79,7 +86,8 @@ export function useServices(): UseServices {
 
   const getService = useCallback(async (id: string): Promise<Service | null> => {
     if (!isSupabaseConfigured()) {
-      return MOCK_SERVICES.find(s => s.id === id) || null;
+      const mock = MOCK_SERVICES.find(s => s.id === id);
+      return mock ? { ...mock, isActive: true } : null;
     }
 
     try {
@@ -99,6 +107,7 @@ export function useServices(): UseServices {
         price: data.price || 0,
         category: data.category,
         image: data.image ?? undefined,
+        isActive: data.is_active,
       };
     } catch (err) {
       logger.error('Error fetching service:', err);
@@ -117,6 +126,7 @@ export function useServices(): UseServices {
         price: service.price,
         category: service.category,
         image: service.image,
+        isActive: service.isActive !== false,
       };
       setServices(prev => [...prev, newService]);
       return newService;
@@ -148,6 +158,7 @@ export function useServices(): UseServices {
         price: data.price || 0,
         category: data.category,
         image: data.image ?? undefined,
+        isActive: data.is_active,
       };
 
       setServices(prev => [...prev, newService]);
@@ -162,10 +173,15 @@ export function useServices(): UseServices {
   const updateService = useCallback(async (id: string, updates: Partial<ServiceInput>): Promise<Service | null> => {
     if (!isSupabaseConfigured()) {
       // Mock update for dev mode
-      setServices(prev => prev.map(s =>
-        s.id === id ? { ...s, ...updates } : s
-      ));
-      return services.find(s => s.id === id) || null;
+      let updatedService: Service | null = null;
+      setServices(prev => prev.map(s => {
+        if (s.id === id) {
+          updatedService = { ...s, ...updates, isActive: updates.isActive ?? s.isActive };
+          return updatedService;
+        }
+        return s;
+      }));
+      return updatedService;
     }
 
     try {
@@ -195,6 +211,7 @@ export function useServices(): UseServices {
         price: data.price || 0,
         category: data.category,
         image: data.image ?? undefined,
+        isActive: data.is_active,
       };
 
       setServices(prev => prev.map(s => s.id === id ? updatedService : s));
@@ -204,7 +221,7 @@ export function useServices(): UseServices {
       setError(getErrorMessage(err) || 'Failed to update service');
       return null;
     }
-  }, [services]);
+  }, []);
 
   const deleteService = useCallback(async (id: string): Promise<boolean> => {
     if (!isSupabaseConfigured()) {

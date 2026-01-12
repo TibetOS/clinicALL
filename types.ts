@@ -85,6 +85,7 @@ export interface Service {
   price: number;
   category: string;
   image?: string;
+  isActive: boolean;
 }
 
 export interface Declaration {
