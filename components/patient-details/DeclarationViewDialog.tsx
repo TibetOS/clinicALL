@@ -1,6 +1,6 @@
 import { CheckCircle2 } from 'lucide-react';
-import { Button, Badge, Dialog } from '../../../components/ui';
-import { Declaration } from '../../../types';
+import { Button, Badge, Dialog } from '../ui';
+import { Declaration } from '../../types';
 
 interface DeclarationViewDialogProps {
   declaration: Declaration | null;

@@ -3,14 +3,14 @@ import {
   Phone, Plus, MoreHorizontal, Trash2, Edit2,
   Calendar, MessageSquare
 } from 'lucide-react';
-import { Button, Badge } from '../../../components/ui';
+import { Button, Badge } from '../ui';
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from '../../../components/ui/dropdown-menu';
+} from '../ui/dropdown-menu';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -21,9 +21,9 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
   AlertDialogTrigger,
-} from '../../../components/ui/alert-dialog';
-import { Avatar, AvatarFallback, AvatarImage } from '../../../components/ui/avatar';
-import { Patient } from '../../../types';
+} from '../ui/alert-dialog';
+import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar';
+import { Patient } from '../../types';
 
 interface PatientHeaderProps {
   patient: Patient;

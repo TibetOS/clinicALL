@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Plus, SplitSquareHorizontal } from 'lucide-react';
-import { Button, Card, Badge } from '../../../components/ui';
-import { ImageSlider } from '../../../components/ImageSlider';
+import { Button, Card, Badge } from '../ui';
+import { ImageSlider } from '../ImageSlider';
 
 interface GalleryTabProps {
   onImageClick: (image: string) => void;

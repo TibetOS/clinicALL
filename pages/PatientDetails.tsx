@@ -12,7 +12,7 @@ import {
   FormsTab,
   GalleryTab,
   ImageLightbox,
-} from './admin/patient-details';
+} from '../components/patient-details';
 
 const TAB_CONFIG = [
   { id: 'clinical', label: 'תיק טיפולים', icon: Sparkles },

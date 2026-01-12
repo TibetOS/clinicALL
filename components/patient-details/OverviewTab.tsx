@@ -1,13 +1,13 @@
 import { AlertTriangle } from 'lucide-react';
-import { Card, Badge } from '../../../components/ui';
+import { Card, Badge } from '../ui';
 import {
   Accordion,
   AccordionContent,
   AccordionItem,
   AccordionTrigger,
-} from '../../../components/ui/accordion';
-import { Separator } from '../../../components/ui/separator';
-import { Patient, Appointment } from '../../../types';
+} from '../ui/accordion';
+import { Separator } from '../ui/separator';
+import { Patient, Appointment } from '../../types';
 
 interface OverviewTabProps {
   patient: Patient;

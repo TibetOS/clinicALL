@@ -1,17 +1,17 @@
 import { useState } from 'react';
 import { FileText, Save, Plus, ZoomIn } from 'lucide-react';
-import { Button, Card, Badge } from '../../../components/ui';
+import { Button, Card, Badge } from '../ui';
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '../../../components/ui/select';
-import { FaceMap } from '../../../components/FaceMap';
-import { useAuth } from '../../../contexts/AuthContext';
+} from '../ui/select';
+import { FaceMap } from '../FaceMap';
+import { useAuth } from '../../contexts/AuthContext';
 import { toast } from 'sonner';
-import { InjectionPoint, ClinicalNote, Patient } from '../../../types';
+import { InjectionPoint, ClinicalNote, Patient } from '../../types';
 
 interface ClinicalTabProps {
   patient: Patient;

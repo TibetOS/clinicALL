@@ -2,16 +2,16 @@ import { useState } from 'react';
 import {
   FileText, Send, Eye, ShieldCheck, Download, Plus, Activity, FileSignature,
 } from 'lucide-react';
-import { Button, Card, Badge } from '../../../components/ui';
+import { Button, Card, Badge } from '../ui';
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '../../../components/ui/select';
+} from '../ui/select';
 import { toast } from 'sonner';
-import { Declaration } from '../../../types';
+import { Declaration } from '../../types';
 import { DeclarationViewDialog } from './DeclarationViewDialog';
 
 interface MedicalForm {
