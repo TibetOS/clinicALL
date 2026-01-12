@@ -62,9 +62,9 @@ export const Calendar = () => {
     typeof window !== 'undefined' && window.innerWidth < 768 ? 'day' : 'week'
   );
   const { appointments, addAppointment, updateAppointment, fetchAppointments, loading, error } = useAppointments();
-  const { services, loading: servicesLoading } = useServices();
+  const { services, loading: servicesLoading, error: servicesError } = useServices();
   const { addNotification } = useNotifications();
-  const { patients } = usePatients();
+  const { patients, error: patientsError } = usePatients();
   const [isNewApptOpen, setIsNewApptOpen] = useState(false);
 
   // Form state
@@ -309,6 +309,17 @@ export const Calendar = () => {
         </div>
       )}
 
+      {/* Warning for services/patients data issues */}
+      {(servicesError || patientsError) && (
+        <div className="bg-yellow-50 border border-yellow-200 text-yellow-800 px-4 py-3 rounded-lg mb-4 flex items-center gap-2">
+          <AlertCircle size={18} />
+          <span>
+            {servicesError && 'שגיאה בטעינת שירותים. '}
+            {patientsError && 'שגיאה בטעינת מטופלים - התאמת שמות לא תפעל.'}
+          </span>
+        </div>
+      )}
+
       {/* Calendar Grid */}
       <Card id="calendar-grid" role="grid" aria-label="לוח תורים" className="flex-1 overflow-hidden flex flex-col border-stone-200">
         {/* Header Row */}
@@ -504,8 +515,9 @@ export const Calendar = () => {
       <Dialog open={isNewApptOpen} onClose={() => setIsNewApptOpen(false)} title="קביעת תור חדש">
         <div className="space-y-4">
           <div>
-            <Label>שם המטופל</Label>
+            <Label htmlFor="patient-name">שם המטופל</Label>
             <Input
+              id="patient-name"
               name="patient-name"
               autoComplete="name"
               placeholder="הכנס שם מטופל..."
@@ -553,8 +565,10 @@ export const Calendar = () => {
             </div>
           </div>
           <div>
-            <Label>הערות</Label>
+            <Label htmlFor="appointment-notes">הערות</Label>
             <textarea
+              id="appointment-notes"
+              name="notes"
               className="w-full h-20 border border-gray-200 rounded-lg p-2 text-sm"
               placeholder="הערות מיוחדות..."
               value={apptForm.notes}
