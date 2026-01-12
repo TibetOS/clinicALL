@@ -366,8 +366,9 @@ export const ServicesPage = () => {
       >
         <div className="space-y-4">
           <div>
-            <Label>שם הטיפול</Label>
+            <Label htmlFor="service-name">שם הטיפול</Label>
             <Input
+              id="service-name"
               name="service-name"
               autoComplete="off"
               placeholder="לדוגמה: בוטוקס - אזור מצח"
@@ -377,8 +378,9 @@ export const ServicesPage = () => {
           </div>
 
           <div>
-            <Label>תיאור</Label>
+            <Label htmlFor="service-description">תיאור</Label>
             <textarea
+              id="service-description"
               className="flex min-h-[80px] w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-gray-900 placeholder:text-gray-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/30 focus-visible:ring-offset-0 focus-visible:border-primary focus-visible:shadow-[0_0_0_3px_rgba(13,148,136,0.1)] disabled:cursor-not-allowed disabled:opacity-50 transition-all duration-200 ease-out resize-none"
               placeholder="תיאור קצר של הטיפול..."
               value={formData.description}
@@ -387,12 +389,12 @@ export const ServicesPage = () => {
           </div>
 
           <div>
-            <Label>קטגוריה</Label>
+            <Label htmlFor="service-category">קטגוריה</Label>
             <Select
               value={formData.category}
               onValueChange={(value) => setFormData(prev => ({ ...prev, category: value }))}
             >
-              <SelectTrigger>
+              <SelectTrigger id="service-category">
                 <SelectValue placeholder="בחר קטגוריה" />
               </SelectTrigger>
               <SelectContent>
@@ -405,8 +407,9 @@ export const ServicesPage = () => {
 
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <Label>משך (דקות)</Label>
+              <Label htmlFor="service-duration">משך (דקות)</Label>
               <Input
+                id="service-duration"
                 type="number"
                 name="service-duration"
                 autoComplete="off"
@@ -417,8 +420,9 @@ export const ServicesPage = () => {
               />
             </div>
             <div>
-              <Label>מחיר (₪)</Label>
+              <Label htmlFor="service-price">מחיר (₪)</Label>
               <Input
+                id="service-price"
                 type="number"
                 name="service-price"
                 autoComplete="off"
