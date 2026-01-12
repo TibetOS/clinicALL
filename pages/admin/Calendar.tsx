@@ -2,12 +2,11 @@ import { useState, useEffect, useMemo, useCallback } from 'react';
 import { AlertCircle } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button, Alert, AlertTitle, AlertDescription } from '../../components/ui';
-import { useAppointments, useServices, useNotifications, usePatients, useStaff } from '../../hooks';
+import { useAppointments, useServices, useNotifications, usePatients } from '../../hooks';
 import { Appointment } from '../../types';
 import { CalendarHeader, CalendarView } from './calendar/CalendarHeader';
 import { CalendarGrid } from './calendar/CalendarGrid';
 import { MonthView } from './calendar/MonthView';
-import { MultiPractitionerView } from './calendar/MultiPractitionerView';
 import { AppointmentFormDialog, AppointmentFormData } from './calendar/AppointmentFormDialog';
 import { CancelAppointmentDialog } from './calendar/CancelAppointmentDialog';
 import { ConflictWarningDialog } from './calendar/ConflictWarningDialog';
@@ -24,7 +23,6 @@ export const Calendar = () => {
   const { services, loading: servicesLoading, error: servicesError } = useServices();
   const { addNotification } = useNotifications();
   const { patients, error: patientsError } = usePatients();
-  const { staff, loading: staffLoading } = useStaff();
 
   // Use extracted hooks for time slots and drag-and-drop
   const {
@@ -158,10 +156,6 @@ export const Calendar = () => {
         case 'm':
           // Month view
           setView('month');
-          break;
-        case 'p':
-          // Practitioners/Team view
-          setView('team');
           break;
         case 'arrowleft':
           // In RTL, left arrow goes forward (next)
@@ -366,22 +360,6 @@ export const Calendar = () => {
           onDayClick={(date) => {
             setCurrentDate(date);
             setView('day');
-          }}
-        />
-      ) : view === 'team' ? (
-        <MultiPractitionerView
-          date={currentDate}
-          appointments={appointments}
-          staff={staff}
-          loading={loading || staffLoading}
-          hours={hours}
-          onSlotClick={openNewApptDialog}
-          onCancelRequest={setAppointmentToDelete}
-          onEditRequest={setAppointmentToEdit}
-          onViewDetails={(appt) => {
-            toast.info(`${appt.patientName} - ${appt.serviceName}`, {
-              description: `${new Date(appt.date).toLocaleDateString('he-IL')} בשעה ${appt.time}`,
-            });
           }}
         />
       ) : (

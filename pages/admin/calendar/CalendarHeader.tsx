@@ -20,12 +20,12 @@ export function CalendarHeader({
   onViewChange,
   onNewAppointment,
 }: CalendarHeaderProps) {
-  // Navigate by 1 day in day/team view, 7 days in week view, 1 month in month view
+  // Navigate by 1 day in day view, 7 days in week view, 1 month in month view
   const navigate = (direction: 'prev' | 'next') => {
     const d = new Date(currentDate);
     const multiplier = direction === 'next' ? 1 : -1;
 
-    if (view === 'day' || view === 'team') {
+    if (view === 'day') {
       d.setDate(d.getDate() + multiplier);
     } else if (view === 'week') {
       d.setDate(d.getDate() + (7 * multiplier));
@@ -51,7 +51,6 @@ export function CalendarHeader({
       day: direction === 'prev' ? 'יום קודם' : 'יום הבא',
       week: direction === 'prev' ? 'שבוע קודם' : 'שבוע הבא',
       month: direction === 'prev' ? 'חודש קודם' : 'חודש הבא',
-      team: direction === 'prev' ? 'יום קודם' : 'יום הבא',
     };
     return labels[view];
   };
@@ -142,17 +141,6 @@ export function CalendarHeader({
             onClick={() => onViewChange('month')}
           >
             חודש
-          </button>
-          <button
-            role="tab"
-            aria-selected={view === 'team'}
-            aria-controls="calendar-grid"
-            className={`px-3 py-1.5 rounded-md transition-all focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 ${
-              view === 'team' ? 'bg-white shadow-sm font-bold' : 'text-gray-500 hover:text-gray-900'
-            }`}
-            onClick={() => onViewChange('team')}
-          >
-            צוות
           </button>
         </div>
         <Button onClick={onNewAppointment} className="shadow-sm gap-2" aria-label="קביעת תור חדש">

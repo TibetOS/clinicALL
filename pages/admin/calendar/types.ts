@@ -1,6 +1,6 @@
 import { Appointment } from '../../../types';
 
-export type CalendarView = 'day' | 'week' | 'month' | 'team';
+export type CalendarView = 'day' | 'week' | 'month';
 
 export type TimeSlotConflict = {
   existingAppointment: Appointment;
