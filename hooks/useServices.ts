@@ -55,6 +55,11 @@ export function useServices(): UseServices {
         .order('category', { ascending: true })
         .order('name', { ascending: true });
 
+      // SECURITY: Filter by clinic_id for multi-tenant isolation
+      if (profile?.clinic_id) {
+        query = query.eq('clinic_id', profile.clinic_id);
+      }
+
       if (!includeInactive) {
         query = query.eq('is_active', true);
       }
@@ -82,7 +87,7 @@ export function useServices(): UseServices {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [profile?.clinic_id]);
 
   const getService = useCallback(async (id: string): Promise<Service | null> => {
     if (!isSupabaseConfigured()) {
@@ -91,11 +96,17 @@ export function useServices(): UseServices {
     }
 
     try {
-      const { data, error: fetchError } = await supabase
+      let query = supabase
         .from('services')
         .select('*')
-        .eq('id', id)
-        .single();
+        .eq('id', id);
+
+      // SECURITY: Filter by clinic_id for multi-tenant isolation
+      if (profile?.clinic_id) {
+        query = query.eq('clinic_id', profile.clinic_id);
+      }
+
+      const { data, error: fetchError } = await query.single();
 
       if (fetchError) throw fetchError;
 
@@ -113,7 +124,7 @@ export function useServices(): UseServices {
       logger.error('Error fetching service:', err);
       return null;
     }
-  }, []);
+  }, [profile?.clinic_id]);
 
   const addService = useCallback(async (service: ServiceInput): Promise<Service | null> => {
     if (!isSupabaseConfigured()) {
@@ -194,12 +205,17 @@ export function useServices(): UseServices {
       if (updates.image !== undefined) dbUpdates.image = updates.image;
       if (updates.isActive !== undefined) dbUpdates.is_active = updates.isActive;
 
-      const { data, error: updateError } = await supabase
+      let query = supabase
         .from('services')
         .update(dbUpdates)
-        .eq('id', id)
-        .select()
-        .single();
+        .eq('id', id);
+
+      // SECURITY: Filter by clinic_id for multi-tenant isolation
+      if (profile?.clinic_id) {
+        query = query.eq('clinic_id', profile.clinic_id);
+      }
+
+      const { data, error: updateError } = await query.select().single();
 
       if (updateError) throw updateError;
 
@@ -221,7 +237,7 @@ export function useServices(): UseServices {
       setError(getErrorMessage(err) || 'Failed to update service');
       return null;
     }
-  }, []);
+  }, [profile?.clinic_id]);
 
   const deleteService = useCallback(async (id: string): Promise<boolean> => {
     if (!isSupabaseConfigured()) {
@@ -232,10 +248,17 @@ export function useServices(): UseServices {
 
     try {
       // Soft delete by setting is_active to false
-      const { error: deleteError } = await supabase
+      let query = supabase
         .from('services')
         .update({ is_active: false })
         .eq('id', id);
+
+      // SECURITY: Filter by clinic_id for multi-tenant isolation
+      if (profile?.clinic_id) {
+        query = query.eq('clinic_id', profile.clinic_id);
+      }
+
+      const { error: deleteError } = await query;
 
       if (deleteError) throw deleteError;
 
@@ -246,7 +269,7 @@ export function useServices(): UseServices {
       setError(getErrorMessage(err) || 'Failed to delete service');
       return false;
     }
-  }, []);
+  }, [profile?.clinic_id]);
 
   const getServicesByCategory = useCallback((category: string): Service[] => {
     return services.filter(s => s.category === category);
