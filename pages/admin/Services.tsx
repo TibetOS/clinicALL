@@ -1,10 +1,10 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Plus, Search, Pencil, Trash2, Clock, Banknote,
-  Syringe, Sparkles, Heart, Zap, MoreHorizontal, Eye
+  Syringe, Sparkles, Heart, Zap, MoreHorizontal, Eye, EyeOff, Power
 } from 'lucide-react';
 import { toast } from 'sonner';
-import { Card, Button, Input, Badge, Dialog, Label, Skeleton } from '../../components/ui';
+import { Card, Button, Input, Badge, Dialog, Label, Skeleton, Switch } from '../../components/ui';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -33,16 +33,19 @@ import { Empty } from '../../components/ui/empty';
 import { useServices } from '../../hooks';
 import { Service } from '../../types';
 
-// Category icons and colors
-const CATEGORY_CONFIG: Record<string, { icon: React.ElementType; color: string; bg: string }> = {
-  'הזרקות': { icon: Syringe, color: 'text-purple-600', bg: 'bg-purple-50' },
-  'קוסמטיקה': { icon: Sparkles, color: 'text-pink-600', bg: 'bg-pink-50' },
-  'טיפולי פנים': { icon: Heart, color: 'text-teal-600', bg: 'bg-teal-50' },
-  'לייזר': { icon: Zap, color: 'text-amber-600', bg: 'bg-amber-50' },
-};
+// Single source of truth for categories
+const CATEGORIES = [
+  { value: 'הזרקות', icon: Syringe, color: 'text-purple-600', bg: 'bg-purple-50' },
+  { value: 'קוסמטיקה', icon: Sparkles, color: 'text-pink-600', bg: 'bg-pink-50' },
+  { value: 'טיפולי פנים', icon: Heart, color: 'text-teal-600', bg: 'bg-teal-50' },
+  { value: 'לייזר', icon: Zap, color: 'text-amber-600', bg: 'bg-amber-50' },
+] as const;
+
+const DEFAULT_CATEGORY = { icon: Sparkles, color: 'text-gray-600', bg: 'bg-gray-50' };
 
 const getCategory = (category: string) => {
-  return CATEGORY_CONFIG[category] || { icon: Sparkles, color: 'text-gray-600', bg: 'bg-gray-50' };
+  const found = CATEGORIES.find(c => c.value === category);
+  return found || DEFAULT_CATEGORY;
 };
 
 interface ServiceFormData {
@@ -51,6 +54,7 @@ interface ServiceFormData {
   duration: number;
   price: number;
   category: string;
+  isActive: boolean;
 }
 
 const INITIAL_FORM: ServiceFormData = {
@@ -59,12 +63,14 @@ const INITIAL_FORM: ServiceFormData = {
   duration: 30,
   price: 0,
   category: 'הזרקות',
+  isActive: true,
 };
 
 export const ServicesPage = () => {
-  const { services, loading, addService, updateService, deleteService } = useServices();
+  const { services, loading, addService, updateService, deleteService, fetchServices } = useServices();
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
+  const [showInactive, setShowInactive] = useState(false);
 
   // Dialog states
   const [isAddOpen, setIsAddOpen] = useState(false);
@@ -73,6 +79,11 @@ export const ServicesPage = () => {
   const [selectedService, setSelectedService] = useState<Service | null>(null);
   const [formData, setFormData] = useState<ServiceFormData>(INITIAL_FORM);
   const [saving, setSaving] = useState(false);
+
+  // Refetch services when showInactive changes
+  useEffect(() => {
+    fetchServices(showInactive);
+  }, [showInactive, fetchServices]);
 
   // Filter services
   const filteredServices = services.filter(s => {
@@ -143,6 +154,7 @@ export const ServicesPage = () => {
       duration: service.duration,
       price: service.price,
       category: service.category,
+      isActive: service.isActive,
     });
     setIsEditOpen(true);
   };
@@ -202,6 +214,16 @@ export const ServicesPage = () => {
             );
           })}
         </div>
+        <div className="flex items-center gap-2 mr-auto">
+          <Button
+            variant={showInactive ? 'secondary' : 'ghost'}
+            size="sm"
+            onClick={() => setShowInactive(!showInactive)}
+            className="whitespace-nowrap gap-1"
+          >
+            {showInactive ? 'הסתר לא פעילים' : 'הצג לא פעילים'} <EyeOff size={14} />
+          </Button>
+        </div>
       </div>
 
       {/* Loading State */}
@@ -244,11 +266,19 @@ export const ServicesPage = () => {
               {categoryServices.map(service => (
                 <Card
                   key={service.id}
-                  className="p-5 hover:shadow-md transition-all group cursor-pointer border-r-2 border-r-transparent hover:border-r-primary"
+                  className={`p-5 hover:shadow-md transition-all group cursor-pointer border-r-2 border-r-transparent hover:border-r-primary ${!service.isActive ? 'opacity-60 bg-gray-50' : ''}`}
+                  onClick={() => openEditDialog(service)}
                 >
                   <div className="flex justify-between items-start mb-3">
-                    <div className={`p-2.5 rounded-xl ${config.bg}`}>
-                      <Icon size={20} className={config.color} />
+                    <div className="flex items-center gap-2">
+                      <div className={`p-2.5 rounded-xl ${config.bg}`}>
+                        <Icon size={20} className={config.color} />
+                      </div>
+                      {!service.isActive && (
+                        <Badge variant="secondary" className="text-xs">
+                          לא פעיל
+                        </Badge>
+                      )}
                     </div>
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
@@ -265,6 +295,17 @@ export const ServicesPage = () => {
                         <DropdownMenuItem className="gap-2" onClick={() => openEditDialog(service)}>
                           עריכה <Pencil className="h-4 w-4" />
                         </DropdownMenuItem>
+                        <DropdownMenuItem
+                          className="gap-2"
+                          onClick={async () => {
+                            const result = await updateService(service.id, { isActive: !service.isActive });
+                            if (result) {
+                              toast.success(service.isActive ? 'הטיפול הושבת' : 'הטיפול הופעל');
+                            }
+                          }}
+                        >
+                          {service.isActive ? 'השבת טיפול' : 'הפעל טיפול'} <Power className="h-4 w-4" />
+                        </DropdownMenuItem>
                         <DropdownMenuItem className="gap-2 opacity-50 cursor-not-allowed" disabled>
                           צפייה בנתונים (בקרוב) <Eye className="h-4 w-4" />
                         </DropdownMenuItem>
@@ -279,7 +320,7 @@ export const ServicesPage = () => {
                     </DropdownMenu>
                   </div>
 
-                  <h3 className="font-bold text-gray-900 mb-1">{service.name}</h3>
+                  <h3 className={`font-bold mb-1 ${!service.isActive ? 'text-gray-500' : 'text-gray-900'}`}>{service.name}</h3>
                   <p className="text-sm text-gray-500 mb-4 line-clamp-2">{service.description}</p>
 
                   <div className="flex items-center gap-4 text-sm">
@@ -287,7 +328,7 @@ export const ServicesPage = () => {
                       <Clock size={14} />
                       <span>{service.duration} דק׳</span>
                     </div>
-                    <div className="flex items-center gap-1 font-bold text-primary">
+                    <div className={`flex items-center gap-1 font-bold ${!service.isActive ? 'text-gray-500' : 'text-primary'}`}>
                       <Banknote size={14} />
                       <span>₪{service.price.toLocaleString()}</span>
                     </div>
@@ -338,7 +379,7 @@ export const ServicesPage = () => {
           <div>
             <Label>תיאור</Label>
             <textarea
-              className="w-full min-h-[80px] border border-gray-200 rounded-lg p-3 text-sm"
+              className="flex min-h-[80px] w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-gray-900 placeholder:text-gray-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/30 focus-visible:ring-offset-0 focus-visible:border-primary focus-visible:shadow-[0_0_0_3px_rgba(13,148,136,0.1)] disabled:cursor-not-allowed disabled:opacity-50 transition-all duration-200 ease-out resize-none"
               placeholder="תיאור קצר של הטיפול..."
               value={formData.description}
               onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
@@ -355,10 +396,9 @@ export const ServicesPage = () => {
                 <SelectValue placeholder="בחר קטגוריה" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="הזרקות">הזרקות</SelectItem>
-                <SelectItem value="קוסמטיקה">קוסמטיקה</SelectItem>
-                <SelectItem value="טיפולי פנים">טיפולי פנים</SelectItem>
-                <SelectItem value="לייזר">לייזר</SelectItem>
+                {CATEGORIES.map(cat => (
+                  <SelectItem key={cat.value} value={cat.value}>{cat.value}</SelectItem>
+                ))}
               </SelectContent>
             </Select>
           </div>
@@ -387,6 +427,20 @@ export const ServicesPage = () => {
                 onChange={(e) => setFormData(prev => ({ ...prev, price: parseInt(e.target.value) || 0 }))}
               />
             </div>
+          </div>
+
+          <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+            <div className="flex items-center gap-2">
+              <Power size={16} className={formData.isActive ? 'text-green-600' : 'text-gray-400'} />
+              <Label className="font-medium cursor-pointer" htmlFor="service-active">
+                טיפול פעיל
+              </Label>
+            </div>
+            <Switch
+              id="service-active"
+              checked={formData.isActive}
+              onCheckedChange={(checked) => setFormData(prev => ({ ...prev, isActive: checked }))}
+            />
           </div>
 
           <div className="flex justify-end gap-3 pt-4 border-t mt-4">
