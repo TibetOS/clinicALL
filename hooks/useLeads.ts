@@ -1,8 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
-import { supabase, isSupabaseConfigured } from '../lib/supabase';
+import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
 import { Lead, LeadStage } from '../types';
-import { MOCK_LEADS } from '../data';
 import { createLogger } from '../lib/logger';
 import { LeadRow, LeadRowUpdate, getErrorMessage } from '../lib/database.types';
 
@@ -38,12 +37,6 @@ export function useLeads(): UseLeads {
   const { profile } = useAuth();
 
   const fetchLeads = useCallback(async () => {
-    if (!isSupabaseConfigured()) {
-      setLeads(MOCK_LEADS);
-      setLoading(false);
-      return;
-    }
-
     setLoading(true);
     setError(null);
 
@@ -77,10 +70,6 @@ export function useLeads(): UseLeads {
   }, []);
 
   const getLead = useCallback(async (id: string): Promise<Lead | null> => {
-    if (!isSupabaseConfigured()) {
-      return MOCK_LEADS.find(lead => lead.id === id) || null;
-    }
-
     try {
       const { data, error: fetchError } = await supabase
         .from('leads')
@@ -108,22 +97,6 @@ export function useLeads(): UseLeads {
   }, []);
 
   const addLead = useCallback(async (lead: LeadInput): Promise<Lead | null> => {
-    if (!isSupabaseConfigured()) {
-      const newLead: Lead = {
-        id: `mock-${Date.now()}`,
-        name: lead.name,
-        phone: lead.phone,
-        email: lead.email,
-        source: lead.source || '',
-        stage: lead.stage || 'new',
-        notes: lead.notes,
-        value: lead.value,
-        createdAt: new Date().toISOString(),
-      };
-      setLeads(prev => [newLead, ...prev]);
-      return newLead;
-    }
-
     try {
       const { data, error: insertError } = await supabase
         .from('leads')
@@ -164,13 +137,6 @@ export function useLeads(): UseLeads {
   }, [profile?.clinic_id]);
 
   const updateLead = useCallback(async (id: string, updates: Partial<LeadInput>): Promise<Lead | null> => {
-    if (!isSupabaseConfigured()) {
-      setLeads(prev => prev.map(lead =>
-        lead.id === id ? { ...lead, ...updates } : lead
-      ));
-      return leads.find(lead => lead.id === id) || null;
-    }
-
     try {
       const dbUpdates: LeadRowUpdate = {};
       if (updates.name !== undefined) dbUpdates.name = updates.name;
@@ -217,11 +183,6 @@ export function useLeads(): UseLeads {
   }, [updateLead]);
 
   const deleteLead = useCallback(async (id: string): Promise<boolean> => {
-    if (!isSupabaseConfigured()) {
-      setLeads(prev => prev.filter(lead => lead.id !== id));
-      return true;
-    }
-
     try {
       const { error: deleteError } = await supabase
         .from('leads')

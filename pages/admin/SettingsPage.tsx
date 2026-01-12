@@ -2,10 +2,13 @@ import { useState, useEffect, useCallback } from 'react';
 import {
   Settings as SettingsIcon, UserPlus, MoreVertical, Crown,
   CreditCard, ArrowUpRight, Download, Check, XCircle, Sparkles,
-  Globe, Image as ImageIcon, Loader2, Trash2, Edit2, AlertCircle
+  Globe, Image as ImageIcon, Trash2, Edit2, AlertCircle
 } from 'lucide-react';
 import { toast } from 'sonner';
-import { Card, Button, Input, Badge, Tabs, TabsList, TabsTrigger, Label, Skeleton, ComingSoon } from '../../components/ui';
+import {
+  Card, Button, Input, Badge, Tabs, TabsList, TabsTrigger, Label, Skeleton, ComingSoon,
+  Alert, AlertTitle, AlertDescription, Spinner,
+} from '../../components/ui';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -189,20 +192,21 @@ export const SettingsPage = () => {
             <p className="text-muted-foreground text-sm">התאמת המערכת לצרכי הקליניקה האסתטית</p>
           </div>
         </div>
-        <Card className="p-6 rounded-3xl border-red-200 bg-red-50">
-          <div className="flex items-center gap-3 text-red-700">
-            <AlertCircle className="w-5 h-5" />
-            <p className="font-medium">שגיאה בטעינת נתוני המרפאה</p>
-          </div>
-          <p className="mt-2 text-sm text-red-600">{clinicError}</p>
-          <Button
-            variant="outline"
-            className="mt-4"
-            onClick={() => window.location.reload()}
-          >
-            נסה שוב
-          </Button>
-        </Card>
+        <Alert variant="destructive">
+          <AlertCircle className="h-4 w-4" />
+          <AlertTitle>שגיאה בטעינת נתוני המרפאה</AlertTitle>
+          <AlertDescription className="flex flex-col gap-3">
+            <span>{clinicError}</span>
+            <Button
+              variant="outline"
+              size="sm"
+              className="w-fit"
+              onClick={() => window.location.reload()}
+            >
+              נסה שוב
+            </Button>
+          </AlertDescription>
+        </Alert>
       </div>
     );
   }
@@ -662,7 +666,7 @@ export const SettingsPage = () => {
                       {invoicesLoading ? (
                         <tr>
                           <td colSpan={5} className="py-8 text-center text-gray-500">
-                            <Loader2 className="w-6 h-6 animate-spin mx-auto mb-2" />
+                            <Spinner className="h-6 w-6 mx-auto mb-2" />
                             טוען חשבוניות...
                           </td>
                         </tr>

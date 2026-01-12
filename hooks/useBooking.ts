@@ -1,5 +1,5 @@
 import { useState, useCallback } from 'react';
-import { supabase, isSupabaseConfigured } from '../lib/supabase';
+import { supabase } from '../lib/supabase';
 import { TimeSlot } from '../types';
 import { createLogger } from '../lib/logger';
 import { getErrorMessage } from '../lib/database.types';
@@ -52,12 +52,6 @@ export function useBooking(): UseBooking {
     _staffId?: string,
     clinicId?: string
   ): Promise<TimeSlot[]> => {
-    if (!isSupabaseConfigured()) {
-      // No mock data - Supabase must be configured for public pages
-      setError('Database not configured');
-      return [];
-    }
-
     setLoading(true);
     setError(null);
 
@@ -114,14 +108,6 @@ export function useBooking(): UseBooking {
   }, []);
 
   const createBooking = useCallback(async (booking: BookingInput): Promise<BookingResult> => {
-    if (!isSupabaseConfigured()) {
-      // No mock data - Supabase must be configured for public pages
-      return {
-        success: false,
-        error: 'Database not configured',
-      };
-    }
-
     setLoading(true);
     setError(null);
 

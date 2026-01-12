@@ -1,8 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
-import { supabase, isSupabaseConfigured } from '../lib/supabase';
+import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
 import { Appointment, AppointmentStatus, AppointmentDeclarationStatus } from '../types';
-import { MOCK_APPOINTMENTS } from '../data';
 import { createLogger } from '../lib/logger';
 import { AppointmentRow, AppointmentRowUpdate, getErrorMessage } from '../lib/database.types';
 
@@ -58,30 +57,6 @@ export function useAppointments(options?: UseAppointmentsOptions): UseAppointmen
     const opts = fetchOptions || options || {};
     const currentPage = opts.page ?? page;
     const limit = opts.limit ?? DEFAULT_PAGE_SIZE;
-
-    if (!isSupabaseConfigured()) {
-      // Return mock data in dev mode, with optional filtering
-      let filteredAppointments = [...MOCK_APPOINTMENTS];
-
-      if (opts.patientId) {
-        filteredAppointments = filteredAppointments.filter(a => a.patientId === opts.patientId);
-      }
-      if (opts.startDate) {
-        filteredAppointments = filteredAppointments.filter(a => a.date >= opts.startDate!);
-      }
-      if (opts.endDate) {
-        filteredAppointments = filteredAppointments.filter(a => a.date <= opts.endDate!);
-      }
-
-      // Apply pagination to mock data
-      const startIndex = (currentPage - 1) * limit;
-      const paginatedAppointments = filteredAppointments.slice(startIndex, startIndex + limit);
-
-      setTotalCount(filteredAppointments.length);
-      setAppointments(paginatedAppointments);
-      setLoading(false);
-      return;
-    }
 
     setLoading(true);
     setError(null);
@@ -143,10 +118,6 @@ export function useAppointments(options?: UseAppointmentsOptions): UseAppointmen
   }, [profile?.clinic_id, options?.startDate, options?.endDate, options?.patientId, page]);
 
   const getAppointment = useCallback(async (id: string): Promise<Appointment | null> => {
-    if (!isSupabaseConfigured()) {
-      return MOCK_APPOINTMENTS.find(a => a.id === id) || null;
-    }
-
     try {
       let query = supabase
         .from('appointments')
@@ -183,17 +154,6 @@ export function useAppointments(options?: UseAppointmentsOptions): UseAppointmen
   }, [profile?.clinic_id]);
 
   const addAppointment = useCallback(async (appointment: AppointmentInput): Promise<Appointment | null> => {
-    if (!isSupabaseConfigured()) {
-      // Mock add for dev mode
-      const newAppointment: Appointment = {
-        id: `mock-${Date.now()}`,
-        ...appointment,
-        status: appointment.status || 'pending',
-      };
-      setAppointments(prev => [...prev, newAppointment]);
-      return newAppointment;
-    }
-
     try {
       const { data, error: insertError } = await supabase
         .from('appointments')
@@ -239,19 +199,6 @@ export function useAppointments(options?: UseAppointmentsOptions): UseAppointmen
   }, [profile?.clinic_id]);
 
   const updateAppointment = useCallback(async (id: string, updates: Partial<AppointmentInput>): Promise<Appointment | null> => {
-    if (!isSupabaseConfigured()) {
-      // Mock update for dev mode - construct updated appointment directly to avoid stale closure
-      let updatedAppointment: Appointment | null = null;
-      setAppointments(prev => prev.map(a => {
-        if (a.id === id) {
-          updatedAppointment = { ...a, ...updates };
-          return updatedAppointment;
-        }
-        return a;
-      }));
-      return updatedAppointment;
-    }
-
     try {
       const dbUpdates: AppointmentRowUpdate = {};
       if (updates.patientId !== undefined) dbUpdates.patient_id = updates.patientId;
@@ -308,12 +255,6 @@ export function useAppointments(options?: UseAppointmentsOptions): UseAppointmen
   }, [updateAppointment]);
 
   const deleteAppointment = useCallback(async (id: string): Promise<boolean> => {
-    if (!isSupabaseConfigured()) {
-      // Mock delete for dev mode
-      setAppointments(prev => prev.filter(a => a.id !== id));
-      return true;
-    }
-
     try {
       let query = supabase
         .from('appointments')

@@ -1,8 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
-import { supabase, isSupabaseConfigured } from '../lib/supabase';
+import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
 import { Invoice, InvoiceItem } from '../types';
-import { MOCK_INVOICES } from '../data';
 import { createLogger } from '../lib/logger';
 import { InvoiceRow, InvoiceRowUpdate, getErrorMessage } from '../lib/database.types';
 
@@ -46,12 +45,6 @@ export function useInvoices(): UseInvoices {
   }, []);
 
   const fetchInvoices = useCallback(async () => {
-    if (!isSupabaseConfigured()) {
-      setInvoices(MOCK_INVOICES);
-      setLoading(false);
-      return;
-    }
-
     setLoading(true);
     setError(null);
 
@@ -91,10 +84,6 @@ export function useInvoices(): UseInvoices {
   }, [profile?.clinic_id]);
 
   const getInvoice = useCallback(async (id: string): Promise<Invoice | null> => {
-    if (!isSupabaseConfigured()) {
-      return MOCK_INVOICES.find(inv => inv.id === id) || null;
-    }
-
     try {
       let query = supabase
         .from('invoices')
@@ -127,21 +116,6 @@ export function useInvoices(): UseInvoices {
   }, [profile?.clinic_id]);
 
   const addInvoice = useCallback(async (invoice: InvoiceInput): Promise<Invoice | null> => {
-    if (!isSupabaseConfigured()) {
-      const newInvoice: Invoice = {
-        id: `mock-${Date.now()}`,
-        invoiceNumber: invoice.invoiceNumber,
-        patientId: invoice.patientId ?? undefined,
-        patientName: invoice.patientName,
-        date: invoice.date ?? new Date().toISOString().split('T')[0] ?? '',
-        items: invoice.items,
-        total: invoice.total,
-        status: invoice.status || 'pending',
-      };
-      setInvoices(prev => [newInvoice, ...prev]);
-      return newInvoice;
-    }
-
     try {
       const { data, error: insertError } = await supabase
         .from('invoices')
@@ -181,13 +155,6 @@ export function useInvoices(): UseInvoices {
   }, [profile?.clinic_id]);
 
   const updateInvoice = useCallback(async (id: string, updates: Partial<InvoiceInput>): Promise<Invoice | null> => {
-    if (!isSupabaseConfigured()) {
-      setInvoices(prev => prev.map(inv =>
-        inv.id === id ? { ...inv, ...updates } : inv
-      ));
-      return invoices.find(inv => inv.id === id) || null;
-    }
-
     try {
       const dbUpdates: InvoiceRowUpdate = {};
       if (updates.invoiceNumber !== undefined) dbUpdates.invoice_number = updates.invoiceNumber;
@@ -238,11 +205,6 @@ export function useInvoices(): UseInvoices {
   }, [updateInvoice]);
 
   const deleteInvoice = useCallback(async (id: string): Promise<boolean> => {
-    if (!isSupabaseConfigured()) {
-      setInvoices(prev => prev.filter(inv => inv.id !== id));
-      return true;
-    }
-
     try {
       let query = supabase
         .from('invoices')

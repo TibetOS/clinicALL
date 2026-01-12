@@ -7,7 +7,12 @@ import {
   MoreHorizontal, Eye, PhoneCall, Info, AlertCircle
 } from 'lucide-react';
 import { toast } from 'sonner';
-import { Card, Button, Input, Badge, Dialog, Label, Skeleton } from '../../components/ui';
+import {
+  Card, CardHeader, CardTitle, CardContent,
+  Button, Input, Badge, Dialog, Label,
+  Alert, AlertTitle, AlertDescription,
+  Spinner,
+} from '../../components/ui';
 import {
   Tooltip,
   TooltipContent,
@@ -308,10 +313,11 @@ export const Dashboard = () => {
 
       {/* ========== ERROR BANNER ========== */}
       {dataError && (
-        <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg flex items-center gap-2">
-          <AlertCircle size={18} />
-          <span>שגיאה בטעינת נתונים: {dataError}</span>
-        </div>
+        <Alert variant="destructive">
+          <AlertCircle className="h-4 w-4" />
+          <AlertTitle>שגיאה בטעינת נתונים</AlertTitle>
+          <AlertDescription>{dataError}</AlertDescription>
+        </Alert>
       )}
 
       {/* ========== DAILY SUMMARY STRIP ========== */}
@@ -390,21 +396,19 @@ export const Dashboard = () => {
         <div className="lg:col-span-2 space-y-6">
 
           {/* ========== NEXT APPOINTMENT (הטיפול הבא) ========== */}
-          <Card className="p-6 rounded-3xl border border-slate-100 shadow-sm overflow-hidden relative card-animate stagger-5">
-            <div className="flex items-center gap-2 mb-4">
-              <Sparkles size={20} className="text-teal-500 animate-gentle-bounce" />
-              <h2 className="text-lg font-bold text-slate-800">הטיפול הבא</h2>
-            </div>
-
-            {isLoading ? (
-              <div className="flex items-center gap-4 p-4">
-                <Skeleton className="w-16 h-16 rounded-full bg-slate-200" />
-                <div className="flex-1 space-y-2">
-                  <Skeleton className="h-5 w-32 bg-slate-200" />
-                  <Skeleton className="h-4 w-48 bg-slate-200" />
+          <Card className="rounded-3xl border border-slate-100 shadow-sm overflow-hidden relative card-animate stagger-5">
+            <CardHeader className="pb-2">
+              <CardTitle className="flex items-center gap-2 text-lg">
+                <Sparkles size={20} className="text-teal-500 animate-gentle-bounce" />
+                הטיפול הבא
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              {isLoading ? (
+                <div className="flex items-center justify-center py-8">
+                  <Spinner className="size-8" />
                 </div>
-              </div>
-            ) : nextAppointment ? (
+              ) : nextAppointment ? (
               <div className="flex items-center gap-4 p-4 rounded-2xl transition-all hover:shadow-md bg-slate-50">
                 <div
                   className="relative cursor-pointer"
@@ -481,29 +485,28 @@ export const Dashboard = () => {
                 className="py-10 border-none min-h-0"
               />
             )}
+            </CardContent>
           </Card>
 
           {/* ========== PENDING HEALTH DECLARATIONS (טפסים ממתינים לחתימה) ========== */}
-          <Card className="p-6 rounded-3xl border border-slate-100 shadow-sm card-animate stagger-6">
-            <div className="flex items-center justify-between mb-4">
-              <div className="flex items-center gap-2">
+          <Card className="rounded-3xl border border-slate-100 shadow-sm card-animate stagger-6">
+            <CardHeader className="flex-row items-center justify-between pb-2">
+              <CardTitle className="flex items-center gap-2 text-lg">
                 <FileText size={20} className="text-slate-400 group-hover:rotate-6 transition-transform duration-200" />
-                <h2 className="text-lg font-bold text-slate-800">הצהרות בריאות ממתינות</h2>
-              </div>
+                הצהרות בריאות ממתינות
+              </CardTitle>
               {patientsNeedingDeclaration.length > 0 && (
                 <Badge className="border-none bg-amber-100 text-amber-700">
                   {patientsNeedingDeclaration.length}
                 </Badge>
               )}
-            </div>
-
-            {isLoading ? (
-              <div className="space-y-3">
-                {[1, 2, 3].map(i => (
-                  <Skeleton key={i} className="h-16 w-full rounded-xl bg-slate-200" />
-                ))}
-              </div>
-            ) : patientsNeedingDeclaration.length === 0 ? (
+            </CardHeader>
+            <CardContent>
+              {isLoading ? (
+                <div className="flex items-center justify-center py-8">
+                  <Spinner className="size-8" />
+                </div>
+              ) : patientsNeedingDeclaration.length === 0 ? (
               <Empty
                 icon={<CheckCircle size={28} className="text-green-600" />}
                 title="הכל מסודר!"
@@ -551,24 +554,23 @@ export const Dashboard = () => {
                 ))}
               </div>
             )}
+            </CardContent>
           </Card>
 
           {/* ========== FOLLOW-UP LIST (לקוחות להתקשר אליהן) ========== */}
-          <Card className="p-6 rounded-3xl border border-slate-100 shadow-sm card-animate stagger-7">
-            <div className="flex items-center justify-between mb-4">
-              <div className="flex items-center gap-2 group">
+          <Card className="rounded-3xl border border-slate-100 shadow-sm card-animate stagger-7">
+            <CardHeader className="pb-2">
+              <CardTitle className="flex items-center gap-2 text-lg group">
                 <Phone size={20} className="text-slate-400 group-hover:rotate-12 transition-transform duration-200" />
-                <h2 className="text-lg font-bold text-slate-800">לקוחות להתקשר אליהן</h2>
-              </div>
-            </div>
-
-            {isLoading ? (
-              <div className="space-y-3">
-                {[1, 2].map(i => (
-                  <Skeleton key={i} className="h-16 w-full rounded-xl bg-slate-200" />
-                ))}
-              </div>
-            ) : dueForFollowUp.length === 0 ? (
+                לקוחות להתקשר אליהן
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              {isLoading ? (
+                <div className="flex items-center justify-center py-8">
+                  <Spinner className="size-8" />
+                </div>
+              ) : dueForFollowUp.length === 0 ? (
               <Empty
                 icon={<UserCheck size={28} className="text-green-600" />}
                 title="אין מעקבים ממתינים"
@@ -607,6 +609,7 @@ export const Dashboard = () => {
                 ))}
               </div>
             )}
+            </CardContent>
           </Card>
         </div>
 

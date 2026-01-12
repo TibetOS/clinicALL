@@ -2,10 +2,9 @@ import { User, Heart, UserCheck, AlertCircle } from 'lucide-react';
 import { Input, Label } from '../ui';
 import { HealthQuestionsList } from './HealthQuestions';
 import type { HealthStepProps } from './types';
-import type { Patient, HealthDeclarationToken } from '../../types';
+import type { HealthDeclarationToken } from '../../types';
 
 type PersonalInfoStepProps = HealthStepProps & {
-  patient?: Patient;
   token?: HealthDeclarationToken;
 };
 
@@ -16,7 +15,6 @@ export const PersonalInfoStep = ({
   t,
   updateForm,
   updateNested,
-  patient,
   token,
 }: PersonalInfoStepProps) => {
   return (
@@ -26,10 +24,10 @@ export const PersonalInfoStep = ({
           <div className="p-2 bg-white rounded-lg text-primary shadow-sm"><User size={20}/></div>
           <h2 className="text-xl font-bold text-gray-900">{t('פרטים אישיים', 'Personal Information')}</h2>
         </div>
-        {(patient || token?.patientName) && (
+        {token?.patientName && (
           <div className="bg-white/60 backdrop-blur-sm p-3 rounded-lg border border-primary/10 flex items-center gap-3 text-sm text-primary mt-2">
             <UserCheck size={16} />
-            <span className="font-medium">{t(`שלום, ${token?.patientName || patient?.name}`, `Hello, ${token?.patientName || patient?.name}`)}</span>
+            <span className="font-medium">{t(`שלום, ${token.patientName}`, `Hello, ${token.patientName}`)}</span>
           </div>
         )}
       </div>

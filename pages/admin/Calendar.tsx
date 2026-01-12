@@ -1,7 +1,10 @@
 import { useState, useEffect, useMemo, useCallback } from 'react';
-import { Plus, ChevronLeft, ChevronRight, FileCheck, Clock, AlertCircle, Loader2, MoreHorizontal, Eye, Trash2, Phone, Edit2, X as XIcon, CalendarDays } from 'lucide-react';
+import { Plus, ChevronLeft, ChevronRight, FileCheck, Clock, AlertCircle, MoreHorizontal, Eye, Trash2, Phone, Edit2, X as XIcon, CalendarDays } from 'lucide-react';
 import { toast } from 'sonner';
-import { Card, Button, Input, Dialog, Label } from '../../components/ui';
+import {
+  Card, Button, Input, Dialog, Label,
+  Alert, AlertTitle, AlertDescription, Spinner,
+} from '../../components/ui';
 import {
   Tooltip,
   TooltipContent,
@@ -300,24 +303,28 @@ export const Calendar = () => {
 
       {/* Error Message */}
       {error && (
-        <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg mb-4 flex items-center gap-2">
-          <AlertCircle size={18} />
-          <span>שגיאה בטעינת תורים: {error}</span>
-          <Button variant="ghost" size="sm" className="mr-auto" onClick={() => fetchAppointments()}>
-            נסה שוב
-          </Button>
-        </div>
+        <Alert variant="destructive" className="mb-4">
+          <AlertCircle className="h-4 w-4" />
+          <AlertTitle>שגיאה בטעינת תורים</AlertTitle>
+          <AlertDescription className="flex items-center justify-between">
+            <span>{error}</span>
+            <Button variant="ghost" size="sm" onClick={() => fetchAppointments()}>
+              נסה שוב
+            </Button>
+          </AlertDescription>
+        </Alert>
       )}
 
       {/* Warning for services/patients data issues */}
       {(servicesError || patientsError) && (
-        <div className="bg-yellow-50 border border-yellow-200 text-yellow-800 px-4 py-3 rounded-lg mb-4 flex items-center gap-2">
-          <AlertCircle size={18} />
-          <span>
+        <Alert className="mb-4 border-yellow-200 bg-yellow-50 text-yellow-800 [&>svg]:text-yellow-600">
+          <AlertCircle className="h-4 w-4" />
+          <AlertTitle>אזהרה</AlertTitle>
+          <AlertDescription>
             {servicesError && 'שגיאה בטעינת שירותים. '}
             {patientsError && 'שגיאה בטעינת מטופלים - התאמת שמות לא תפעל.'}
-          </span>
-        </div>
+          </AlertDescription>
+        </Alert>
       )}
 
       {/* Calendar Grid */}
@@ -353,7 +360,7 @@ export const Calendar = () => {
           {loading && (
             <div className="absolute inset-0 bg-white/80 z-40 flex items-center justify-center">
               <div className="flex flex-col items-center gap-3">
-                <Loader2 className="w-8 h-8 text-primary animate-spin" />
+                <Spinner className="h-8 w-8 text-primary" />
                 <span className="text-gray-600 text-sm">טוען תורים...</span>
               </div>
             </div>

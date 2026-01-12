@@ -13,7 +13,6 @@ import {
   type HealthDeclarationFormData,
   type TokenValidationState,
 } from '../components/health-declaration';
-import { MOCK_PATIENTS } from '../data';
 import { useHealthTokens } from '../hooks';
 import { isValidEmail, isValidIsraeliPhone } from '../lib/validation';
 
@@ -45,10 +44,6 @@ export const HealthDeclarationPage = () => {
     checkToken();
   }, [tokenParam, validateToken]);
 
-  // Get patient data from token or mock
-  const patient = tokenValidation.token?.patientId
-    ? MOCK_PATIENTS.find(p => p.id === tokenValidation.token?.patientId)
-    : undefined;
 
   // Form State
   const [formData, setFormData] = useState<HealthDeclarationFormData>(INITIAL_HEALTH_FORM_DATA);
@@ -61,12 +56,12 @@ export const HealthDeclarationPage = () => {
     if (tokenValidation.valid && tokenValidation.token) {
       setFormData(prev => ({
         ...prev,
-        fullName: tokenValidation.token?.patientName || patient?.name || prev.fullName,
-        phone: tokenValidation.token?.patientPhone || patient?.phone || prev.phone,
-        email: tokenValidation.token?.patientEmail || patient?.email || prev.email,
+        fullName: tokenValidation.token?.patientName || prev.fullName,
+        phone: tokenValidation.token?.patientPhone || prev.phone,
+        email: tokenValidation.token?.patientEmail || prev.email,
       }));
     }
-  }, [tokenValidation.valid, tokenValidation.token, patient]);
+  }, [tokenValidation.valid, tokenValidation.token]);
 
   const updateForm = <K extends keyof HealthDeclarationFormData>(key: K, value: HealthDeclarationFormData[K]) => {
     setFormData(prev => ({ ...prev, [key]: value }));
@@ -201,7 +196,6 @@ export const HealthDeclarationPage = () => {
           {step === 1 && (
             <PersonalInfoStep
               {...stepProps}
-              patient={patient}
               token={tokenValidation.token}
             />
           )}

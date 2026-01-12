@@ -5,7 +5,10 @@ import {
   ChevronDown, ChevronUp, ShoppingCart, X
 } from 'lucide-react';
 import { toast } from 'sonner';
-import { Card, Button, Input, Badge, Dialog, Label } from '../../components/ui';
+import {
+  Card, Button, Input, Badge, Dialog, Label,
+  Alert, AlertTitle, AlertDescription, Spinner,
+} from '../../components/ui';
 import { Checkbox } from '../../components/ui/checkbox';
 import {
   Select,
@@ -578,13 +581,11 @@ export const InventoryPage = () => {
     <div className="space-y-6 animate-in fade-in duration-500 pb-10">
       {/* Error Display */}
       {error && (
-        <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-xl flex items-center gap-3">
-          <AlertTriangle size={20} />
-          <div>
-            <p className="font-medium">שגיאה בטעינת המלאי</p>
-            <p className="text-sm">{error}</p>
-          </div>
-        </div>
+        <Alert variant="destructive">
+          <AlertTriangle className="h-4 w-4" />
+          <AlertTitle>שגיאה בטעינת המלאי</AlertTitle>
+          <AlertDescription>{error}</AlertDescription>
+        </Alert>
       )}
 
       {/* Header */}
@@ -781,7 +782,7 @@ export const InventoryPage = () => {
                 <tr>
                   <td colSpan={10} className="px-6 py-12 text-center text-gray-500">
                     <div className="flex flex-col items-center gap-2">
-                      <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+                      <Spinner className="h-8 w-8 text-primary" />
                       <span>טוען מלאי...</span>
                     </div>
                   </td>

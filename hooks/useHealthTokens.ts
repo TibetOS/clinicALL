@@ -1,8 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
-import { supabase, isSupabaseConfigured } from '../lib/supabase';
+import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
 import { HealthDeclarationToken } from '../types';
-import { MOCK_HEALTH_TOKENS } from '../data';
 import { createLogger } from '../lib/logger';
 import { tokenCreationLimiter } from '../lib/rateLimiter';
 
@@ -77,9 +76,6 @@ interface UseHealthTokens {
   generateEmailLink: (token: string, email: string, clinicName?: string) => string;
 }
 
-// In-memory store for mock mode (persists across hook instances)
-let mockTokensStore = [...MOCK_HEALTH_TOKENS];
-
 export function useHealthTokens(): UseHealthTokens {
   const [tokens, setTokens] = useState<HealthDeclarationToken[]>([]);
   const [loading, setLoading] = useState(true);
@@ -87,20 +83,6 @@ export function useHealthTokens(): UseHealthTokens {
   const { profile } = useAuth();
 
   const fetchTokens = useCallback(async () => {
-    if (!isSupabaseConfigured()) {
-      // Update status for expired tokens
-      const now = new Date();
-      mockTokensStore = mockTokensStore.map(t => {
-        if (t.status === 'active' && new Date(t.expiresAt) < now) {
-          return { ...t, status: 'expired' as const };
-        }
-        return t;
-      });
-      setTokens(mockTokensStore);
-      setLoading(false);
-      return;
-    }
-
     setLoading(true);
     setError(null);
 
@@ -143,10 +125,6 @@ export function useHealthTokens(): UseHealthTokens {
    * Invalid/expired/used tokens will return null (no data from database).
    */
   const getTokenByValue = useCallback(async (tokenValue: string): Promise<HealthDeclarationToken | null> => {
-    if (!isSupabaseConfigured()) {
-      return mockTokensStore.find(t => t.token === tokenValue) || null;
-    }
-
     try {
       // RLS policy 'anon_lookup_valid_tokens' ensures only active, non-expired tokens are returned
       const { data, error: fetchError } = await supabase
@@ -232,24 +210,6 @@ export function useHealthTokens(): UseHealthTokens {
     const tokenValue = generateToken();
     const expiresAt = getDefaultExpiry(input.expiryDays || 7);
 
-    if (!isSupabaseConfigured()) {
-      const newToken: HealthDeclarationToken = {
-        id: `hdt-${Date.now()}`,
-        token: tokenValue,
-        clinicId: 'clinic-1',
-        patientId: input.patientId,
-        patientName: input.patientName,
-        patientPhone: input.patientPhone,
-        patientEmail: input.patientEmail,
-        createdAt: new Date().toISOString(),
-        expiresAt,
-        status: 'active',
-      };
-      mockTokensStore = [newToken, ...mockTokensStore];
-      setTokens(mockTokensStore);
-      return newToken;
-    }
-
     try {
       const { data, error: insertError } = await supabase
         .from('health_declaration_tokens')
@@ -294,14 +254,6 @@ export function useHealthTokens(): UseHealthTokens {
   const markTokenAsUsed = useCallback(async (tokenId: string): Promise<boolean> => {
     const usedAt = new Date().toISOString();
 
-    if (!isSupabaseConfigured()) {
-      mockTokensStore = mockTokensStore.map(t =>
-        t.id === tokenId ? { ...t, status: 'used' as const, usedAt } : t
-      );
-      setTokens(mockTokensStore);
-      return true;
-    }
-
     try {
       // SECURITY: Filter by clinic_id to ensure multi-tenant isolation
       let query = supabase
@@ -328,12 +280,6 @@ export function useHealthTokens(): UseHealthTokens {
   }, [profile?.clinic_id]);
 
   const deleteToken = useCallback(async (tokenId: string): Promise<boolean> => {
-    if (!isSupabaseConfigured()) {
-      mockTokensStore = mockTokensStore.filter(t => t.id !== tokenId);
-      setTokens(mockTokensStore);
-      return true;
-    }
-
     try {
       // SECURITY: Filter by clinic_id to ensure multi-tenant isolation
       let query = supabase

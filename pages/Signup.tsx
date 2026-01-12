@@ -262,7 +262,7 @@ export const SignupPage = () => {
           <Card className="w-full p-0 shadow-xl border-0 overflow-hidden order-2 lg:order-1">
             <SignupStepIndicator currentStep={step} />
 
-            <div className="p-8 min-h-[450px]">
+            <div className="p-8 min-h-112.5">
               {step === 1 && (
                 <PhoneStep
                   formData={formData}

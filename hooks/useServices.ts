@@ -1,8 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
-import { supabase, isSupabaseConfigured } from '../lib/supabase';
+import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
 import { Service } from '../types';
-import { MOCK_SERVICES } from '../data';
 import { createLogger } from '../lib/logger';
 import { ServiceRow, ServiceRowUpdate, getErrorMessage } from '../lib/database.types';
 
@@ -37,14 +36,6 @@ export function useServices(): UseServices {
   const { profile } = useAuth();
 
   const fetchServices = useCallback(async (includeInactive = false) => {
-    if (!isSupabaseConfigured()) {
-      // Return mock data in dev mode (add isActive: true to mock services)
-      const mockWithActive = MOCK_SERVICES.map(s => ({ ...s, isActive: true }));
-      setServices(mockWithActive);
-      setLoading(false);
-      return;
-    }
-
     setLoading(true);
     setError(null);
 
@@ -90,11 +81,6 @@ export function useServices(): UseServices {
   }, [profile?.clinic_id]);
 
   const getService = useCallback(async (id: string): Promise<Service | null> => {
-    if (!isSupabaseConfigured()) {
-      const mock = MOCK_SERVICES.find(s => s.id === id);
-      return mock ? { ...mock, isActive: true } : null;
-    }
-
     try {
       let query = supabase
         .from('services')
@@ -127,22 +113,6 @@ export function useServices(): UseServices {
   }, [profile?.clinic_id]);
 
   const addService = useCallback(async (service: ServiceInput): Promise<Service | null> => {
-    if (!isSupabaseConfigured()) {
-      // Mock add for dev mode
-      const newService: Service = {
-        id: `mock-${Date.now()}`,
-        name: service.name,
-        description: service.description || '',
-        duration: service.duration,
-        price: service.price,
-        category: service.category,
-        image: service.image,
-        isActive: service.isActive !== false,
-      };
-      setServices(prev => [...prev, newService]);
-      return newService;
-    }
-
     try {
       const { data, error: insertError } = await supabase
         .from('services')
@@ -182,19 +152,6 @@ export function useServices(): UseServices {
   }, [profile?.clinic_id]);
 
   const updateService = useCallback(async (id: string, updates: Partial<ServiceInput>): Promise<Service | null> => {
-    if (!isSupabaseConfigured()) {
-      // Mock update for dev mode
-      let updatedService: Service | null = null;
-      setServices(prev => prev.map(s => {
-        if (s.id === id) {
-          updatedService = { ...s, ...updates, isActive: updates.isActive ?? s.isActive };
-          return updatedService;
-        }
-        return s;
-      }));
-      return updatedService;
-    }
-
     try {
       const dbUpdates: ServiceRowUpdate = {};
       if (updates.name !== undefined) dbUpdates.name = updates.name;
@@ -240,12 +197,6 @@ export function useServices(): UseServices {
   }, [profile?.clinic_id]);
 
   const deleteService = useCallback(async (id: string): Promise<boolean> => {
-    if (!isSupabaseConfigured()) {
-      // Mock delete for dev mode
-      setServices(prev => prev.filter(s => s.id !== id));
-      return true;
-    }
-
     try {
       // Soft delete by setting is_active to false
       let query = supabase

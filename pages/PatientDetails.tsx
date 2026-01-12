@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { AlertTriangle, Sparkles, ImageIcon, Smile, FileSignature } from 'lucide-react';
-import { Tabs, Breadcrumb } from '../components/ui';
+import { AlertCircle, Sparkles, ImageIcon, Smile, FileSignature } from 'lucide-react';
+import { Tabs, Breadcrumb, Alert, AlertTitle, AlertDescription, Spinner } from '../components/ui';
 import { usePatients, useAppointments, useClinicalNotes, useDeclarations } from '../hooks';
 import { toast } from 'sonner';
 import { Patient } from '../types';
@@ -76,8 +76,9 @@ export const PatientDetails = () => {
   // Loading state
   if (patientLoading) {
     return (
-      <div className="p-8 flex items-center justify-center">
-        <div className="animate-pulse text-gray-500">טוען...</div>
+      <div className="p-8 flex flex-col items-center justify-center gap-3">
+        <Spinner className="h-8 w-8 text-primary" />
+        <span className="text-gray-500">טוען פרטי מטופל...</span>
       </div>
     );
   }
@@ -85,12 +86,12 @@ export const PatientDetails = () => {
   // Error state
   if (patientError) {
     return (
-      <div className="p-8 text-center">
-        <div className="h-12 w-12 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
-          <AlertTriangle className="h-6 w-6 text-red-600" />
-        </div>
-        <h2 className="text-lg font-bold text-gray-900 mb-2">שגיאה בטעינת מטופל</h2>
-        <p className="text-gray-500">{patientError}</p>
+      <div className="p-8 max-w-md mx-auto">
+        <Alert variant="destructive">
+          <AlertCircle className="h-4 w-4" />
+          <AlertTitle>שגיאה בטעינת מטופל</AlertTitle>
+          <AlertDescription>{patientError}</AlertDescription>
+        </Alert>
       </div>
     );
   }

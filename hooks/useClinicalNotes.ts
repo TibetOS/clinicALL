@@ -1,8 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
-import { supabase, isSupabaseConfigured } from '../lib/supabase';
+import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
 import { ClinicalNote, InjectionPoint } from '../types';
-import { MOCK_CLINICAL_NOTES } from '../data';
 import { createLogger } from '../lib/logger';
 import { ClinicalNoteRow, ClinicalNoteRowUpdate, getErrorMessage } from '../lib/database.types';
 import { sanitizeInput } from '../lib/validation';
@@ -44,16 +43,6 @@ export function useClinicalNotes(options?: UseClinicalNotesOptions): UseClinical
   const fetchClinicalNotes = useCallback(async (fetchOptions?: UseClinicalNotesOptions) => {
     const opts = fetchOptions || options || {};
 
-    if (!isSupabaseConfigured()) {
-      let filtered = [...MOCK_CLINICAL_NOTES];
-      if (opts.patientId) {
-        filtered = filtered.filter(note => note.patientId === opts.patientId);
-      }
-      setClinicalNotes(filtered);
-      setLoading(false);
-      return;
-    }
-
     setLoading(true);
     setError(null);
 
@@ -92,10 +81,6 @@ export function useClinicalNotes(options?: UseClinicalNotesOptions): UseClinical
   }, [options?.patientId]);
 
   const getClinicalNote = useCallback(async (id: string): Promise<ClinicalNote | null> => {
-    if (!isSupabaseConfigured()) {
-      return MOCK_CLINICAL_NOTES.find(note => note.id === id) || null;
-    }
-
     try {
       const { data, error: fetchError } = await supabase
         .from('clinical_notes')
@@ -129,21 +114,6 @@ export function useClinicalNotes(options?: UseClinicalNotesOptions): UseClinical
       treatmentType: note.treatmentType ? sanitizeInput(note.treatmentType) : undefined,
       notes: note.notes ? sanitizeInput(note.notes) : undefined,
     };
-
-    if (!isSupabaseConfigured()) {
-      const newNote: ClinicalNote = {
-        id: `mock-${Date.now()}`,
-        patientId: sanitizedNote.patientId || '',
-        date: sanitizedNote.date ?? new Date().toISOString().split('T')[0] ?? '',
-        providerName: sanitizedNote.providerName || '',
-        treatmentType: sanitizedNote.treatmentType || '',
-        notes: sanitizedNote.notes || '',
-        injectionPoints: sanitizedNote.injectionPoints || [],
-        images: sanitizedNote.images || [],
-      };
-      setClinicalNotes(prev => [newNote, ...prev]);
-      return newNote;
-    }
 
     try {
       const { data, error: insertError } = await supabase
@@ -192,13 +162,6 @@ export function useClinicalNotes(options?: UseClinicalNotesOptions): UseClinical
       notes: updates.notes !== undefined ? sanitizeInput(updates.notes) : undefined,
     };
 
-    if (!isSupabaseConfigured()) {
-      setClinicalNotes(prev => prev.map(note =>
-        note.id === id ? { ...note, ...sanitizedUpdates } : note
-      ));
-      return clinicalNotes.find(note => note.id === id) || null;
-    }
-
     try {
       const dbUpdates: ClinicalNoteRowUpdate = {};
       if (sanitizedUpdates.patientId !== undefined) dbUpdates.patient_id = sanitizedUpdates.patientId;
@@ -239,11 +202,6 @@ export function useClinicalNotes(options?: UseClinicalNotesOptions): UseClinical
   }, [clinicalNotes]);
 
   const deleteClinicalNote = useCallback(async (id: string): Promise<boolean> => {
-    if (!isSupabaseConfigured()) {
-      setClinicalNotes(prev => prev.filter(note => note.id !== id));
-      return true;
-    }
-
     try {
       const { error: deleteError } = await supabase
         .from('clinical_notes')

@@ -1,8 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
-import { supabase, isSupabaseConfigured } from '../lib/supabase';
+import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
 import { Campaign } from '../types';
-import { MOCK_CAMPAIGNS } from '../data';
 import { createLogger } from '../lib/logger';
 import { CampaignRow, CampaignRowUpdate, getErrorMessage } from '../lib/database.types';
 
@@ -37,12 +36,6 @@ export function useCampaigns(): UseCampaigns {
   const { profile } = useAuth();
 
   const fetchCampaigns = useCallback(async () => {
-    if (!isSupabaseConfigured()) {
-      setCampaigns(MOCK_CAMPAIGNS);
-      setLoading(false);
-      return;
-    }
-
     setLoading(true);
     setError(null);
 
@@ -75,10 +68,6 @@ export function useCampaigns(): UseCampaigns {
   }, []);
 
   const getCampaign = useCallback(async (id: string): Promise<Campaign | null> => {
-    if (!isSupabaseConfigured()) {
-      return MOCK_CAMPAIGNS.find(camp => camp.id === id) || null;
-    }
-
     try {
       const { data, error: fetchError } = await supabase
         .from('campaigns')
@@ -105,21 +94,6 @@ export function useCampaigns(): UseCampaigns {
   }, []);
 
   const addCampaign = useCallback(async (campaign: CampaignInput): Promise<Campaign | null> => {
-    if (!isSupabaseConfigured()) {
-      const newCampaign: Campaign = {
-        id: `mock-${Date.now()}`,
-        name: campaign.name,
-        type: campaign.type,
-        status: campaign.status || 'draft',
-        audience: campaign.audience || '',
-        sentCount: campaign.sentCount || 0,
-        openRate: campaign.openRate,
-        scheduledDate: campaign.scheduledDate,
-      };
-      setCampaigns(prev => [newCampaign, ...prev]);
-      return newCampaign;
-    }
-
     try {
       const { data, error: insertError } = await supabase
         .from('campaigns')
@@ -159,13 +133,6 @@ export function useCampaigns(): UseCampaigns {
   }, [profile?.clinic_id]);
 
   const updateCampaign = useCallback(async (id: string, updates: Partial<CampaignInput>): Promise<Campaign | null> => {
-    if (!isSupabaseConfigured()) {
-      setCampaigns(prev => prev.map(camp =>
-        camp.id === id ? { ...camp, ...updates } : camp
-      ));
-      return campaigns.find(camp => camp.id === id) || null;
-    }
-
     try {
       const dbUpdates: CampaignRowUpdate = {};
       if (updates.name !== undefined) dbUpdates.name = updates.name;
@@ -211,11 +178,6 @@ export function useCampaigns(): UseCampaigns {
   }, [updateCampaign]);
 
   const deleteCampaign = useCallback(async (id: string): Promise<boolean> => {
-    if (!isSupabaseConfigured()) {
-      setCampaigns(prev => prev.filter(camp => camp.id !== id));
-      return true;
-    }
-
     try {
       const { error: deleteError } = await supabase
         .from('campaigns')

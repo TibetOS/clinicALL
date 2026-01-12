@@ -1,8 +1,8 @@
 import { useState, useEffect, useCallback } from 'react';
-import { supabase, isSupabaseConfigured } from '../lib/supabase';
+import { supabase } from '../lib/supabase';
 import { StaffMember } from '../types';
 import { createLogger } from '../lib/logger';
-import { UserRow, getErrorMessage } from '../lib/database.types';
+import { getErrorMessage } from '../lib/database.types';
 
 const logger = createLogger('useStaff');
 
@@ -20,13 +20,6 @@ export function useStaff(clinicId?: string): UseStaff {
   const [error, setError] = useState<string | null>(null);
 
   const fetchStaff = useCallback(async () => {
-    if (!isSupabaseConfigured()) {
-      // No mock data - Supabase must be configured for public pages
-      setLoading(false);
-      setError('Database not configured');
-      return;
-    }
-
     setLoading(true);
     setError(null);
 

@@ -1,8 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
-import { supabase, isSupabaseConfigured } from '../lib/supabase';
+import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
 import { InventoryItem } from '../types';
-import { MOCK_INVENTORY } from '../data';
 import { createLogger } from '../lib/logger';
 import { InventoryItemRow, InventoryItemRowUpdate, getErrorMessage } from '../lib/database.types';
 
@@ -48,12 +47,6 @@ export function useInventory(): UseInventory {
   const { profile } = useAuth();
 
   const fetchItems = useCallback(async () => {
-    if (!isSupabaseConfigured()) {
-      setItems(MOCK_INVENTORY);
-      setLoading(false);
-      return;
-    }
-
     setLoading(true);
     setError(null);
 
@@ -98,10 +91,6 @@ export function useInventory(): UseInventory {
   }, [profile?.clinic_id]);
 
   const getItem = useCallback(async (id: string): Promise<InventoryItem | null> => {
-    if (!isSupabaseConfigured()) {
-      return MOCK_INVENTORY.find(item => item.id === id) || null;
-    }
-
     try {
       let query = supabase
         .from('inventory_items')
@@ -139,26 +128,6 @@ export function useInventory(): UseInventory {
   }, [profile?.clinic_id]);
 
   const addItem = useCallback(async (item: InventoryInput): Promise<InventoryItem | null> => {
-    if (!isSupabaseConfigured()) {
-      const newItem: InventoryItem = {
-        id: `mock-${Date.now()}`,
-        name: item.name,
-        sku: item.sku || '',
-        category: item.category,
-        quantity: item.quantity,
-        minQuantity: item.minQuantity,
-        unit: item.unit || 'יחידות',
-        expiryDate: item.expiryDate || '',
-        supplier: item.supplier || '',
-        status: calculateStatus(item.quantity, item.minQuantity),
-        unitPrice: item.unitPrice,
-        lotNumber: item.lotNumber || '',
-        notes: item.notes || '',
-      };
-      setItems((prev: InventoryItem[]) => [...prev, newItem]);
-      return newItem;
-    }
-
     try {
       const status = calculateStatus(item.quantity, item.minQuantity);
       const { data, error: insertError } = await supabase
@@ -209,21 +178,6 @@ export function useInventory(): UseInventory {
   }, [profile?.clinic_id]);
 
   const updateItem = useCallback(async (id: string, updates: Partial<InventoryInput>): Promise<InventoryItem | null> => {
-    if (!isSupabaseConfigured()) {
-      setItems((prev: InventoryItem[]) => prev.map((item: InventoryItem) => {
-        if (item.id !== id) return item;
-        const updated = { ...item, ...updates };
-        if (updates.quantity !== undefined || updates.minQuantity !== undefined) {
-          updated.status = calculateStatus(
-            updates.quantity ?? item.quantity,
-            updates.minQuantity ?? item.minQuantity
-          );
-        }
-        return updated;
-      }));
-      return items.find((item: InventoryItem) => item.id === id) || null;
-    }
-
     try {
       const dbUpdates: InventoryItemRowUpdate = {};
       if (updates.name !== undefined) dbUpdates.name = updates.name;
@@ -291,11 +245,6 @@ export function useInventory(): UseInventory {
   }, [updateItem]);
 
   const deleteItem = useCallback(async (id: string): Promise<boolean> => {
-    if (!isSupabaseConfigured()) {
-      setItems((prev: InventoryItem[]) => prev.filter((item: InventoryItem) => item.id !== id));
-      return true;
-    }
-
     try {
       let query = supabase
         .from('inventory_items')

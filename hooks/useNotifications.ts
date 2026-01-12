@@ -1,8 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
-import { supabase, isSupabaseConfigured } from '../lib/supabase';
+import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
 import { Notification, NotificationAction } from '../types';
-import { MOCK_NOTIFICATIONS } from '../data';
 import { createLogger } from '../lib/logger';
 import { NotificationRow, getErrorMessage } from '../lib/database.types';
 
@@ -47,12 +46,6 @@ export function useNotifications(): UseNotifications {
   const unreadCount = notifications.filter(n => !n.read).length;
 
   const fetchNotifications = useCallback(async () => {
-    if (!isSupabaseConfigured()) {
-      setNotifications(MOCK_NOTIFICATIONS);
-      setLoading(false);
-      return;
-    }
-
     setLoading(true);
     setError(null);
 
@@ -84,21 +77,6 @@ export function useNotifications(): UseNotifications {
   }, []);
 
   const addNotification = useCallback(async (notification: NotificationInput): Promise<Notification | null> => {
-    if (!isSupabaseConfigured()) {
-      const newNotification: Notification = {
-        id: `mock-${Date.now()}`,
-        title: notification.title,
-        message: notification.message,
-        type: notification.type || 'info',
-        timestamp: new Date().toISOString(),
-        read: false,
-        action: notification.action,
-        metadata: notification.metadata,
-      };
-      setNotifications(prev => [newNotification, ...prev]);
-      return newNotification;
-    }
-
     try {
       const { data, error: insertError } = await supabase
         .from('notifications')
@@ -134,13 +112,6 @@ export function useNotifications(): UseNotifications {
   }, [profile?.clinic_id, user?.id]);
 
   const markAsRead = useCallback(async (id: string): Promise<boolean> => {
-    if (!isSupabaseConfigured()) {
-      setNotifications(prev => prev.map(n =>
-        n.id === id ? { ...n, read: true } : n
-      ));
-      return true;
-    }
-
     try {
       const { error: updateError } = await supabase
         .from('notifications')
@@ -161,11 +132,6 @@ export function useNotifications(): UseNotifications {
   }, []);
 
   const markAllAsRead = useCallback(async (): Promise<boolean> => {
-    if (!isSupabaseConfigured()) {
-      setNotifications(prev => prev.map(n => ({ ...n, read: true })));
-      return true;
-    }
-
     try {
       const unreadIds = notifications.filter(n => !n.read).map(n => n.id);
       if (unreadIds.length === 0) return true;
@@ -187,11 +153,6 @@ export function useNotifications(): UseNotifications {
   }, [notifications]);
 
   const deleteNotification = useCallback(async (id: string): Promise<boolean> => {
-    if (!isSupabaseConfigured()) {
-      setNotifications(prev => prev.filter(n => n.id !== id));
-      return true;
-    }
-
     try {
       const { error: deleteError } = await supabase
         .from('notifications')
@@ -210,11 +171,6 @@ export function useNotifications(): UseNotifications {
   }, []);
 
   const clearAll = useCallback(async (): Promise<boolean> => {
-    if (!isSupabaseConfigured()) {
-      setNotifications([]);
-      return true;
-    }
-
     try {
       const ids = notifications.map(n => n.id);
       if (ids.length === 0) return true;
@@ -241,7 +197,7 @@ export function useNotifications(): UseNotifications {
 
   // Subscribe to real-time notifications
   useEffect(() => {
-    if (!isSupabaseConfigured() || !user?.id) return;
+    if (!user?.id) return;
 
     const channel = supabase
       .channel('notifications')

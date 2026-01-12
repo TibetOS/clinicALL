@@ -5,6 +5,21 @@ import { Link } from 'react-router-dom';
 import { ChevronLeft } from 'lucide-react';
 import { ResponsiveDialog } from './ui/responsive-dialog';
 
+// Re-export shadcn/ui components
+export {
+  CardHeader,
+  CardTitle,
+  CardDescription,
+  CardContent,
+  CardFooter,
+  CardAction,
+} from './ui/card';
+
+export { Alert, AlertTitle, AlertDescription } from './ui/alert';
+export { Spinner } from './ui/spinner';
+export { Textarea } from './ui/textarea';
+export { Skeleton as ShadcnSkeleton } from './ui/skeleton';
+
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }

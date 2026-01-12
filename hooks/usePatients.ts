@@ -1,8 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
-import { supabase, isSupabaseConfigured } from '../lib/supabase';
+import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
 import { Patient, RiskLevel, DeclarationStatus } from '../types';
-import { MOCK_PATIENTS } from '../data';
 import { createLogger } from '../lib/logger';
 import { PatientRow, PatientRowUpdate, getErrorMessage } from '../lib/database.types';
 
@@ -90,17 +89,6 @@ export function usePatients(): UsePatients {
   const fetchPatients = useCallback(async (requestedPage?: number) => {
     const targetPage = requestedPage ?? page;
 
-    if (!isSupabaseConfigured()) {
-      // Return mock data in dev mode (paginated)
-      const start = (targetPage - 1) * ITEMS_PER_PAGE;
-      const paginatedMock = MOCK_PATIENTS.slice(start, start + ITEMS_PER_PAGE);
-      setPatients(paginatedMock);
-      setTotalCount(MOCK_PATIENTS.length);
-      setPage(targetPage);
-      setLoading(false);
-      return;
-    }
-
     setLoading(true);
     setError(null);
 
@@ -140,10 +128,6 @@ export function usePatients(): UsePatients {
   }, [profile?.clinic_id, page]);
 
   const getPatient = useCallback(async (id: string): Promise<Patient | null> => {
-    if (!isSupabaseConfigured()) {
-      return MOCK_PATIENTS.find(p => p.id === id) || null;
-    }
-
     try {
       let query = supabase
         .from('patients')
@@ -167,26 +151,6 @@ export function usePatients(): UsePatients {
   }, [profile?.clinic_id]);
 
   const addPatient = useCallback(async (patient: PatientInput): Promise<Patient | null> => {
-    if (!isSupabaseConfigured()) {
-      // Mock add for dev mode
-      const newPatient: Patient = {
-        id: `mock-${Date.now()}`,
-        name: patient.name,
-        email: patient.email || '',
-        phone: patient.phone,
-        riskLevel: patient.riskLevel || 'low',
-        lastVisit: '',
-        memberSince: new Date().toISOString().split('T')[0] ?? '',
-        birthDate: patient.birthDate ?? undefined,
-        age: patient.age ?? undefined,
-        gender: patient.gender ?? undefined,
-        aestheticInterests: patient.aestheticInterests ?? undefined,
-        skinType: patient.skinType ?? undefined,
-      };
-      setPatients(prev => [newPatient, ...prev]);
-      return newPatient;
-    }
-
     try {
       const { data, error: insertError } = await supabase
         .from('patients')
@@ -219,16 +183,6 @@ export function usePatients(): UsePatients {
   }, [profile?.clinic_id]);
 
   const updatePatient = useCallback(async (id: string, updates: Partial<PatientInput>): Promise<Patient | null> => {
-    if (!isSupabaseConfigured()) {
-      // Mock update for dev mode
-      const existingPatient = patients.find(p => p.id === id);
-      if (!existingPatient) return null;
-
-      const updatedPatient: Patient = { ...existingPatient, ...updates };
-      setPatients(prev => prev.map(p => p.id === id ? updatedPatient : p));
-      return updatedPatient;
-    }
-
     try {
       const dbUpdates: PatientRowUpdate = {};
       if (updates.name !== undefined) dbUpdates.name = updates.name;
@@ -270,12 +224,6 @@ export function usePatients(): UsePatients {
   }, [patients, profile?.clinic_id]);
 
   const deletePatient = useCallback(async (id: string): Promise<boolean> => {
-    if (!isSupabaseConfigured()) {
-      // Mock delete for dev mode
-      setPatients(prev => prev.filter(p => p.id !== id));
-      return true;
-    }
-
     try {
       // SECURITY: Filter by clinic_id to ensure multi-tenant isolation
       let query = supabase

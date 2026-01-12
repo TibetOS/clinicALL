@@ -56,6 +56,7 @@ Comprehensive Radix UI-based components following shadcn/ui patterns:
 | File | Description |
 |------|-------------|
 | `accordion.tsx` | Collapsible content sections |
+| `alert.tsx` | Alert banners with variants (default, destructive) |
 | `alert-dialog.tsx` | Confirmation dialogs for destructive actions |
 | `aspect-ratio.tsx` | Maintain aspect ratios for images/videos |
 | `avatar.tsx` | User profile images with fallback |
@@ -74,6 +75,7 @@ Comprehensive Radix UI-based components following shadcn/ui patterns:
 | `select.tsx` | Enhanced select dropdowns |
 | `separator.tsx` | Visual dividers |
 | `slider.tsx` | Range slider input |
+| `spinner.tsx` | Loading spinner indicator (Loader2Icon) |
 | `toggle.tsx` | Toggle button |
 | `toggle-group.tsx` | Group of toggle buttons |
 | `tooltip.tsx` | Hover tooltips |
@@ -155,6 +157,102 @@ import { AlertDialog, Tooltip, Empty } from '@/components/ui';
     </TooltipContent>
   </Tooltip>
 </TooltipProvider>
+```
+
+### Alert Example
+
+Display important messages with semantic styling:
+
+```tsx
+import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
+import { AlertCircle, CheckCircle2, Info } from 'lucide-react';
+
+// Error alert (destructive variant)
+<Alert variant="destructive">
+  <AlertCircle className="h-4 w-4" />
+  <AlertTitle>שגיאה בטעינת נתונים</AlertTitle>
+  <AlertDescription>לא ניתן לטעון את רשימת המטופלים. נסה שוב מאוחר יותר.</AlertDescription>
+</Alert>
+
+// Success alert (default variant)
+<Alert>
+  <CheckCircle2 className="h-4 w-4" />
+  <AlertTitle>הצלחה</AlertTitle>
+  <AlertDescription>הנתונים נשמרו בהצלחה.</AlertDescription>
+</Alert>
+
+// Info alert (default variant with different icon)
+<Alert>
+  <Info className="h-4 w-4" />
+  <AlertTitle>שים לב</AlertTitle>
+  <AlertDescription>יש להשלים את ההצהרה לפני התור.</AlertDescription>
+</Alert>
+```
+
+### Spinner Example
+
+Loading indicator for async operations:
+
+```tsx
+import { Spinner } from '@/components/ui/spinner';
+
+// Default size (size-4)
+<Spinner />
+
+// Larger spinner for loading states
+<div className="flex items-center justify-center py-8">
+  <Spinner className="size-8" />
+</div>
+
+// With loading text
+<div className="flex items-center gap-2">
+  <Spinner className="size-4" />
+  <span>טוען...</span>
+</div>
+```
+
+### Card with Subcomponents Example
+
+Structured card layout with semantic sections:
+
+```tsx
+import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter, CardAction } from '@/components/ui/card';
+
+<Card>
+  <CardHeader>
+    <CardTitle className="flex items-center gap-2">
+      <CalendarIcon className="h-5 w-5 text-teal-500" />
+      התור הבא
+    </CardTitle>
+    <CardDescription>פרטי התור הקרוב שלך</CardDescription>
+    <CardAction>
+      <Button variant="ghost" size="icon">
+        <MoreHorizontal className="h-4 w-4" />
+      </Button>
+    </CardAction>
+  </CardHeader>
+  <CardContent>
+    <div className="space-y-2">
+      <p className="font-medium">בוטוקס - אזור מצח</p>
+      <p className="text-sm text-muted-foreground">יום ראשון, 15 בינואר 2024 בשעה 10:00</p>
+    </div>
+  </CardContent>
+  <CardFooter>
+    <Button variant="outline" className="w-full">צפה בפרטים</Button>
+  </CardFooter>
+</Card>
+
+// Loading state with Spinner
+<Card>
+  <CardHeader>
+    <CardTitle>התור הבא</CardTitle>
+  </CardHeader>
+  <CardContent>
+    <div className="flex items-center justify-center py-8">
+      <Spinner className="size-8" />
+    </div>
+  </CardContent>
+</Card>
 ```
 
 ### Field Example
@@ -282,11 +380,20 @@ import { TimeSlotPicker } from '@/components/ui/time-slot-picker';
 - **Tabs, TabsList, TabsTrigger** - Tab navigation
 - **Card** - Container with shadow and hover effects
 - **Badge** - Status badges with variants: `default`, `success`, `warning`, `destructive`, `outline`, `secondary`
-- **Dialog** - Modal with focus trap, ARIA support, and escape key handling
-- **Skeleton** - Loading placeholder
+- **Dialog** - Responsive modal (Dialog on desktop, Drawer on mobile)
+- **Skeleton** - Loading placeholder with shimmer animation
 - **Breadcrumb** - Navigation breadcrumb (RTL-aware)
-- **Toast, useToast** - Toast notifications with auto-dismiss
 - **ComingSoon** - Wrapper for disabled buttons/elements with "בקרוב" (Coming soon) tooltip
+
+### Re-exported from shadcn/ui
+
+These components are imported from `components/ui/` and re-exported for convenience:
+
+- **CardHeader, CardTitle, CardDescription, CardContent, CardFooter, CardAction** - Card subcomponents for structured layouts
+- **Alert, AlertTitle, AlertDescription** - Alert banners with `default` and `destructive` variants
+- **Spinner** - Loading spinner indicator (Loader2Icon-based)
+- **Textarea** - Multi-line text input
+- **ShadcnSkeleton** - shadcn/ui skeleton (aliased to avoid conflict with custom Skeleton)
 
 ### Utility Function
 

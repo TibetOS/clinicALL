@@ -5,7 +5,10 @@ import {
   Check, Send, Mail, Phone, Clock, AlertCircle, FileCheck, MoreHorizontal,
   Eye, Calendar, Users, ChevronLeft, ChevronRight
 } from 'lucide-react';
-import { Card, Button, Input, Badge, Dialog, Label, Skeleton } from '../../components/ui';
+import {
+  Card, Button, Input, Badge, Dialog, Label, Skeleton,
+  Alert, AlertTitle, AlertDescription,
+} from '../../components/ui';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -351,13 +354,16 @@ export const PatientList = () => {
 
       {/* Error Banner */}
       {error && (
-        <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg flex items-center gap-2">
-          <AlertCircle size={18} />
-          <span>שגיאה בטעינת מטופלים: {error}</span>
-          <Button variant="ghost" size="sm" className="mr-auto" onClick={() => fetchPatients()}>
-            נסה שוב
-          </Button>
-        </div>
+        <Alert variant="destructive">
+          <AlertCircle className="h-4 w-4" />
+          <AlertTitle>שגיאה בטעינת מטופלים</AlertTitle>
+          <AlertDescription className="flex items-center justify-between">
+            <span>{error}</span>
+            <Button variant="ghost" size="sm" onClick={() => fetchPatients()}>
+              נסה שוב
+            </Button>
+          </AlertDescription>
+        </Alert>
       )}
 
       {/* Selection Mode Actions Bar */}

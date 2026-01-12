@@ -1,8 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
-import { supabase, isSupabaseConfigured } from '../lib/supabase';
+import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
 import { Declaration } from '../types';
-import { MOCK_DECLARATIONS } from '../data';
 import { createLogger } from '../lib/logger';
 import { DeclarationRow, DeclarationRowUpdate, getErrorMessage } from '../lib/database.types';
 
@@ -57,16 +56,6 @@ export function useDeclarations(options?: UseDeclarationsOptions): UseDeclaratio
   const fetchDeclarations = useCallback(async (fetchOptions?: UseDeclarationsOptions) => {
     const opts = fetchOptions || options || {};
 
-    if (!isSupabaseConfigured()) {
-      let filtered = [...MOCK_DECLARATIONS];
-      if (opts.patientId) {
-        filtered = filtered.filter(dec => dec.patientId === opts.patientId);
-      }
-      setDeclarations(filtered);
-      setLoading(false);
-      return;
-    }
-
     setLoading(true);
     setError(null);
 
@@ -101,10 +90,6 @@ export function useDeclarations(options?: UseDeclarationsOptions): UseDeclaratio
   }, [options?.patientId, profile?.clinic_id]);
 
   const getDeclaration = useCallback(async (id: string): Promise<Declaration | null> => {
-    if (!isSupabaseConfigured()) {
-      return MOCK_DECLARATIONS.find(dec => dec.id === id) || null;
-    }
-
     try {
       let query = supabase
         .from('declarations')
@@ -128,19 +113,6 @@ export function useDeclarations(options?: UseDeclarationsOptions): UseDeclaratio
   }, [profile?.clinic_id]);
 
   const addDeclaration = useCallback(async (declaration: DeclarationInput): Promise<Declaration | null> => {
-    if (!isSupabaseConfigured()) {
-      const newDeclaration: Declaration = {
-        id: `mock-${Date.now()}`,
-        patientId: declaration.patientId,
-        patientName: declaration.patientName,
-        submittedAt: new Date().toISOString(),
-        status: declaration.status || 'pending',
-        formData: declaration.formData,
-      };
-      setDeclarations(prev => [newDeclaration, ...prev]);
-      return newDeclaration;
-    }
-
     try {
       const { data, error: insertError } = await supabase
         .from('declarations')
@@ -167,13 +139,6 @@ export function useDeclarations(options?: UseDeclarationsOptions): UseDeclaratio
   }, [profile?.clinic_id]);
 
   const updateDeclaration = useCallback(async (id: string, updates: Partial<DeclarationInput>): Promise<Declaration | null> => {
-    if (!isSupabaseConfigured()) {
-      setDeclarations(prev => prev.map(dec =>
-        dec.id === id ? { ...dec, ...updates } : dec
-      ));
-      return declarations.find(dec => dec.id === id) || null;
-    }
-
     try {
       const dbUpdates: DeclarationRowUpdate = {};
       if (updates.patientId !== undefined) dbUpdates.patient_id = updates.patientId;
@@ -211,11 +176,6 @@ export function useDeclarations(options?: UseDeclarationsOptions): UseDeclaratio
   }, [updateDeclaration]);
 
   const deleteDeclaration = useCallback(async (id: string): Promise<boolean> => {
-    if (!isSupabaseConfigured()) {
-      setDeclarations(prev => prev.filter(dec => dec.id !== id));
-      return true;
-    }
-
     try {
       let query = supabase
         .from('declarations')

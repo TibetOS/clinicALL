@@ -1,35 +1,11 @@
 import { useState, useEffect, useCallback } from 'react';
-import { supabase, isSupabaseConfigured } from '../lib/supabase';
+import { supabase } from '../lib/supabase';
 import { ClinicProfile } from '../types';
 import { createLogger } from '../lib/logger';
 import { getErrorMessage } from '../lib/database.types';
 import { useAuth } from '../contexts/AuthContext';
 
 const logger = createLogger('useMyClinic');
-
-// Fallback mock profile for development when no database is configured
-const MOCK_MY_CLINIC: ClinicProfile = {
-  id: 'clinic-1',
-  name: 'ד״ר שרה כהן - אסתטיקה רפואית',
-  slug: 'dr-sarah',
-  businessId: '512345678',
-  tagline: 'אומנות היופי הטבעי',
-  description: `ברוכים הבאים לקליניקה שלנו בלב תל אביב. אנו מתמחים בטיפולי אסתטיקה מתקדמים המדגישים את היופי הטבעי שלך.
-
-הקליניקה מצוידת בטכנולוגיות המתקדמות ביותר ומציעה מגוון רחב של טיפולים: הזרקות, בוטוקס, חומצה היאלורונית, ושיפור מרקם העור.`,
-  brandColor: '#BCA48D',
-  address: 'שדרות רוטשילד 45, תל אביב',
-  phone: '03-555-1234',
-  whatsapp: '050-1234567',
-  instagram: '@drsarah_clinic',
-  openingHours: {
-    'א׳-ה׳': '09:00 - 19:00',
-    'ו׳': '09:00 - 13:00',
-  },
-  services: ['1', '2', '3'],
-  coverUrl: 'https://images.unsplash.com/photo-1629909613654-28e377c37b09?auto=format&fit=crop&q=80&w=2068',
-  logoUrl: 'https://ui-avatars.com/api/?name=Sarah+Cohen&background=BCA48D&color=fff&size=128'
-};
 
 interface UseMyClinic {
   clinic: ClinicProfile | null;
@@ -51,13 +27,6 @@ export function useMyClinic(): UseMyClinic {
   const [error, setError] = useState<string | null>(null);
 
   const fetchClinic = useCallback(async () => {
-    if (!isSupabaseConfigured()) {
-      // Return mock data in dev mode
-      setClinic(MOCK_MY_CLINIC);
-      setLoading(false);
-      return;
-    }
-
     if (!profile?.clinic_id) {
       setLoading(false);
       setError('No clinic associated with user');
@@ -115,12 +84,6 @@ export function useMyClinic(): UseMyClinic {
   }, [profile?.clinic_id]);
 
   const updateClinic = useCallback(async (updates: Partial<ClinicProfile>): Promise<{ success: boolean; error?: string }> => {
-    if (!isSupabaseConfigured()) {
-      // In mock mode, just update local state
-      setClinic(prev => prev ? { ...prev, ...updates } : null);
-      return { success: true };
-    }
-
     if (!profile?.clinic_id) {
       return { success: false, error: 'No clinic associated with user' };
     }
