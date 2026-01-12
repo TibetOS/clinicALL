@@ -1,0 +1,4 @@
+// Validate slug contains only URL-safe characters
+export const isValidSlug = (slug: string): boolean => {
+  return /^[a-z0-9-]+$/.test(slug);
+};
