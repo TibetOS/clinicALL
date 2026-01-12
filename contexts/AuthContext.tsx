@@ -1,7 +1,8 @@
 import { createContext, useContext, useEffect, useState, useRef, useCallback, ReactNode } from 'react';
 import { User, Session } from '@supabase/supabase-js';
-import { supabase, isSupabaseConfigured } from '../lib/supabase';
+import { supabase, isSupabaseConfigured, uploadImage } from '../lib/supabase';
 import { createLogger } from '../lib/logger';
+import type { DaySchedule, ServiceInput, BusinessTypeKey } from '../components/auth/types';
 
 const logger = createLogger('AuthContext');
 
@@ -17,24 +18,19 @@ interface UserProfile {
 interface SignUpData {
   email: string;
   password: string;
-  fullName: string;
-  clinicName: string;
+  phone: string;
+  businessName: string;
+  businessPhone: string;
   slug: string;
-  businessId?: string;
-  address?: string;
-  phone?: string;
-  // New fields for Israeli market
-  whatsapp?: string;
-  city?: string;
-  businessType?: 'exempt' | 'authorized' | 'company' | 'partnership'; // עוסק פטור, עוסק מורשה, חברה בע"מ, שותפות
-  practitionerType?: 'doctor' | 'nurse' | 'aesthetician' | 'cosmetician' | 'other';
-  licenseNumber?: string;
-  instagram?: string;
-  facebook?: string;
-  languages?: string[];
-  operatingHours?: string;
-  referralSource?: string;
-  specializations?: string[];
+  address: string;
+  city: string;
+  businessTypes: BusinessTypeKey[];
+  operatingHours: DaySchedule[];
+  services: ServiceInput[];
+  logo: File | null;
+  coverImage: File | null;
+  galleryImages: File[];
+  tagline: string;
 }
 
 interface AuthContextType {
@@ -193,36 +189,137 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const signUp = async (data: SignUpData) => {
     if (!isConfigured) {
-      return { error: new Error('Supabase not configured') };
+      // Mock signup for development - simulate success
+      logger.info('Mock signup (Supabase not configured)');
+      setUser({ id: 'mock-user', email: data.email } as User);
+      setProfile({
+        id: 'mock-user',
+        email: data.email,
+        full_name: data.businessName,
+        role: 'admin',
+        clinic_id: 'mock-clinic',
+      });
+      return { error: null };
     }
 
-    const { error } = await supabase.auth.signUp({
-      email: data.email,
-      password: data.password,
-      options: {
-        data: {
-          full_name: data.fullName,
-          clinic_name: data.clinicName,
-          slug: data.slug,
-          business_id: data.businessId,
-          address: data.address,
-          phone: data.phone,
-          // New fields for Israeli market
-          whatsapp: data.whatsapp,
-          city: data.city,
-          business_type: data.businessType,
-          practitioner_type: data.practitionerType,
-          license_number: data.licenseNumber,
-          instagram: data.instagram,
-          facebook: data.facebook,
-          languages: data.languages,
-          operating_hours: data.operatingHours,
-          referral_source: data.referralSource,
-          specializations: data.specializations,
+    try {
+      // Upload images first if present
+      let logoUrl: string | null = null;
+      let coverUrl: string | null = null;
+      const galleryUrls: string[] = [];
+
+      if (data.logo) {
+        const ext = data.logo.name.split('.').pop() || 'jpg';
+        logoUrl = await uploadImage(data.logo, 'clinic-assets', `${data.slug}/logo.${ext}`);
+      }
+
+      if (data.coverImage) {
+        const ext = data.coverImage.name.split('.').pop() || 'jpg';
+        coverUrl = await uploadImage(data.coverImage, 'clinic-assets', `${data.slug}/cover.${ext}`);
+      }
+
+      for (let i = 0; i < data.galleryImages.length; i++) {
+        const file = data.galleryImages[i];
+        if (file) {
+          const ext = file.name.split('.').pop() || 'jpg';
+          const url = await uploadImage(file, 'clinic-assets', `${data.slug}/gallery/${i}.${ext}`);
+          if (url) galleryUrls.push(url);
+        }
+      }
+
+      // Step 1: Create user account in Supabase Auth
+      const { data: authData, error: authError } = await supabase.auth.signUp({
+        email: data.email,
+        password: data.password,
+        options: {
+          data: {
+            full_name: data.businessName,
+          },
         },
-      },
-    });
-    return { error: error as Error | null };
+      });
+
+      if (authError) {
+        logger.error('Auth signUp error:', authError);
+        return { error: authError as Error };
+      }
+
+      const userId = authData.user?.id;
+      if (!userId) {
+        return { error: new Error('Failed to create user account') };
+      }
+
+      // Step 2: Create clinic record
+      const { data: clinicData, error: clinicError } = await supabase
+        .from('clinics')
+        .insert({
+          name: data.businessName,
+          slug: data.slug,
+          phone: data.businessPhone,
+          address: data.address,
+          city: data.city,
+          tagline: data.tagline,
+          logo_url: logoUrl,
+          cover_url: coverUrl,
+          gallery_urls: galleryUrls,
+          business_types: data.businessTypes,
+          opening_hours: data.operatingHours,
+        })
+        .select('id')
+        .single();
+
+      if (clinicError) {
+        logger.error('Clinic creation error:', clinicError);
+        return { error: clinicError as Error };
+      }
+
+      const clinicId = clinicData.id;
+
+      // Step 3: Create services records
+      if (data.services.length > 0) {
+        const servicesData = data.services.map((service) => ({
+          clinic_id: clinicId,
+          name: service.name,
+          duration: service.duration,
+          price: service.price,
+          category: 'כללי', // Default category
+        }));
+
+        const { error: servicesError } = await supabase
+          .from('services')
+          .insert(servicesData);
+
+        if (servicesError) {
+          logger.error('Services creation error:', servicesError);
+          // Continue even if services fail - non-critical
+        }
+      }
+
+      // Step 4: Update user record with clinic_id and phone
+      // The user record might be auto-created by trigger, so we use upsert
+      const { error: userError } = await supabase
+        .from('users')
+        .upsert({
+          id: userId,
+          email: data.email,
+          full_name: data.businessName,
+          phone: data.phone.replace(/\D/g, ''), // Normalize phone
+          clinic_id: clinicId,
+          role: 'admin',
+        }, {
+          onConflict: 'id',
+        });
+
+      if (userError) {
+        logger.error('User update error:', userError);
+        // Continue - the user might still be able to use the app
+      }
+
+      logger.info('Signup completed successfully for:', data.email);
+      return { error: null };
+    } catch (err) {
+      logger.error('signUp exception:', err);
+      return { error: err as Error };
+    }
   };
 
   const signOut = async (): Promise<{ error: Error | null }> => {

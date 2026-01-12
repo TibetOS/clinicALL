@@ -116,3 +116,72 @@ export function sanitizeInput(input: string): string {
     .replace(/"/g, '&quot;')
     .replace(/'/g, '&#x27;');
 }
+
+// Image validation types
+type ImageValidationResult = {
+  valid: boolean;
+  message: string;
+};
+
+// Allowed image MIME types
+const ALLOWED_IMAGE_TYPES = [
+  'image/jpeg',
+  'image/jpg',
+  'image/png',
+  'image/gif',
+  'image/webp',
+];
+
+/**
+ * Validates an image file for upload
+ * @param file - The file to validate
+ * @param maxSizeMB - Maximum file size in MB
+ * @returns Validation result with message
+ */
+export function validateImageFile(
+  file: File,
+  maxSizeMB: number
+): ImageValidationResult {
+  // Check if file is an image
+  if (!ALLOWED_IMAGE_TYPES.includes(file.type)) {
+    return {
+      valid: false,
+      message: 'יש להעלות קובץ תמונה בלבד',
+    };
+  }
+
+  // Check file size
+  const maxSizeBytes = maxSizeMB * 1024 * 1024;
+  if (file.size > maxSizeBytes) {
+    return {
+      valid: false,
+      message: `גודל הקובץ חייב להיות עד ${maxSizeMB}MB`,
+    };
+  }
+
+  return {
+    valid: true,
+    message: '',
+  };
+}
+
+/**
+ * Validates logo image (2MB max)
+ */
+export function validateLogoImage(file: File): ImageValidationResult {
+  return validateImageFile(file, 2);
+}
+
+/**
+ * Validates cover image (5MB max)
+ */
+export function validateCoverImage(file: File): ImageValidationResult {
+  return validateImageFile(file, 5);
+}
+
+/**
+ * Validates gallery image (5MB max)
+ */
+export function validateGalleryImage(file: File): ImageValidationResult {
+  return validateImageFile(file, 5);
+}

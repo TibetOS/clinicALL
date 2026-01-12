@@ -108,6 +108,7 @@ export const InventoryPage = () => {
   const [isEditOpen, setIsEditOpen] = useState(false);
   const [isAdjustOpen, setIsAdjustOpen] = useState(false);
   const [isDeleteOpen, setIsDeleteOpen] = useState(false);
+  const [isBatchDeleteOpen, setIsBatchDeleteOpen] = useState(false);
   const [isReorderOpen, setIsReorderOpen] = useState(false);
 
   // Form state
@@ -288,6 +289,7 @@ export const InventoryPage = () => {
     }
     setSaving(false);
     setSelectedItems(new Set());
+    setIsBatchDeleteOpen(false);
     toast.success(`${deleted} פריטים נמחקו בהצלחה`);
   };
 
@@ -435,8 +437,9 @@ export const InventoryPage = () => {
     <div className="space-y-4">
       <div className="grid grid-cols-2 gap-4">
         <div className="col-span-2">
-          <Label>שם הפריט *</Label>
+          <Label htmlFor="item-name">שם הפריט *</Label>
           <Input
+            id="item-name"
             name="item-name"
             autoComplete="off"
             placeholder="לדוג׳: Botox Allergan 100u"
@@ -445,8 +448,9 @@ export const InventoryPage = () => {
           />
         </div>
         <div>
-          <Label>מק״ט</Label>
+          <Label htmlFor="sku">מק״ט</Label>
           <Input
+            id="sku"
             name="sku"
             autoComplete="off"
             placeholder="BTX-001"
@@ -455,12 +459,12 @@ export const InventoryPage = () => {
           />
         </div>
         <div>
-          <Label>קטגוריה</Label>
+          <Label htmlFor="category">קטגוריה</Label>
           <Select
             value={itemForm.category}
             onValueChange={(value) => setItemForm(prev => ({ ...prev, category: value }))}
           >
-            <SelectTrigger>
+            <SelectTrigger id="category">
               <SelectValue placeholder="בחר קטגוריה" />
             </SelectTrigger>
             <SelectContent>
@@ -471,8 +475,9 @@ export const InventoryPage = () => {
           </Select>
         </div>
         <div>
-          <Label>כמות</Label>
+          <Label htmlFor="quantity">כמות</Label>
           <Input
+            id="quantity"
             type="number"
             name="quantity"
             autoComplete="off"
@@ -482,8 +487,9 @@ export const InventoryPage = () => {
           />
         </div>
         <div>
-          <Label>סף התראה</Label>
+          <Label htmlFor="min-quantity">סף התראה</Label>
           <Input
+            id="min-quantity"
             type="number"
             name="min-quantity"
             autoComplete="off"
@@ -493,8 +499,9 @@ export const InventoryPage = () => {
           />
         </div>
         <div>
-          <Label>יחידת מידה</Label>
+          <Label htmlFor="unit">יחידת מידה</Label>
           <Input
+            id="unit"
             name="unit"
             autoComplete="off"
             placeholder="יחידות"
@@ -503,8 +510,9 @@ export const InventoryPage = () => {
           />
         </div>
         <div>
-          <Label>תאריך תפוגה</Label>
+          <Label htmlFor="expiry-date">תאריך תפוגה</Label>
           <Input
+            id="expiry-date"
             type="date"
             name="expiry-date"
             autoComplete="off"
@@ -513,8 +521,9 @@ export const InventoryPage = () => {
           />
         </div>
         <div>
-          <Label>ספק</Label>
+          <Label htmlFor="supplier">ספק</Label>
           <Input
+            id="supplier"
             name="supplier"
             autoComplete="off"
             placeholder="שם הספק"
@@ -523,8 +532,9 @@ export const InventoryPage = () => {
           />
         </div>
         <div>
-          <Label>מחיר ליחידה (₪)</Label>
+          <Label htmlFor="unit-price">מחיר ליחידה (₪)</Label>
           <Input
+            id="unit-price"
             type="number"
             name="unit-price"
             autoComplete="off"
@@ -539,8 +549,9 @@ export const InventoryPage = () => {
           />
         </div>
         <div>
-          <Label>מספר אצווה</Label>
+          <Label htmlFor="lot-number">מספר אצווה</Label>
           <Input
+            id="lot-number"
             name="lot-number"
             autoComplete="off"
             placeholder="LOT-2024-001"
@@ -549,8 +560,9 @@ export const InventoryPage = () => {
           />
         </div>
         <div className="col-span-2">
-          <Label>הערות</Label>
+          <Label htmlFor="notes">הערות</Label>
           <Input
+            id="notes"
             name="notes"
             autoComplete="off"
             placeholder="הערות נוספות..."
@@ -734,7 +746,7 @@ export const InventoryPage = () => {
           <span className="text-sm font-medium">{selectedItems.size} פריטים נבחרו</span>
           <div className="flex gap-2">
             <Button variant="ghost" size="sm" onClick={() => setSelectedItems(new Set())}>בטל בחירה</Button>
-            <Button variant="destructive" size="sm" onClick={handleBatchDelete} disabled={saving}>
+            <Button variant="destructive" size="sm" onClick={() => setIsBatchDeleteOpen(true)} disabled={saving}>
               {saving ? 'מוחק...' : 'מחק נבחרים'}
             </Button>
           </div>
@@ -913,8 +925,9 @@ export const InventoryPage = () => {
               <p className="text-sm text-gray-500">כמות נוכחית: {adjustment.currentQuantity} יחידות</p>
             </div>
             <div>
-              <Label>כמות {adjustment.adjustmentType === 'add' ? 'להוספה' : 'להפחתה'}</Label>
+              <Label htmlFor="adjustment-amount">כמות {adjustment.adjustmentType === 'add' ? 'להוספה' : 'להפחתה'}</Label>
               <Input
+                id="adjustment-amount"
                 type="number"
                 name="adjustment-amount"
                 autoComplete="off"
@@ -925,8 +938,9 @@ export const InventoryPage = () => {
               />
             </div>
             <div>
-              <Label>סיבה (אופציונלי)</Label>
+              <Label htmlFor="adjustment-reason">סיבה (אופציונלי)</Label>
               <Input
+                id="adjustment-reason"
                 name="adjustment-reason"
                 autoComplete="off"
                 placeholder={adjustment.adjustmentType === 'add' ? 'לדוג׳: קליטת הזמנה' : 'לדוג׳: שימוש בטיפול'}
@@ -981,6 +995,26 @@ export const InventoryPage = () => {
             </div>
           </div>
         )}
+      </Dialog>
+
+      {/* Batch Delete Confirmation Dialog */}
+      <Dialog
+        open={isBatchDeleteOpen}
+        onClose={() => setIsBatchDeleteOpen(false)}
+        title="אישור מחיקה מרובה"
+      >
+        <div className="space-y-4">
+          <p>האם אתה בטוח שברצונך למחוק <strong>{selectedItems.size} פריטים</strong>?</p>
+          <p className="text-sm text-gray-500">פעולה זו אינה ניתנת לביטול.</p>
+          <div className="flex justify-end gap-3 pt-4 border-t mt-4">
+            <Button variant="ghost" onClick={() => setIsBatchDeleteOpen(false)} disabled={saving}>
+              ביטול
+            </Button>
+            <Button variant="destructive" onClick={handleBatchDelete} disabled={saving}>
+              {saving ? 'מוחק...' : `מחק ${selectedItems.size} פריטים`}
+            </Button>
+          </div>
+        </div>
       </Dialog>
 
       {/* Reorder Suggestions Dialog */}
