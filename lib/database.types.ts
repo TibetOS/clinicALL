@@ -135,6 +135,9 @@ export interface InventoryItemRow {
   expiry_date: string;
   supplier: string;
   status: 'ok' | 'low' | 'critical';
+  unit_price: number | null;
+  lot_number: string | null;
+  notes: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -288,6 +291,9 @@ export interface InventoryItemRowUpdate {
   expiry_date?: string;
   supplier?: string;
   status?: 'ok' | 'low' | 'critical';
+  unit_price?: number | null;
+  lot_number?: string | null;
+  notes?: string | null;
 }
 
 export interface LeadRowUpdate {

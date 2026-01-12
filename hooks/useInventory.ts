@@ -17,6 +17,9 @@ interface InventoryInput {
   unit?: string;
   expiryDate?: string;
   supplier?: string;
+  unitPrice?: number;
+  lotNumber?: string;
+  notes?: string;
 }
 
 interface UseInventory {
@@ -80,6 +83,9 @@ export function useInventory(): UseInventory {
         expiryDate: item.expiry_date || '',
         supplier: item.supplier || '',
         status: item.status || calculateStatus(item.quantity, item.min_quantity),
+        unitPrice: item.unit_price ?? undefined,
+        lotNumber: item.lot_number || '',
+        notes: item.notes || '',
       }));
 
       setItems(transformedItems);
@@ -122,6 +128,9 @@ export function useInventory(): UseInventory {
         expiryDate: data.expiry_date || '',
         supplier: data.supplier || '',
         status: data.status || calculateStatus(data.quantity, data.min_quantity),
+        unitPrice: data.unit_price ?? undefined,
+        lotNumber: data.lot_number || '',
+        notes: data.notes || '',
       };
     } catch (err) {
       logger.error('Error fetching inventory item:', err);
@@ -142,8 +151,11 @@ export function useInventory(): UseInventory {
         expiryDate: item.expiryDate || '',
         supplier: item.supplier || '',
         status: calculateStatus(item.quantity, item.minQuantity),
+        unitPrice: item.unitPrice,
+        lotNumber: item.lotNumber || '',
+        notes: item.notes || '',
       };
-      setItems(prev => [...prev, newItem]);
+      setItems((prev: InventoryItem[]) => [...prev, newItem]);
       return newItem;
     }
 
@@ -162,6 +174,9 @@ export function useInventory(): UseInventory {
           expiry_date: item.expiryDate,
           supplier: item.supplier,
           status,
+          unit_price: item.unitPrice,
+          lot_number: item.lotNumber,
+          notes: item.notes,
         })
         .select()
         .single();
@@ -179,9 +194,12 @@ export function useInventory(): UseInventory {
         expiryDate: data.expiry_date || '',
         supplier: data.supplier || '',
         status: data.status,
+        unitPrice: data.unit_price ?? undefined,
+        lotNumber: data.lot_number || '',
+        notes: data.notes || '',
       };
 
-      setItems(prev => [...prev, newItem]);
+      setItems((prev: InventoryItem[]) => [...prev, newItem]);
       return newItem;
     } catch (err) {
       logger.error('Error adding inventory item:', err);
@@ -192,7 +210,7 @@ export function useInventory(): UseInventory {
 
   const updateItem = useCallback(async (id: string, updates: Partial<InventoryInput>): Promise<InventoryItem | null> => {
     if (!isSupabaseConfigured()) {
-      setItems(prev => prev.map(item => {
+      setItems((prev: InventoryItem[]) => prev.map((item: InventoryItem) => {
         if (item.id !== id) return item;
         const updated = { ...item, ...updates };
         if (updates.quantity !== undefined || updates.minQuantity !== undefined) {
@@ -203,7 +221,7 @@ export function useInventory(): UseInventory {
         }
         return updated;
       }));
-      return items.find(item => item.id === id) || null;
+      return items.find((item: InventoryItem) => item.id === id) || null;
     }
 
     try {
@@ -216,10 +234,13 @@ export function useInventory(): UseInventory {
       if (updates.unit !== undefined) dbUpdates.unit = updates.unit;
       if (updates.expiryDate !== undefined) dbUpdates.expiry_date = updates.expiryDate;
       if (updates.supplier !== undefined) dbUpdates.supplier = updates.supplier;
+      if (updates.unitPrice !== undefined) dbUpdates.unit_price = updates.unitPrice;
+      if (updates.lotNumber !== undefined) dbUpdates.lot_number = updates.lotNumber;
+      if (updates.notes !== undefined) dbUpdates.notes = updates.notes;
 
       // Recalculate status if quantity or minQuantity changed
       if (updates.quantity !== undefined || updates.minQuantity !== undefined) {
-        const currentItem = items.find(i => i.id === id);
+        const currentItem = items.find((i: InventoryItem) => i.id === id);
         const newQuantity = updates.quantity ?? currentItem?.quantity ?? 0;
         const newMinQuantity = updates.minQuantity ?? currentItem?.minQuantity ?? 0;
         dbUpdates.status = calculateStatus(newQuantity, newMinQuantity);
@@ -250,9 +271,12 @@ export function useInventory(): UseInventory {
         expiryDate: data.expiry_date || '',
         supplier: data.supplier || '',
         status: data.status,
+        unitPrice: data.unit_price ?? undefined,
+        lotNumber: data.lot_number || '',
+        notes: data.notes || '',
       };
 
-      setItems(prev => prev.map(item => item.id === id ? updatedItem : item));
+      setItems((prev: InventoryItem[]) => prev.map((item: InventoryItem) => item.id === id ? updatedItem : item));
       return updatedItem;
     } catch (err) {
       logger.error('Error updating inventory item:', err);
@@ -268,7 +292,7 @@ export function useInventory(): UseInventory {
 
   const deleteItem = useCallback(async (id: string): Promise<boolean> => {
     if (!isSupabaseConfigured()) {
-      setItems(prev => prev.filter(item => item.id !== id));
+      setItems((prev: InventoryItem[]) => prev.filter((item: InventoryItem) => item.id !== id));
       return true;
     }
 
@@ -287,7 +311,7 @@ export function useInventory(): UseInventory {
 
       if (deleteError) throw deleteError;
 
-      setItems(prev => prev.filter(item => item.id !== id));
+      setItems((prev: InventoryItem[]) => prev.filter((item: InventoryItem) => item.id !== id));
       return true;
     } catch (err) {
       logger.error('Error deleting inventory item:', err);
