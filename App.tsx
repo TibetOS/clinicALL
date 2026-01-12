@@ -7,7 +7,12 @@ import {
   Crown, Sparkles, X, Syringe, FileHeart, MessageCircle, Mail,
   Timer, Loader2
 } from 'lucide-react';
-import { LoginPage, HealthDeclaration, SignupPage, LandingPage, LockScreen, ResetPasswordPage } from './pages/Public';
+import { LandingPage } from './pages/Public';
+import { LoginPage } from './pages/Login';
+import { SignupPage } from './pages/Signup';
+import { ResetPasswordPage } from './pages/ResetPassword';
+import { LockScreen } from './pages/LockScreen';
+import { HealthDeclarationPage } from './pages/HealthDeclaration';
 import { ClinicLanding } from './pages/ClinicLanding';
 import { BookingApp } from './pages/Booking';
 import { Button, Badge, Dialog } from './components/ui';
@@ -703,8 +708,8 @@ function App() {
           <Route path="/login" element={<LoginPage />} />
           <Route path="/signup" element={<SignupPage />} />
           <Route path="/reset-password" element={<ResetPasswordPage />} />
-          <Route path="/health/:token" element={<HealthDeclaration />} />
-          <Route path="/health" element={<HealthDeclaration />} />
+          <Route path="/health/:token" element={<HealthDeclarationPage />} />
+          <Route path="/health" element={<HealthDeclarationPage />} />
           <Route path="/locked" element={<LockScreen />} />
 
           {/* PUBLIC CLINIC LANDING PAGE */}

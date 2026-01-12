@@ -15,3 +15,4 @@ export { useBooking } from './useBooking';
 export { useHealthTokens } from './useHealthTokens';
 export { useActivityLog, getActivityDescription } from './useActivityLog';
 export { useSessionTimeout, formatRemainingTime } from './useSessionTimeout';
+export { useDialogState, useMultiDialogState } from './useDialogState';
