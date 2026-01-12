@@ -153,6 +153,12 @@ export interface InventoryItem {
   expiryDate: string;
   supplier: string;
   status: 'ok' | 'low' | 'critical';
+  /** Unit cost price for inventory valuation */
+  unitPrice?: number;
+  /** Lot or batch number for traceability */
+  lotNumber?: string;
+  /** Notes or additional information */
+  notes?: string;
 }
 
 export type NotificationAction = 'send_declaration' | 'view_appointment' | 'view_patient' | 'none';

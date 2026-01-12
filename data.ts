@@ -202,9 +202,13 @@ export const MOCK_CLINICAL_NOTES: ClinicalNote[] = [
 ];
 
 export const MOCK_INVENTORY: InventoryItem[] = [
-  { id: 'inv-1', name: 'Dysport 500u', sku: 'DYS-500', category: 'רעלנים', quantity: 12, minQuantity: 5, unit: 'בקבוקון', expiryDate: '2024-12-01', supplier: 'מדיסון', status: 'ok' },
-  { id: 'inv-2', name: 'Juvederm Voluma', sku: 'JUV-VOL', category: 'חומרי מילוי', quantity: 3, minQuantity: 4, unit: 'מזרק', expiryDate: '2024-06-15', supplier: 'אלרגן', status: 'low' },
-  { id: 'inv-3', name: 'לידוקאין משחה', sku: 'LID-CRM', category: 'ציוד מתכלה', quantity: 1, minQuantity: 2, unit: 'שפופרת', expiryDate: '2023-12-30', supplier: 'טבע', status: 'critical' },
+  { id: 'inv-1', name: 'Dysport 500u', sku: 'DYS-500', category: 'רעלנים', quantity: 12, minQuantity: 5, unit: 'בקבוקון', expiryDate: '2024-12-01', supplier: 'מדיסון', status: 'ok', unitPrice: 850, lotNumber: 'LOT-2024-001' },
+  { id: 'inv-2', name: 'Juvederm Voluma', sku: 'JUV-VOL', category: 'חומרי מילוי', quantity: 3, minQuantity: 4, unit: 'מזרק', expiryDate: '2024-06-15', supplier: 'אלרגן', status: 'low', unitPrice: 1200, lotNumber: 'LOT-2024-002' },
+  { id: 'inv-3', name: 'לידוקאין משחה', sku: 'LID-CRM', category: 'ציוד מתכלה', quantity: 1, minQuantity: 2, unit: 'שפופרת', expiryDate: '2023-12-30', supplier: 'טבע', status: 'critical', unitPrice: 45, lotNumber: 'LOT-2023-015' },
+  { id: 'inv-4', name: 'Botox Allergan 100u', sku: 'BTX-100', category: 'רעלנים', quantity: 8, minQuantity: 3, unit: 'בקבוקון', expiryDate: '2025-03-15', supplier: 'אלרגן', status: 'ok', unitPrice: 1100, lotNumber: 'LOT-2024-003' },
+  { id: 'inv-5', name: 'Restylane Lyft', sku: 'RST-LFT', category: 'חומרי מילוי', quantity: 6, minQuantity: 4, unit: 'מזרק', expiryDate: '2024-09-20', supplier: 'גאלדרמה', status: 'ok', unitPrice: 980, lotNumber: 'LOT-2024-004' },
+  { id: 'inv-6', name: 'כפפות ניטריל M', sku: 'GLV-NIT-M', category: 'ציוד מתכלה', quantity: 50, minQuantity: 20, unit: 'קופסה', expiryDate: '2026-01-01', supplier: 'מדיטק', status: 'ok', unitPrice: 35 },
+  { id: 'inv-7', name: 'מחטי 30G', sku: 'NDL-30G', category: 'ציוד מתכלה', quantity: 15, minQuantity: 30, unit: 'קופסה', expiryDate: '2025-06-01', supplier: 'מדיטק', status: 'critical', unitPrice: 25 },
 ];
 
 export const MOCK_NOTIFICATIONS: Notification[] = [
