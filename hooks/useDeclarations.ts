@@ -106,11 +106,17 @@ export function useDeclarations(options?: UseDeclarationsOptions): UseDeclaratio
     }
 
     try {
-      const { data, error: fetchError } = await supabase
+      let query = supabase
         .from('declarations')
         .select('*')
-        .eq('id', id)
-        .single();
+        .eq('id', id);
+
+      // SECURITY: Filter by clinic_id for multi-tenant isolation
+      if (profile?.clinic_id) {
+        query = query.eq('clinic_id', profile.clinic_id);
+      }
+
+      const { data, error: fetchError } = await query.single();
 
       if (fetchError) throw fetchError;
 
@@ -119,7 +125,7 @@ export function useDeclarations(options?: UseDeclarationsOptions): UseDeclaratio
       logger.error('Error fetching declaration:', err);
       return null;
     }
-  }, []);
+  }, [profile?.clinic_id]);
 
   const addDeclaration = useCallback(async (declaration: DeclarationInput): Promise<Declaration | null> => {
     if (!isSupabaseConfigured()) {
@@ -175,12 +181,17 @@ export function useDeclarations(options?: UseDeclarationsOptions): UseDeclaratio
       if (updates.status !== undefined) dbUpdates.status = updates.status;
       if (updates.formData !== undefined) dbUpdates.form_data = updates.formData;
 
-      const { data, error: updateError } = await supabase
+      let query = supabase
         .from('declarations')
         .update(dbUpdates)
-        .eq('id', id)
-        .select()
-        .single();
+        .eq('id', id);
+
+      // SECURITY: Filter by clinic_id for multi-tenant isolation
+      if (profile?.clinic_id) {
+        query = query.eq('clinic_id', profile.clinic_id);
+      }
+
+      const { data, error: updateError } = await query.select().single();
 
       if (updateError) throw updateError;
 
@@ -192,7 +203,7 @@ export function useDeclarations(options?: UseDeclarationsOptions): UseDeclaratio
       setError(getErrorMessage(err) || 'Failed to update declaration');
       return null;
     }
-  }, [declarations]);
+  }, [declarations, profile?.clinic_id]);
 
   const updateStatus = useCallback(async (id: string, status: Declaration['status']): Promise<boolean> => {
     const result = await updateDeclaration(id, { status });
@@ -206,10 +217,17 @@ export function useDeclarations(options?: UseDeclarationsOptions): UseDeclaratio
     }
 
     try {
-      const { error: deleteError } = await supabase
+      let query = supabase
         .from('declarations')
         .delete()
         .eq('id', id);
+
+      // SECURITY: Filter by clinic_id for multi-tenant isolation
+      if (profile?.clinic_id) {
+        query = query.eq('clinic_id', profile.clinic_id);
+      }
+
+      const { error: deleteError } = await query;
 
       if (deleteError) throw deleteError;
 
@@ -220,7 +238,7 @@ export function useDeclarations(options?: UseDeclarationsOptions): UseDeclaratio
       setError(getErrorMessage(err) || 'Failed to delete declaration');
       return false;
     }
-  }, []);
+  }, [profile?.clinic_id]);
 
   const getDeclarationsByPatient = useCallback((patientId: string): Declaration[] => {
     return declarations.filter(dec => dec.patientId === patientId);

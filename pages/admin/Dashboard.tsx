@@ -1,10 +1,10 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import {
   Calendar as CalendarIcon, FileText,
   Plus, ChevronLeft, Clock, CheckCircle,
   User, Phone, Gift, Send, Heart, Sparkles,
   Sun, Moon, Coffee, UserCheck, MessageCircle,
-  MoreHorizontal, Eye, PhoneCall, Info
+  MoreHorizontal, Eye, PhoneCall, Info, AlertCircle
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { Card, Button, Input, Badge, Dialog, Label, Skeleton } from '../../components/ui';
@@ -39,12 +39,15 @@ export const Dashboard = () => {
   const { profile } = useAuth();
 
   // ========== DATA HOOKS ==========
-  const { appointments, loading: appointmentsLoading, addAppointment } = useAppointments();
-  const { patients, loading: patientsLoading, addPatient } = usePatients();
-  const { invoices, loading: invoicesLoading } = useInvoices();
-  const { declarations, loading: declarationsLoading } = useDeclarations();
+  const { appointments, loading: appointmentsLoading, error: appointmentsError, addAppointment } = useAppointments();
+  const { patients, loading: patientsLoading, error: patientsError, addPatient } = usePatients();
+  const { invoices, loading: invoicesLoading, error: invoicesError } = useInvoices();
+  const { declarations, loading: declarationsLoading, error: declarationsError } = useDeclarations();
   const { services } = useServices();
   const { createToken, generateShareLink, generateWhatsAppLink } = useHealthTokens();
+
+  // Aggregate errors for display
+  const dataError = appointmentsError || patientsError || invoicesError || declarationsError;
 
   // ========== DIALOG STATES ==========
   const [isNewApptOpen, setIsNewApptOpen] = useState(false);
@@ -68,8 +71,21 @@ export const Dashboard = () => {
   const [saving, setSaving] = useState(false);
 
   // ========== COMPUTED VALUES (MEMOIZED FOR PERFORMANCE) ==========
-  const today = useMemo(() => new Date(), []);
+  // Use state for today to handle day changes when dashboard stays open
+  const [today, setToday] = useState(() => new Date());
   const todayStr = useMemo(() => today.toISOString().split('T')[0] ?? '', [today]);
+
+  // Check for day change every minute
+  useEffect(() => {
+    const checkDate = () => {
+      const now = new Date();
+      if (now.toDateString() !== today.toDateString()) {
+        setToday(now);
+      }
+    };
+    const interval = setInterval(checkDate, 60000);
+    return () => clearInterval(interval);
+  }, [today]);
 
   // Today's appointments
   const todaysAppointments = useMemo(() => appointments
@@ -289,6 +305,14 @@ export const Dashboard = () => {
           </Button>
         </div>
       </div>
+
+      {/* ========== ERROR BANNER ========== */}
+      {dataError && (
+        <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg flex items-center gap-2">
+          <AlertCircle size={18} />
+          <span>שגיאה בטעינת נתונים: {dataError}</span>
+        </div>
+      )}
 
       {/* ========== DAILY SUMMARY STRIP ========== */}
       <TooltipProvider>
@@ -592,8 +616,11 @@ export const Dashboard = () => {
 
           {/* Lapsed Clients */}
           <Card
-            className="p-5 rounded-2xl border border-slate-100 cursor-pointer transition-all duration-200 hover:shadow-lg hover:-translate-y-1 card-animate stagger-5 group"
+            role="button"
+            tabIndex={0}
+            className="p-5 rounded-2xl border border-slate-100 cursor-pointer transition-all duration-200 hover:shadow-lg hover:-translate-y-1 card-animate stagger-5 group focus:outline-none focus:ring-2 focus:ring-teal-500 focus:ring-offset-2"
             onClick={() => navigate('/admin/patients')}
+            onKeyDown={(e) => e.key === 'Enter' && navigate('/admin/patients')}
           >
             <div className="flex items-center gap-3">
               <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${lapsedClients.length > 0 ? 'bg-amber-50' : 'bg-slate-50'}`}>
@@ -618,8 +645,11 @@ export const Dashboard = () => {
 
           {/* Due for Follow-up */}
           <Card
-            className="p-5 rounded-2xl border border-slate-100 cursor-pointer transition-all duration-200 hover:shadow-lg hover:-translate-y-1 card-animate stagger-6 group"
+            role="button"
+            tabIndex={0}
+            className="p-5 rounded-2xl border border-slate-100 cursor-pointer transition-all duration-200 hover:shadow-lg hover:-translate-y-1 card-animate stagger-6 group focus:outline-none focus:ring-2 focus:ring-teal-500 focus:ring-offset-2"
             onClick={() => navigate('/admin/patients')}
+            onKeyDown={(e) => e.key === 'Enter' && navigate('/admin/patients')}
           >
             <div className="flex items-center gap-3">
               <div className="w-12 h-12 rounded-xl flex items-center justify-center bg-teal-50 group-hover:scale-110 transition-transform duration-200">
@@ -644,8 +674,11 @@ export const Dashboard = () => {
 
           {/* Upcoming Birthdays */}
           <Card
-            className="p-5 rounded-2xl border border-slate-100 cursor-pointer transition-all duration-200 hover:shadow-lg hover:-translate-y-1 card-animate stagger-7 group"
+            role="button"
+            tabIndex={0}
+            className="p-5 rounded-2xl border border-slate-100 cursor-pointer transition-all duration-200 hover:shadow-lg hover:-translate-y-1 card-animate stagger-7 group focus:outline-none focus:ring-2 focus:ring-teal-500 focus:ring-offset-2"
             onClick={() => navigate('/admin/patients')}
+            onKeyDown={(e) => e.key === 'Enter' && navigate('/admin/patients')}
           >
             <div className="flex items-center gap-3">
               <div className="w-12 h-12 rounded-xl flex items-center justify-center bg-pink-50 group-hover:scale-110 transition-transform duration-200">
@@ -670,8 +703,11 @@ export const Dashboard = () => {
 
           {/* Active Patients */}
           <Card
-            className="p-5 rounded-2xl border border-slate-100 cursor-pointer transition-all duration-200 hover:shadow-lg hover:-translate-y-1 card-animate stagger-8 group"
+            role="button"
+            tabIndex={0}
+            className="p-5 rounded-2xl border border-slate-100 cursor-pointer transition-all duration-200 hover:shadow-lg hover:-translate-y-1 card-animate stagger-8 group focus:outline-none focus:ring-2 focus:ring-teal-500 focus:ring-offset-2"
             onClick={() => navigate('/admin/patients')}
+            onKeyDown={(e) => e.key === 'Enter' && navigate('/admin/patients')}
           >
             <div className="flex items-center gap-3">
               <div className="w-12 h-12 rounded-xl flex items-center justify-center bg-green-50 group-hover:scale-110 transition-transform duration-200">
@@ -698,6 +734,7 @@ export const Dashboard = () => {
           }`}
         >
           <button
+            aria-label="תור חדש"
             className="flex items-center gap-2 bg-white shadow-lg rounded-full py-2 px-4 text-sm font-medium text-slate-700 hover:bg-slate-50 hover:shadow-xl hover:-translate-y-0.5 transition-all duration-200 min-h-[44px] active:scale-95"
             style={{ transitionDelay: isFabOpen ? '100ms' : '0ms' }}
             onClick={() => { setIsNewApptOpen(true); setIsFabOpen(false); }}
@@ -706,6 +743,7 @@ export const Dashboard = () => {
             תור חדש
           </button>
           <button
+            aria-label="קבלת לקוחה"
             className="flex items-center gap-2 bg-white shadow-lg rounded-full py-2 px-4 text-sm font-medium text-slate-700 hover:bg-slate-50 hover:shadow-xl hover:-translate-y-0.5 transition-all duration-200 min-h-[44px] active:scale-95"
             style={{ transitionDelay: isFabOpen ? '50ms' : '0ms' }}
             onClick={() => { setIsWalkInOpen(true); setIsFabOpen(false); }}
@@ -714,6 +752,7 @@ export const Dashboard = () => {
             קבלת לקוחה
           </button>
           <button
+            aria-label="שלח תזכורת"
             className="flex items-center gap-2 bg-white shadow-lg rounded-full py-2 px-4 text-sm font-medium text-slate-700 hover:bg-slate-50 hover:shadow-xl hover:-translate-y-0.5 transition-all duration-200 min-h-[44px] active:scale-95"
             style={{ transitionDelay: isFabOpen ? '0ms' : '0ms' }}
             onClick={() => { navigate('/admin/patients'); setIsFabOpen(false); }}
@@ -725,6 +764,8 @@ export const Dashboard = () => {
 
         {/* FAB Button */}
         <button
+          aria-label={isFabOpen ? 'סגור תפריט' : 'פתח תפריט פעולות מהירות'}
+          aria-expanded={isFabOpen}
           className={`w-14 h-14 rounded-full shadow-lg flex items-center justify-center transition-all duration-300 transform-gpu active:scale-90 ${
             isFabOpen ? 'bg-slate-800 rotate-45 shadow-xl' : 'bg-teal-500 hover:bg-teal-600 hover:shadow-xl hover:scale-105'
           }`}
