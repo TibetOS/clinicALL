@@ -56,10 +56,17 @@ export function useInvoices(): UseInvoices {
     setError(null);
 
     try {
-      const { data, error: fetchError } = await supabase
+      let query = supabase
         .from('invoices')
         .select('*')
         .order('date', { ascending: false });
+
+      // SECURITY: Filter by clinic_id for multi-tenant isolation
+      if (profile?.clinic_id) {
+        query = query.eq('clinic_id', profile.clinic_id);
+      }
+
+      const { data, error: fetchError } = await query;
 
       if (fetchError) throw fetchError;
 
@@ -81,7 +88,7 @@ export function useInvoices(): UseInvoices {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [profile?.clinic_id]);
 
   const getInvoice = useCallback(async (id: string): Promise<Invoice | null> => {
     if (!isSupabaseConfigured()) {
@@ -89,11 +96,17 @@ export function useInvoices(): UseInvoices {
     }
 
     try {
-      const { data, error: fetchError } = await supabase
+      let query = supabase
         .from('invoices')
         .select('*')
-        .eq('id', id)
-        .single();
+        .eq('id', id);
+
+      // SECURITY: Filter by clinic_id for multi-tenant isolation
+      if (profile?.clinic_id) {
+        query = query.eq('clinic_id', profile.clinic_id);
+      }
+
+      const { data, error: fetchError } = await query.single();
 
       if (fetchError) throw fetchError;
 
@@ -111,7 +124,7 @@ export function useInvoices(): UseInvoices {
       logger.error('Error fetching invoice:', err);
       return null;
     }
-  }, []);
+  }, [profile?.clinic_id]);
 
   const addInvoice = useCallback(async (invoice: InvoiceInput): Promise<Invoice | null> => {
     if (!isSupabaseConfigured()) {
@@ -185,12 +198,17 @@ export function useInvoices(): UseInvoices {
       if (updates.total !== undefined) dbUpdates.total = updates.total;
       if (updates.status !== undefined) dbUpdates.status = updates.status;
 
-      const { data, error: updateError } = await supabase
+      let query = supabase
         .from('invoices')
         .update(dbUpdates)
-        .eq('id', id)
-        .select()
-        .single();
+        .eq('id', id);
+
+      // SECURITY: Filter by clinic_id for multi-tenant isolation
+      if (profile?.clinic_id) {
+        query = query.eq('clinic_id', profile.clinic_id);
+      }
+
+      const { data, error: updateError } = await query.select().single();
 
       if (updateError) throw updateError;
 
@@ -212,7 +230,7 @@ export function useInvoices(): UseInvoices {
       setError(getErrorMessage(err) || 'Failed to update invoice');
       return null;
     }
-  }, [invoices]);
+  }, [invoices, profile?.clinic_id]);
 
   const updateStatus = useCallback(async (id: string, status: Invoice['status']): Promise<boolean> => {
     const result = await updateInvoice(id, { status });
@@ -226,10 +244,17 @@ export function useInvoices(): UseInvoices {
     }
 
     try {
-      const { error: deleteError } = await supabase
+      let query = supabase
         .from('invoices')
         .delete()
         .eq('id', id);
+
+      // SECURITY: Filter by clinic_id for multi-tenant isolation
+      if (profile?.clinic_id) {
+        query = query.eq('clinic_id', profile.clinic_id);
+      }
+
+      const { error: deleteError } = await query;
 
       if (deleteError) throw deleteError;
 
@@ -240,7 +265,7 @@ export function useInvoices(): UseInvoices {
       setError(getErrorMessage(err) || 'Failed to delete invoice');
       return false;
     }
-  }, []);
+  }, [profile?.clinic_id]);
 
   useEffect(() => {
     fetchInvoices();
