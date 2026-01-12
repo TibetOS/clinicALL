@@ -245,12 +245,17 @@ export function usePatients(): UsePatients {
       if (updates.declarationStatus !== undefined) dbUpdates.declaration_status = updates.declarationStatus;
       if (updates.pendingDeclarationToken !== undefined) dbUpdates.pending_declaration_token = updates.pendingDeclarationToken;
 
-      const { data, error: updateError } = await supabase
+      // SECURITY: Filter by clinic_id to ensure multi-tenant isolation
+      let query = supabase
         .from('patients')
         .update(dbUpdates)
-        .eq('id', id)
-        .select()
-        .single();
+        .eq('id', id);
+
+      if (profile?.clinic_id) {
+        query = query.eq('clinic_id', profile.clinic_id);
+      }
+
+      const { data, error: updateError } = await query.select().single();
 
       if (updateError) throw updateError;
 
@@ -262,7 +267,7 @@ export function usePatients(): UsePatients {
       setError(getErrorMessage(err) || 'Failed to update patient');
       return null;
     }
-  }, [patients]);
+  }, [patients, profile?.clinic_id]);
 
   const deletePatient = useCallback(async (id: string): Promise<boolean> => {
     if (!isSupabaseConfigured()) {
@@ -272,10 +277,17 @@ export function usePatients(): UsePatients {
     }
 
     try {
-      const { error: deleteError } = await supabase
+      // SECURITY: Filter by clinic_id to ensure multi-tenant isolation
+      let query = supabase
         .from('patients')
         .delete()
         .eq('id', id);
+
+      if (profile?.clinic_id) {
+        query = query.eq('clinic_id', profile.clinic_id);
+      }
+
+      const { error: deleteError } = await query;
 
       if (deleteError) throw deleteError;
 
@@ -286,7 +298,7 @@ export function usePatients(): UsePatients {
       setError(getErrorMessage(err) || 'Failed to delete patient');
       return false;
     }
-  }, []);
+  }, [profile?.clinic_id]);
 
   // Fetch patients on mount
   useEffect(() => {

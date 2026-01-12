@@ -94,13 +94,28 @@ const INITIAL_FILTERS: FilterState = {
   hasUpcomingAppointment: 'all',
 };
 
+// SECURITY: Sanitize CSV values to prevent formula injection
+// Characters =, +, -, @, tab, carriage return can execute formulas in Excel
+const sanitizeCSVValue = (value: string): string => {
+  if (!value) return '';
+  // If value starts with dangerous characters, prefix with single quote
+  if (/^[=+\-@\t\r]/.test(value)) {
+    return `'${value}`;
+  }
+  // Escape quotes and wrap in quotes if contains comma, quote, or newline
+  if (/[",\n]/.test(value)) {
+    return `"${value.replace(/"/g, '""')}"`;
+  }
+  return value;
+};
+
 // CSV Export utility
 const exportToCSV = (patients: Patient[], filename: string) => {
   const headers = ['שם', 'טלפון', 'אימייל', 'ביקור אחרון', 'תור קרוב', 'רמת סיכון', 'תאריך הצטרפות'];
   const rows = patients.map(p => [
-    p.name,
-    p.phone,
-    p.email,
+    sanitizeCSVValue(p.name),
+    sanitizeCSVValue(p.phone),
+    sanitizeCSVValue(p.email),
     p.lastVisit ? new Date(p.lastVisit).toLocaleDateString('he-IL') : '',
     p.upcomingAppointment ? new Date(p.upcomingAppointment).toLocaleDateString('he-IL') : '',
     getStatusLabel(p.riskLevel),
@@ -784,8 +799,9 @@ export const PatientList = () => {
         <div className="space-y-4">
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <Label>שם פרטי</Label>
+              <Label htmlFor="patient-first-name">שם פרטי</Label>
               <Input
+                id="patient-first-name"
                 name="given-name"
                 autoComplete="given-name"
                 placeholder="ישראל"
@@ -794,8 +810,9 @@ export const PatientList = () => {
               />
             </div>
             <div>
-              <Label>שם משפחה</Label>
+              <Label htmlFor="patient-last-name">שם משפחה</Label>
               <Input
+                id="patient-last-name"
                 name="family-name"
                 autoComplete="family-name"
                 placeholder="ישראלי"
@@ -805,8 +822,9 @@ export const PatientList = () => {
             </div>
           </div>
           <div>
-            <Label>טלפון נייד</Label>
+            <Label htmlFor="patient-phone">טלפון נייד</Label>
             <Input
+              id="patient-phone"
               type="tel"
               name="tel"
               autoComplete="tel"
@@ -817,8 +835,9 @@ export const PatientList = () => {
             />
           </div>
           <div>
-            <Label>אימייל</Label>
+            <Label htmlFor="patient-email">אימייל</Label>
             <Input
+              id="patient-email"
               type="email"
               name="email"
               autoComplete="email"
@@ -830,8 +849,9 @@ export const PatientList = () => {
           </div>
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <Label>תאריך לידה</Label>
+              <Label htmlFor="patient-birthdate">תאריך לידה</Label>
               <Input
+                id="patient-birthdate"
                 type="date"
                 name="bday"
                 autoComplete="bday"
@@ -840,7 +860,7 @@ export const PatientList = () => {
               />
             </div>
             <div>
-              <Label>מגדר</Label>
+              <Label htmlFor="patient-gender">מגדר</Label>
               <Select
                 value={formData.gender}
                 onValueChange={(value) => setFormData(prev => ({ ...prev, gender: value }))}
@@ -875,12 +895,12 @@ export const PatientList = () => {
       <Dialog open={isFilterOpen} onClose={() => setIsFilterOpen(false)} title="סינון מטופלים">
         <div className="space-y-4">
           <div>
-            <Label>רמת סיכון</Label>
+            <Label htmlFor="filter-risk-level">רמת סיכון</Label>
             <Select
               value={filters.riskLevel}
               onValueChange={(value) => setFilters(prev => ({ ...prev, riskLevel: value as RiskLevel | 'all' }))}
             >
-              <SelectTrigger>
+              <SelectTrigger id="filter-risk-level">
                 <SelectValue placeholder="בחר רמת סיכון" />
               </SelectTrigger>
               <SelectContent>
@@ -893,12 +913,12 @@ export const PatientList = () => {
           </div>
 
           <div>
-            <Label>תור קרוב</Label>
+            <Label htmlFor="filter-upcoming-appointment">תור קרוב</Label>
             <Select
               value={filters.hasUpcomingAppointment}
               onValueChange={(value) => setFilters(prev => ({ ...prev, hasUpcomingAppointment: value as 'all' | 'yes' | 'no' }))}
             >
-              <SelectTrigger>
+              <SelectTrigger id="filter-upcoming-appointment">
                 <SelectValue placeholder="בחר סטטוס תור" />
               </SelectTrigger>
               <SelectContent>
@@ -913,16 +933,18 @@ export const PatientList = () => {
             <Label>טווח תאריכי ביקור אחרון</Label>
             <div className="grid grid-cols-2 gap-4 mt-2">
               <div>
-                <span className="text-xs text-gray-500">מתאריך</span>
+                <Label htmlFor="filter-visit-from" className="text-xs text-gray-500 font-normal">מתאריך</Label>
                 <Input
+                  id="filter-visit-from"
                   type="date"
                   value={filters.lastVisitFrom}
                   onChange={(e) => setFilters(prev => ({ ...prev, lastVisitFrom: e.target.value }))}
                 />
               </div>
               <div>
-                <span className="text-xs text-gray-500">עד תאריך</span>
+                <Label htmlFor="filter-visit-to" className="text-xs text-gray-500 font-normal">עד תאריך</Label>
                 <Input
+                  id="filter-visit-to"
                   type="date"
                   value={filters.lastVisitTo}
                   onChange={(e) => setFilters(prev => ({ ...prev, lastVisitTo: e.target.value }))}
@@ -962,8 +984,9 @@ export const PatientList = () => {
               </div>
 
               <div>
-                <Label>שם מלא *</Label>
+                <Label htmlFor="health-patient-name">שם מלא *</Label>
                 <Input
+                  id="health-patient-name"
                   placeholder="שם הלקוח"
                   value={healthFormData.patientName}
                   onChange={(e) => setHealthFormData(prev => ({ ...prev, patientName: e.target.value }))}
@@ -971,8 +994,9 @@ export const PatientList = () => {
               </div>
 
               <div>
-                <Label>טלפון נייד *</Label>
+                <Label htmlFor="health-patient-phone">טלפון נייד *</Label>
                 <Input
+                  id="health-patient-phone"
                   type="tel"
                   placeholder="050-0000000"
                   className="direction-ltr"
@@ -982,8 +1006,9 @@ export const PatientList = () => {
               </div>
 
               <div>
-                <Label>אימייל (אופציונלי)</Label>
+                <Label htmlFor="health-patient-email">אימייל (אופציונלי)</Label>
                 <Input
+                  id="health-patient-email"
                   type="email"
                   placeholder="email@example.com"
                   className="direction-ltr"

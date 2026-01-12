@@ -303,10 +303,17 @@ export function useHealthTokens(): UseHealthTokens {
     }
 
     try {
-      const { error: updateError } = await supabase
+      // SECURITY: Filter by clinic_id to ensure multi-tenant isolation
+      let query = supabase
         .from('health_declaration_tokens')
         .update({ status: 'used', used_at: usedAt })
         .eq('id', tokenId);
+
+      if (profile?.clinic_id) {
+        query = query.eq('clinic_id', profile.clinic_id);
+      }
+
+      const { error: updateError } = await query;
 
       if (updateError) throw updateError;
 
@@ -318,7 +325,7 @@ export function useHealthTokens(): UseHealthTokens {
       logger.error('Error marking token as used:', err);
       return false;
     }
-  }, []);
+  }, [profile?.clinic_id]);
 
   const deleteToken = useCallback(async (tokenId: string): Promise<boolean> => {
     if (!isSupabaseConfigured()) {
@@ -328,10 +335,17 @@ export function useHealthTokens(): UseHealthTokens {
     }
 
     try {
-      const { error: deleteError } = await supabase
+      // SECURITY: Filter by clinic_id to ensure multi-tenant isolation
+      let query = supabase
         .from('health_declaration_tokens')
         .delete()
         .eq('id', tokenId);
+
+      if (profile?.clinic_id) {
+        query = query.eq('clinic_id', profile.clinic_id);
+      }
+
+      const { error: deleteError } = await query;
 
       if (deleteError) throw deleteError;
 
@@ -341,7 +355,7 @@ export function useHealthTokens(): UseHealthTokens {
       logger.error('Error deleting token:', err);
       return false;
     }
-  }, []);
+  }, [profile?.clinic_id]);
 
   const generateShareLink = useCallback((token: string): string => {
     const baseUrl = window.location.origin;
