@@ -58,19 +58,45 @@ export function CalendarGrid({
             const dayKey = `${day.getFullYear()}-${day.getMonth()}-${day.getDate()}`;
             const count = appointmentCountByDay.get(dayKey) || 0;
             const isToday = day.toDateString() === new Date().toDateString();
+            const isSingleDay = weekDays.length === 1;
             return (
               <div key={i} className={`flex-1 text-center py-3 border-l border-gray-100 ${isToday ? 'bg-primary/5' : ''}`}>
-                <div className="text-xs text-gray-500 mb-1">{day.toLocaleDateString('he-IL', { weekday: 'short' })}</div>
-                <div className="flex items-center justify-center gap-1.5">
-                  <div className={`text-lg font-bold inline-flex items-center justify-center w-8 h-8 rounded-full ${isToday ? 'bg-primary text-white shadow-md' : 'text-gray-900'}`}>
-                    {day.getDate()}
-                  </div>
-                  {count > 0 && (
-                    <span className="text-xs bg-primary/10 text-primary px-1.5 py-0.5 rounded-full font-medium" title={`${count} תורים`}>
-                      {count}
-                    </span>
-                  )}
-                </div>
+                {isSingleDay ? (
+                  // Day view: show full date with weekday
+                  <>
+                    <div className="text-sm text-gray-600 mb-1">
+                      {day.toLocaleDateString('he-IL', { weekday: 'long' })}
+                    </div>
+                    <div className="flex items-center justify-center gap-2">
+                      <div className={`text-2xl font-bold inline-flex items-center justify-center w-10 h-10 rounded-full ${isToday ? 'bg-primary text-white shadow-md' : 'text-gray-900'}`}>
+                        {day.getDate()}
+                      </div>
+                      <div className="text-sm text-gray-500">
+                        {day.toLocaleDateString('he-IL', { month: 'long', year: 'numeric' })}
+                      </div>
+                      {count > 0 && (
+                        <span className="text-xs bg-primary/10 text-primary px-2 py-1 rounded-full font-medium" title={`${count} תורים`}>
+                          {count} תורים
+                        </span>
+                      )}
+                    </div>
+                  </>
+                ) : (
+                  // Week view: compact header
+                  <>
+                    <div className="text-xs text-gray-500 mb-1">{day.toLocaleDateString('he-IL', { weekday: 'short' })}</div>
+                    <div className="flex items-center justify-center gap-1.5">
+                      <div className={`text-lg font-bold inline-flex items-center justify-center w-8 h-8 rounded-full ${isToday ? 'bg-primary text-white shadow-md' : 'text-gray-900'}`}>
+                        {day.getDate()}
+                      </div>
+                      {count > 0 && (
+                        <span className="text-xs bg-primary/10 text-primary px-1.5 py-0.5 rounded-full font-medium" title={`${count} תורים`}>
+                          {count}
+                        </span>
+                      )}
+                    </div>
+                  </>
+                )}
               </div>
             );
           })}

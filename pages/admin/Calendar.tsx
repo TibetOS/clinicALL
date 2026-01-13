@@ -101,8 +101,13 @@ export const Calendar = () => {
     return () => clearTimeout(timer);
   }, [currentDate]);
 
-  // Memoized week days calculation
+  // Memoized days calculation - 1 day for day view, 7 for week view
   const weekDays = useMemo(() => {
+    if (view === 'day') {
+      // Day view: show only the current date
+      return [new Date(debouncedDate)];
+    }
+    // Week view: show full week (Sunday to Saturday)
     const start = new Date(debouncedDate);
     start.setDate(start.getDate() - start.getDay()); // Sunday
     return Array.from({ length: 7 }, (_, i) => {
@@ -110,7 +115,7 @@ export const Calendar = () => {
       d.setDate(d.getDate() + i);
       return d;
     });
-  }, [debouncedDate]);
+  }, [debouncedDate, view]);
 
   // Keyboard shortcuts
   useEffect(() => {
